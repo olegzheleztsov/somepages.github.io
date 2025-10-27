@@ -1,0 +1,85 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="best-practices-and-pitfalls-in-performance-testing">Best Practices and Pitfalls in Performance Testing</h3>
+<p>Performance testing is essential for validating Non-Functional Requirements (NFRs) like scalability and reliability, but executing it effectively requires careful planning to avoid misleading results or wasted effort. Drawing from industry standards and recent insights (as of 2025), below are common best practices and pitfalls. As a tech lead, discussing these shows your ability to lead teams toward reliable, cost-effective testing—e.g., by integrating them into CI/CD pipelines.</p>
+<h4 id="common-best-practices">Common Best Practices</h4>
+<p>These practices help ensure tests are accurate, actionable, and aligned with production realities:</p>
+<ul>
+<li><strong>Define Clear Objectives and SLAs Upfront</strong>: Start by outlining specific goals tied to NFRs (e.g., &quot;95% of requests under 200ms at 1k concurrent users&quot;). This guides test design and makes results measurable.</li>
+<li><strong>Use Realistic Test Data and User Scenarios</strong>: Mimic production data volumes and behaviors (e.g., diverse user journeys via scripts). Research shows this reduces errors from unrealistic assumptions, as 66% of issues stem from poor user modeling.</li>
+<li><strong>Test Early and Often (Shift-Left Approach)</strong>: Integrate lightweight performance tests into development sprints, not just end-of-cycle. This catches issues sooner, lowering fix costs—ideally starting in unit/integration phases.</li>
+<li><strong>Diversify Test Types and Scenarios</strong>: Cover load, stress, endurance, spike, and scalability tests to simulate varied conditions (e.g., traffic bursts). Combine with configuration and isolation tests for comprehensive coverage.</li>
+<li><strong>Set Up a Representative Environment</strong>: Use production-like setups (e.g., mirrored hardware, network latency) and monitor with tools like Prometheus. Avoid isolated dev environments to prevent &quot;it works on my machine&quot; surprises.</li>
+<li><strong>Automate and Monitor Iteratively</strong>: Leverage CI/CD for repeatable runs, and always correlate results with metrics (e.g., CPU, memory) to pinpoint bottlenecks like threading or algorithmic flaws.</li>
+</ul>
+<h4 id="common-pitfalls">Common Pitfalls</h4>
+<p>These errors can lead to false positives/negatives, delayed releases, or overlooked risks—often amplifying costs if found late.</p>
+<table>
+<thead>
+<tr>
+<th>Pitfall</th>
+<th>Description/Impact</th>
+<th>How to Avoid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Vague or Missing Objectives</strong></td>
+<td>Tests without defined success criteria lead to subjective interpretations and scope creep.</td>
+<td>Tie to quantifiable SLAs from the start.</td>
+</tr>
+<tr>
+<td><strong>Unrealistic Data/Scenarios</strong></td>
+<td>Synthetic or low-volume data hides real issues like memory leaks under production load.</td>
+<td>Validate scripts against analytics (e.g., user logs).</td>
+</tr>
+<tr>
+<td><strong>Poor Environment Setup</strong></td>
+<td>Testing in non-production-like conditions (e.g., no latency) skews results.</td>
+<td>Mirror prod configs; use cloud sandboxes.</td>
+</tr>
+<tr>
+<td><strong>Overlooking Test Types</strong></td>
+<td>Focusing only on load tests misses endurance failures (e.g., gradual degradation).</td>
+<td>Plan a mix; rotate based on app maturity.</td>
+</tr>
+<tr>
+<td><strong>Ignoring Monitoring/Root Causes</strong></td>
+<td>Blaming &quot;the system&quot; without deep dives into metrics (e.g., server outages from unoptimized queries).</td>
+<td>Use APM tools; root-cause with teams post-test.</td>
+</tr>
+<tr>
+<td><strong>Late-Stage Testing Only</strong></td>
+<td>Delays fixes, as performance bugs cost 10x more to resolve in production.</td>
+<td>Embed in agile cycles for proactive detection.</td>
+</tr>
+<tr>
+<td><strong>Neglecting Edge Cases</strong></td>
+<td>Skipping spikes or mobile-specific issues (e.g., battery drain) leaves vulnerabilities.</td>
+<td>Include diverse loads; test on real devices.</td>
+</tr>
+</tbody>
+</table>
+<p>In a tech lead interview, weave these in with examples: &quot;I'd avoid the 'unrealistic data' pitfall by collaborating with product for user telemetry, ensuring our JMeter scripts reflect Black Friday spikes.&quot; This demonstrates foresight and cross-team leadership. Great question—ties perfectly to validating NFRs. What's next on your prep list?</p>
+
+    </div>
+</body>
+</html>"

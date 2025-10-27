@@ -1,0 +1,79 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="choosing-between-synchronous-and-asynchronous-communication-in-microservices">Choosing Between Synchronous and Asynchronous Communication in Microservices</h3>
+<p>Deciding between synchronous (sync) and asynchronous (async) communication depends on factors like latency requirements, consistency needs, scalability, and system complexity. Sync (e.g., HTTP/gRPC) is blocking and request-response based, while async (e.g., Kafka/RabbitMQ) is non-blocking and event/message-driven. Below is a decision framework with scenarios for each.</p>
+<h4 id="decision-criteria-table">Decision Criteria Table</h4>
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Choose Sync When...</th>
+<th>Choose Async When...</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Latency &amp; Responsiveness</strong></td>
+<td>Real-time interactions are critical (e.g., user queries like &quot;fetch profile&quot; needing &lt;100ms response; chat apps or API gateways).</td>
+<td>Delays are tolerable (e.g., background tasks like email notifications or data syncing, where seconds/minutes OK).</td>
+</tr>
+<tr>
+<td><strong>Consistency Model</strong></td>
+<td>Strong/immediate consistency required (e.g., financial transactions like balance checks, where eventual consistency risks errors).</td>
+<td>Eventual consistency suffices (e.g., analytics updates or inventory adjustments across services).</td>
+</tr>
+<tr>
+<td><strong>Scalability &amp; Load</strong></td>
+<td>Low-to-medium volume, predictable traffic (e.g., admin dashboards with few concurrent users).</td>
+<td>High-volume, bursty loads (e.g., e-commerce flash sales; queues buffer spikes without overwhelming services).</td>
+</tr>
+<tr>
+<td><strong>Coupling &amp; Decoupling</strong></td>
+<td>Services are tightly integrated with simple flows (e.g., orchestration in a small workflow like login + session creation).</td>
+<td>Loose coupling needed for independent evolution (e.g., publish &quot;OrderShipped&quot; event for multiple subscribers like notifications and reporting).</td>
+</tr>
+<tr>
+<td><strong>Error Handling &amp; Resilience</strong></td>
+<td>Direct error propagation is beneficial (e.g., quick retries or circuit breaking in a payment flow).</td>
+<td>Fault isolation and retries via brokers are preferred (e.g., offline processing of IoT data).</td>
+</tr>
+<tr>
+<td><strong>Complexity &amp; Debugging</strong></td>
+<td>Team prefers straightforward tracing (e.g., early-stage apps or monolith migrations).</td>
+<td>Mature ops with event tracing tools (e.g., large-scale systems using Jaeger for distributed logs).</td>
+</tr>
+<tr>
+<td><strong>Use Case Examples</strong></td>
+<td>- User-facing APIs (e.g., search results).<br>- Short-lived transactions (e.g., validate coupon).</td>
+<td>- Event-driven architectures (e.g., user signup triggers welcome email + analytics).<br>- Batch processing (e.g., daily reports).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="additional-guidance">Additional Guidance</h4>
+<ul>
+<li><strong>Hybrid Approach</strong>: Often best—use sync for the &quot;happy path&quot; (user interactions) and async for side effects (e.g., Netflix uses REST for UI fetches but Kafka for recommendations).</li>
+<li><strong>Trade-Offs Recap</strong>: Sync simplifies dev but risks cascading failures; async boosts resilience but adds eventual consistency challenges.</li>
+<li><strong>As a Tech Lead</strong>: Evaluate via PoCs measuring metrics like P99 latency and throughput. Start with sync for MVPs, shift to async as scale/complexity grows. Always layer resilience (e.g., timeouts for sync, dead-letter queues for async).</li>
+</ul>
+
+    </div>
+</body>
+</html>"

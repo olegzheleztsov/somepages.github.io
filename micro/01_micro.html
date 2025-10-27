@@ -1,0 +1,92 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-a-microservice">What is a Microservice?</h3>
+<p>A <strong>microservice</strong> is an architectural style in software development where an application is composed of small, independent services that communicate over a network (typically via lightweight protocols like HTTP/REST or messaging queues). Each microservice focuses on a specific business capability, runs in its own process, and can be developed, deployed, scaled, and maintained independently. This contrasts with traditional monolithic applications, where all components are tightly coupled in a single codebase and deployable unit.</p>
+<p>The concept was popularized by Martin Fowler and James Lewis in their 2014 article, building on ideas from service-oriented architecture (SOA). Microservices align with Domain-Driven Design (DDD), where services are bounded by business domains (e.g., a &quot;User Service&quot; handling authentication and profiles, separate from an &quot;Order Service&quot; for e-commerce).</p>
+<h4 id="key-characteristics">Key Characteristics</h4>
+<ul>
+<li><strong>Independence</strong>: Each service has its own codebase, database (polyglot persistence), and deployment pipeline.</li>
+<li><strong>Decentralized Governance</strong>: Teams own services end-to-end (using &quot;two-pizza teams&quot; per Amazon's model).</li>
+<li><strong>Loose Coupling</strong>: Services interact via APIs or events, not shared databases.</li>
+<li><strong>Resilience</strong>: Designed to fail gracefully (e.g., using circuit breakers like Hystrix).</li>
+<li><strong>Scalability</strong>: Scale individual services horizontally based on load (e.g., scale the payment service during Black Friday without affecting others).</li>
+</ul>
+<h4 id="comparison-microservices-vs.monolithic-architecture">Comparison: Microservices vs. Monolithic Architecture</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Monolithic Architecture</th>
+<th>Microservices Architecture</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Structure</strong></td>
+<td>Single, unified codebase and deployment.</td>
+<td>Multiple, loosely coupled services.</td>
+</tr>
+<tr>
+<td><strong>Scaling</strong></td>
+<td>Scale the entire app (vertical/horizontal).</td>
+<td>Scale services independently.</td>
+</tr>
+<tr>
+<td><strong>Development</strong></td>
+<td>Easier initial setup; tech stack uniform.</td>
+<td>Faster iteration per team; polyglot stacks.</td>
+</tr>
+<tr>
+<td><strong>Fault Isolation</strong></td>
+<td>Failure in one module can crash the whole app.</td>
+<td>Isolated failures; use patterns like saga for distributed transactions.</td>
+</tr>
+<tr>
+<td><strong>Complexity</strong></td>
+<td>Low for small apps; grows unmanageable.</td>
+<td>High operational overhead (e.g., service discovery, monitoring).</td>
+</tr>
+<tr>
+<td><strong>Examples</strong></td>
+<td>Traditional web apps like early WordPress.</td>
+<td>Netflix (video streaming services), Uber (ride booking, payments).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="advantages">Advantages</h4>
+<ul>
+<li><strong>Agility</strong>: Enables continuous deployment and faster feature releases.</li>
+<li><strong>Technology Diversity</strong>: Use the best tool for each job (e.g., Node.js for real-time chat, Python for ML in one service).</li>
+<li><strong>Resilience &amp; Fault Tolerance</strong>: If one service fails, others continue (e.g., via fallback mechanisms).</li>
+<li><strong>Team Autonomy</strong>: Aligns with DevOps, allowing small teams to own services fully.</li>
+</ul>
+<h4 id="disadvantages-and-challenges">Disadvantages and Challenges</h4>
+<ul>
+<li><strong>Distributed Complexity</strong>: Managing inter-service communication, data consistency (e.g., eventual consistency via CQRS/ES), and latency.</li>
+<li><strong>Operational Overhead</strong>: Requires tools like Kubernetes for orchestration, API gateways (e.g., Kong), service meshes (e.g., Istio), and monitoring (e.g., Prometheus + Grafana).</li>
+<li><strong>Debugging</strong>: Tracing requests across services (use tools like Jaeger for distributed tracing).</li>
+<li><strong>When Not to Use</strong>: For simple apps or startups, monoliths are often simpler to start with (&quot;monolith first&quot; principle).</li>
+</ul>
+<p>In a tech lead interview, emphasize trade-offs: Microservices shine in large, evolving systems but introduce complexity—always justify based on team size, domain complexity, and scaling needs. If migrating, start with a &quot;strangler pattern&quot; to gradually decompose a monolith.</p>
+
+    </div>
+</body>
+</html>"

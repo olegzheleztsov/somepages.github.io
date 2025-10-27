@@ -1,0 +1,68 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="when-to-use-an-api-gateway-in-microservices-architecture">When to Use an API Gateway in Microservices Architecture</h3>
+<p>In microservices architectures, an API Gateway serves as a single entry point (reverse proxy) that routes client requests to the appropriate backend services, while handling cross-cutting concerns like authentication, rate limiting, and monitoring. It's particularly valuable when direct client-to-microservice communication would introduce unnecessary complexity, but it's not always mandatory—especially in simpler setups.</p>
+<h4 id="key-scenarios-for-using-an-api-gateway">Key Scenarios for Using an API Gateway</h4>
+<p>Based on established patterns and best practices, deploy an API Gateway in these situations:</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Description</th>
+<th>Why It Helps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Multiple Backend Services</strong></td>
+<td>When clients (e.g., mobile apps, web frontends) need to interact with several microservices for a single feature, like fetching user data from Profile, Order, and Notification services.</td>
+<td>Provides a unified endpoint, reducing client-side boilerplate and hiding internal service URLs or versions.</td>
+</tr>
+<tr>
+<td><strong>Cross-Cutting Concerns</strong></td>
+<td>Implementing shared features like security (OAuth/JWT validation), throttling, logging, or caching across services.</td>
+<td>Centralizes these without duplicating code in each service, enforcing consistency.</td>
+</tr>
+<tr>
+<td><strong>Client-Specific Optimization</strong></td>
+<td>Tailoring responses for different clients (e.g., lightweight JSON for mobile vs. detailed for admin dashboards) via Backend-for-Frontend (BFF) patterns.</td>
+<td>Aggregates data from multiple services into a client-optimized response, minimizing round-trips.</td>
+</tr>
+<tr>
+<td><strong>High Security or Compliance Needs</strong></td>
+<td>Exposing only public APIs while shielding internal microservices from direct access.</td>
+<td>Acts as a security boundary, enabling fine-grained policies and DDoS protection.</td>
+</tr>
+<tr>
+<td><strong>Scalability and Evolution</strong></td>
+<td>As the system grows, adding/removing services without client changes.</td>
+<td>Supports dynamic routing and service discovery, easing evolution.</td>
+</tr>
+</tbody>
+</table>
+<p>Avoid it in low-complexity environments (e.g., 2-3 services with simple CRUD) where direct communication suffices, as it adds an extra hop.</p>
+<h4 id="quick-example">Quick Example</h4>
+<p>In an e-commerce app, a client requests <code>/user/orders</code>. The gateway authenticates the request, routes to the Order Service (aggregating from Inventory if needed), applies rate limits, and returns a streamlined response— all without the client knowing about internal endpoints.</p>
+<p>This pattern integrates well with service meshes for advanced setups. For your interview, when might you choose a service mesh over (or alongside) an API Gateway?</p>
+
+    </div>
+</body>
+</html>"

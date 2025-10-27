@@ -1,0 +1,96 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>In C#, an <strong>AggregateException</strong> is a special exception type used to encapsulate multiple exceptions that occur during concurrent or asynchronous operations, such as those involving <code>Task</code>s. It’s part of the Task Parallel Library (TPL) to handle scenarios where multiple errors need to be reported together.</p>
+<ul>
+<li><p><strong>Purpose</strong>: Groups multiple exceptions into a single exception object, making it easier to handle errors from parallel or async tasks.</p>
+</li>
+<li><p><strong>Common Scenarios</strong>:</p>
+<ul>
+<li>Thrown by <code>Task</code> or <code>Task&lt;T&gt;</code> when one or more operations fail (e.g., in <code>Task.WhenAll</code>).</li>
+<li>Occurs in parallel operations like <code>Parallel.For</code> or <code>Parallel.ForEach</code>.</li>
+</ul>
+</li>
+<li><p><strong>Key Properties</strong>:</p>
+<ul>
+<li><code>InnerExceptions</code>: A read-only collection of exceptions that caused the <code>AggregateException</code>.</li>
+<li><code>InnerException</code>: Returns the first inner exception (less commonly used).</li>
+</ul>
+</li>
+<li><p><strong>Handling</strong>:</p>
+<ul>
+<li>Use <code>try-catch</code> to catch <code>AggregateException</code>.</li>
+<li>Use <code>Flatten()</code> to simplify nested <code>AggregateException</code>s into a single level.</li>
+<li>Use <code>Handle(Func&lt;Exception, bool&gt;)</code> to process each inner exception individually; return <code>true</code> for handled exceptions, <code>false</code> to rethrow unhandled ones.</li>
+</ul>
+</li>
+<li><p><strong>Example</strong>:</p>
+</li>
+</ul>
+<pre><code class="language-csharp">try
+{
+    Task[] tasks = new[]
+    {
+        Task.Run(() =&gt; throw new InvalidOperationException(&quot;Error 1&quot;)),
+        Task.Run(() =&gt; throw new NullReferenceException(&quot;Error 2&quot;))
+    };
+    Task.WhenAll(tasks).Wait();
+}
+catch (AggregateException ae)
+{
+    ae.Flatten().Handle(ex =&gt;
+    {
+        Console.WriteLine(ex.Message); // Outputs: Error 1, Error 2
+        return true; // Mark as handled
+    });
+}
+</code></pre>
+<ul>
+<li><strong>Async/Await Context</strong>:
+<ul>
+<li>With <code>await</code>, the first inner exception is typically thrown instead of the <code>AggregateException</code>.</li>
+<li>Example:</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-csharp">try
+{
+    await Task.WhenAll(tasks);
+}
+catch (Exception ex) // Catches first inner exception (e.g., InvalidOperationException)
+{
+    Console.WriteLine(ex.Message);
+}
+</code></pre>
+<ul>
+<li><strong>Key Points</strong>:
+<ul>
+<li>Simplifies error handling for concurrent tasks.</li>
+<li>Always check <code>InnerExceptions</code> for full error details.</li>
+<li><code>Flatten</code> and <code>Handle</code> are useful for complex scenarios with nested exceptions.</li>
+<li>In <code>async/await</code>, you often deal with the first inner exception directly.</li>
+</ul>
+</li>
+</ul>
+<p>Ask for more specifics or examples if needed!</p>
+
+    </div>
+</body>
+</html>"

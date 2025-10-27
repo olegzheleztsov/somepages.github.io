@@ -1,0 +1,79 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-a-transactional-log">What is a Transactional Log?</h3>
+<p>A <strong>transactional log</strong> (also known as a transaction journal, database log, binary log, or audit trail) is a file or structured record that captures the history of all actions executed by a database management system (DBMS). It logs every transaction and the corresponding database modifications in sequence, ensuring durability and recoverability. This mechanism is fundamental to achieving ACID (Atomicity, Consistency, Isolation, Durability) properties in databases.</p>
+<h4 id="key-purposes">Key Purposes:</h4>
+<ul>
+<li><strong>Recovery</strong>: Allows rollback or redo of operations after crashes or failures by replaying or reversing logged changes.</li>
+<li><strong>Replication</strong>: Enables syncing data across replicas or distributed systems.</li>
+<li><strong>Auditing and Debugging</strong>: Provides a detailed trail for compliance, troubleshooting, or point-in-time restores.</li>
+<li><strong>Consistency</strong>: Ensures changes are written ahead of commitment (e.g., via Write-Ahead Logging or WAL) to prevent data loss.</li>
+</ul>
+<p>In practice, logs are append-only for efficiency, often segmented into files that can be archived or backed up.</p>
+<h3 id="tools-and-databases-that-commonly-use-transactional-logs">Tools and Databases That Commonly Use Transactional Logs</h3>
+<p>Most relational and some NoSQL databases rely on transactional logs. Here's a summary of prominent examples:</p>
+<table>
+<thead>
+<tr>
+<th>Tool/Database</th>
+<th>Description of Log Usage</th>
+<th>Key Features</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SQL Server</strong></td>
+<td>Integral file in every database that records all transactions and modifications for recovery and replication.</td>
+<td>Supports log backups for point-in-time recovery; managed via virtual log files (VLFs).</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>Uses Write-Ahead Logging (WAL) as its transaction log for crash recovery and streaming replication.</td>
+<td>Append-only; enables features like logical replication and PITR (Point-In-Time Recovery).</td>
+</tr>
+<tr>
+<td><strong>MySQL</strong></td>
+<td>Binary log (binlog) records changes for replication and recovery.</td>
+<td>Statement-based or row-based logging; used in master-slave setups.</td>
+</tr>
+<tr>
+<td><strong>Oracle Database</strong></td>
+<td>Redo logs capture committed and uncommitted changes for instance recovery.</td>
+<td>Online redo logs and archived redo logs; supports Real Application Clusters (RAC).</td>
+</tr>
+<tr>
+<td><strong>Delta Lake (Databricks)</strong></td>
+<td>An ordered JSON-based transaction log (DeltaLog) for ACID transactions on data lakes.</td>
+<td>Tracks metadata like file additions/deletions; enables time travel and schema enforcement.</td>
+</tr>
+<tr>
+<td><strong>ServiceNow</strong></td>
+<td>Logs browser activity and instance transactions for debugging.</td>
+<td>Accessible via system logs; focuses on platform-level auditing.</td>
+</tr>
+</tbody>
+</table>
+<p>These tools often integrate transactional logs with backup strategies—e.g., frequent log backups in SQL Server to minimize data loss. In microservices contexts (like event sourcing), patterns such as the Transactional Outbox leverage database logs to reliably publish events.</p>
+<p>If this ties into a specific scenario from your interview prep (e.g., distributed transactions), let me know for deeper examples!</p>
+
+    </div>
+</body>
+</html>"

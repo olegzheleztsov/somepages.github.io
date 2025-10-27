@@ -1,0 +1,67 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-the-shared-database-pattern">What is the Shared Database Pattern?</h3>
+<p>In microservices architecture, the <strong>Shared Database pattern</strong> (also called &quot;Shared Schema&quot; or &quot;Database per Team&quot;) involves multiple microservices accessing and sharing a single, centralized database (or schema) rather than each service having its own dedicated database. This contrasts with the preferred &quot;Database per Service&quot; pattern, where each service owns its data for loose coupling.</p>
+<p>The pattern allows services to query or update data directly via SQL or ORM without needing APIs or message queues for inter-service communication. It's often used in transitional phases from monoliths to microservices, where services are logically separated but data is co-located for simplicity.</p>
+<h4 id="pros-and-cons-of-the-shared-database-approach">Pros and Cons of the Shared Database Approach</h4>
+<p>While it simplifies early development, it can hinder scalability and independence over time. Here's a balanced overview:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Development Speed</strong></td>
+<td>Faster initial implementation—no need for service-to-service APIs or event schemas; teams can query shared data directly.</td>
+<td>Introduces hidden dependencies; changes to schema require coordination across teams, slowing iterations.</td>
+</tr>
+<tr>
+<td><strong>Data Consistency</strong></td>
+<td>Strong ACID consistency across services via database transactions (e.g., no eventual consistency issues).</td>
+<td>Risk of tight coupling—services may inadvertently rely on each other's data models, violating microservices boundaries.</td>
+</tr>
+<tr>
+<td><strong>Operational Overhead</strong></td>
+<td>Single DB means easier backups, monitoring, and scaling (one point for replication/sharding).</td>
+<td>Single point of failure or bottleneck; high contention during peaks can degrade performance for all services.</td>
+</tr>
+<tr>
+<td><strong>Cost and Simplicity</strong></td>
+<td>Lower infrastructure costs (fewer DB instances); straightforward for small teams or legacy migrations.</td>
+<td>Hinders independent deployments—DB schema changes can break multiple services, increasing rollback risks.</td>
+</tr>
+<tr>
+<td><strong>Scalability &amp; Resilience</strong></td>
+<td>Easier data aggregation for reporting (e.g., joins across &quot;service&quot; boundaries).</td>
+<td>Limits polyglot persistence (hard to switch DB tech per service); poor fault isolation—if DB goes down, all services fail.</td>
+</tr>
+</tbody>
+</table>
+<p>In practice, I recommend this pattern only for bounded contexts with low inter-service data needs, transitioning to per-service DBs as the system grows. It pairs poorly with Sagas or Outbox patterns, as distributed transactions become tricky.</p>
+<p>For your tech lead interview, how would you migrate from a shared DB to per-service DBs without downtime?</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,150 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-interlocked">What is Interlocked?</h3>
+<p>The <code>Interlocked</code> class in C# (<code>System.Threading.Interlocked</code>) provides atomic operations for variables shared across multiple threads. These operations are performed as a single, indivisible step, ensuring thread safety without the need for locks. <code>Interlocked</code> leverages low-level CPU instructions (e.g., compare-and-swap, fetch-and-add) to achieve high-performance synchronization, making it ideal for simple, lock-free concurrency scenarios.</p>
+<p>Key methods include:</p>
+<ul>
+<li><strong>Increment/Decrement</strong>: Atomically increments or decrements an integer (<code>Interlocked.Increment(ref int)</code>, <code>Interlocked.Decrement(ref int)</code>).</li>
+<li><strong>Add</strong>: Atomically adds a value to a variable (<code>Interlocked.Add(ref int, int)</code>).</li>
+<li><strong>CompareExchange</strong>: Compares a variable to an expected value and swaps it with a new value if they match (<code>Interlocked.CompareExchange&lt;T&gt;(ref T, T, T)</code>).</li>
+<li><strong>Exchange</strong>: Atomically sets a variable to a new value (<code>Interlocked.Exchange&lt;T&gt;(ref T, T)</code>).</li>
+<li><strong>Read</strong>: Ensures atomic read for 64-bit values on 32-bit systems (<code>Interlocked.Read(ref long)</code>).</li>
+</ul>
+<p>These operations are supported for primitive types (<code>int</code>, <code>long</code>, <code>float</code>, <code>double</code>, reference types, etc.) and are executed in a single CPU instruction, avoiding race conditions without blocking threads.</p>
+<h3 id="when-would-you-use-interlocked">When Would You Use Interlocked?</h3>
+<p>Use <code>Interlocked</code> in scenarios where you need <strong>fast, lock-free synchronization</strong> for simple operations on shared variables. It’s particularly suited for cases where:</p>
+<ol>
+<li><p><strong>Updating Simple Counters or Flags</strong>:</p>
+<ul>
+<li>Scenario: Incrementing a shared counter (e.g., tracking requests in a web server) or toggling a boolean flag.</li>
+<li>Why: <code>Interlocked.Increment</code> or <code>Interlocked.Exchange</code> is faster than a <code>lock</code> because it avoids monitor overhead and thread blocking.</li>
+<li>Example:
+<pre><code class="language-csharp">private int _counter = 0;
+public void IncrementCounter() =&gt; Interlocked.Increment(ref _counter);
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Atomic Updates to Shared Variables</strong>:</p>
+<ul>
+<li>Scenario: Updating a shared variable (e.g., a status flag or total sum) without locking.</li>
+<li>Why: <code>Interlocked.Add</code> or <code>Interlocked.Exchange</code> ensures the update is atomic, preventing partial writes or reads.</li>
+<li>Example:
+<pre><code class="language-csharp">private long _total = 0;
+public void AddValue(long value) =&gt; Interlocked.Add(ref _total, value);
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Compare-and-Swap (CAS) Operations</strong>:</p>
+<ul>
+<li>Scenario: Conditional updates, like updating a value only if it hasn’t changed (e.g., optimistic concurrency in a thread-safe cache).</li>
+<li>Why: <code>Interlocked.CompareExchange</code> allows atomic read-modify-write, enabling lock-free algorithms.</li>
+<li>Example:
+<pre><code class="language-csharp">private int _state = 0;
+public bool TrySetState(int expected, int newValue) =&gt;
+    Interlocked.CompareExchange(ref _state, newValue, expected) == expected;
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Implementing Lock-Free Data Structures</strong>:</p>
+<ul>
+<li>Scenario: Building custom thread-safe structures (e.g., a lock-free queue or linked list).</li>
+<li>Why: <code>Interlocked</code> operations like <code>CompareExchange</code> enable complex algorithms without locks, improving performance in high-concurrency scenarios.</li>
+<li>Example:
+<pre><code class="language-csharp">private Node _head = null;
+public void Push(Node newNode)
+{
+    Node oldHead;
+    do
+    {
+        oldHead = _head;
+        newNode.Next = oldHead;
+    } while (Interlocked.CompareExchange(ref _head, newNode, oldHead) != oldHead);
+}
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Avoiding Lock Overhead in High-Contention Scenarios</strong>:</p>
+<ul>
+<li>Scenario: High-frequency updates in a multi-threaded application (e.g., metrics in a parallel loop).</li>
+<li>Why: <code>Interlocked</code> is lightweight (single CPU instruction) compared to <code>lock</code>, which involves monitor acquisition and potential thread blocking.</li>
+<li>Example:
+<pre><code class="language-csharp">private float _average;
+public void UpdateAverage(float value) =&gt; Interlocked.Exchange(ref _average, value);
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Ensuring Visibility Across Threads</strong>:</p>
+<ul>
+<li>Scenario: Ensuring a shared variable’s value is immediately visible to all threads (e.g., a configuration flag).</li>
+<li>Why: <code>Interlocked</code> operations provide memory barriers, ensuring changes are not cached locally by threads.</li>
+<li>Example:
+<pre><code class="language-csharp">private int _flag = 0;
+public void SetFlag() =&gt; Interlocked.Exchange(ref _flag, 1);
+</code></pre>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="when-not-to-use-interlocked">When <em>Not</em> to Use Interlocked</h3>
+<ul>
+<li><strong>Complex Operations</strong>: <code>Interlocked</code> is limited to simple atomic operations (e.g., increment, swap). For multi-step operations (e.g., updating multiple fields), use <code>lock</code>, <code>ReaderWriterLockSlim</code>, or concurrent collections.</li>
+<li><strong>Blocking Requirements</strong>: <code>Interlocked</code> is non-blocking; for scenarios requiring threads to wait (e.g., resource pools), use <code>SemaphoreSlim</code> or <code>Monitor</code>.</li>
+<li><strong>Async/Await</strong>: <code>Interlocked</code> is synchronous; for async workflows, consider <code>SemaphoreSlim</code> or concurrent collections with <code>async</code> support.</li>
+<li><strong>Cross-Process Synchronization</strong>: <code>Interlocked</code> is intra-process only; use <code>Mutex</code> or <code>Semaphore</code> for inter-process needs.</li>
+</ul>
+<h3 id="tradeoffs-and-considerations">Tradeoffs and Considerations</h3>
+<ul>
+<li><strong>Pros</strong>:
+<ul>
+<li><strong>Performance</strong>: Faster than <code>lock</code> (single CPU instruction vs. monitor overhead).</li>
+<li><strong>Lock-Free</strong>: Reduces contention and avoids deadlocks or blocking.</li>
+<li><strong>Simplicity</strong>: Easy to use for simple atomic operations.</li>
+<li><strong>Scalability</strong>: Performs well in high-concurrency scenarios on multi-core systems.</li>
+</ul>
+</li>
+<li><strong>Cons</strong>:
+<ul>
+<li><strong>Limited Scope</strong>: Only supports atomic operations on single variables or references.</li>
+<li><strong>Complexity in Advanced Use</strong>: Lock-free algorithms using <code>CompareExchange</code> can be error-prone and hard to debug.</li>
+<li><strong>No Blocking</strong>: Cannot make threads wait for conditions, unlike <code>Semaphore</code> or <code>EventWaitHandle</code>.</li>
+<li><strong>Non-Deterministic in Loops</strong>: CAS operations (e.g., <code>CompareExchange</code>) may retry multiple times under contention, impacting predictability.</li>
+</ul>
+</li>
+<li><strong>Best Practices</strong>:
+<ul>
+<li>Use for simple, single-variable updates (e.g., counters, flags).</li>
+<li>Combine with volatile fields or <code>Volatile</code> class for visibility guarantees.</li>
+<li>Test thoroughly under high contention, as lock-free code can have subtle bugs.</li>
+<li>Avoid overcomplicating—use <code>lock</code> or concurrent collections for complex scenarios.</li>
+</ul>
+</li>
+</ul>
+<h3 id="summary">Summary</h3>
+<p><code>Interlocked</code> is a high-performance, lock-free synchronization tool for atomic operations on shared variables. Use it for simple updates (counters, flags), compare-and-swap patterns, or lock-free data structures in high-concurrency, intra-process scenarios. For complex operations, blocking, or async needs, opt for <code>lock</code>, <code>SemaphoreSlim</code>, or concurrent collections instead. Always profile and test to ensure correctness under load.</p>
+
+    </div>
+</body>
+</html>"

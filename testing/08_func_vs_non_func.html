@@ -1,0 +1,242 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>In the context of software testing, including .NET applications, <strong>functional testing</strong> and <strong>non-functional testing</strong> are two broad categories that focus on different aspects of an application's quality. Below, I’ll explain what they are, their differences, examples relevant to .NET, and how they’re applied, keeping it concise and tailored for your .NET interview preparation.</p>
+<h3 id="functional-testing">Functional Testing</h3>
+<p><strong>What it is</strong>: Functional testing verifies that the application’s features and functionalities work as specified in the requirements. It focuses on <strong>what the system does</strong>, ensuring that each function or feature produces the expected output for given inputs.</p>
+<p><strong>Key Characteristics</strong>:</p>
+<ul>
+<li>Tests the application’s behavior against functional requirements or specifications.</li>
+<li>Focuses on user-facing features, business logic, or APIs.</li>
+<li>Typically involves testing inputs, outputs, and interactions with the system.</li>
+<li>Tests are written from the user’s perspective (e.g., “Does this API endpoint return the correct data?”).</li>
+<li>Common in unit, integration, and end-to-end testing.</li>
+</ul>
+<p><strong>Examples in .NET</strong>:</p>
+<ul>
+<li><strong>Unit Testing</strong>: Testing a method in a .NET class to ensure it performs as expected.
+<pre><code class="language-csharp">[Fact]
+public void Add_TwoNumbers_ReturnsSum()
+{
+    var calculator = new Calculator();
+    var result = calculator.Add(2, 3);
+    Assert.Equal(5, result); // Verifies functional behavior
+}
+</code></pre>
+</li>
+<li><strong>Integration Testing</strong>: Testing an ASP.NET Core controller to ensure it retrieves data correctly from a database via Entity Framework Core.
+<pre><code class="language-csharp">[Fact]
+public async Task GetWeatherForecast_ReturnsData()
+{
+    var client = _factory.CreateClient();
+    var response = await client.GetAsync(&quot;/api/WeatherForecast/1&quot;);
+    response.EnsureSuccessStatusCode();
+    var forecast = await response.Content.ReadFromJsonAsync&lt;WeatherForecast&gt;();
+    Assert.NotNull(forecast); // Verifies functional API behavior
+}
+</code></pre>
+</li>
+<li><strong>End-to-End Testing</strong>: Using Selenium to test a Blazor app’s UI, ensuring a user can submit a form and see the correct result.</li>
+</ul>
+<p><strong>Types of Functional Testing</strong>:</p>
+<ul>
+<li>Unit Testing: Tests individual methods (e.g., using xUnit, NUnit, MSTest).</li>
+<li>Integration Testing: Tests interactions between components (e.g., controller and service).</li>
+<li>System Testing: Tests the entire application’s functionality.</li>
+<li>Acceptance Testing: Validates the application against business requirements (e.g., using SpecFlow for BDD).</li>
+<li>Regression Testing: Ensures new changes don’t break existing functionality.</li>
+</ul>
+<p><strong>Tools in .NET</strong>:</p>
+<ul>
+<li>xUnit, NUnit, MSTest for unit testing.</li>
+<li><code>Microsoft.AspNetCore.Mvc.Testing</code> for integration testing ASP.NET Core APIs.</li>
+<li>Selenium, Playwright, or bUnit for UI testing in Blazor or ASP.NET MVC.</li>
+<li>SpecFlow for behavior-driven development (BDD).</li>
+<li>Postman for manual API testing.</li>
+</ul>
+<p><strong>When to Use</strong>:</p>
+<ul>
+<li>To verify that features like APIs, UI interactions, or business logic work as intended.</li>
+<li>To ensure the application meets user requirements (e.g., “Can a user retrieve a weather forecast by ID?”).</li>
+</ul>
+<h3 id="non-functional-testing">Non-Functional Testing</h3>
+<p><strong>What it is</strong>: Non-functional testing evaluates the application’s performance, usability, security, and other quality attributes that are not directly related to specific functionalities. It focuses on <strong>how the system performs</strong> rather than what it does.</p>
+<p><strong>Key Characteristics</strong>:</p>
+<ul>
+<li>Tests aspects like performance, scalability, security, usability, and reliability.</li>
+<li>Ensures the application meets quality standards beyond functional requirements.</li>
+<li>Often requires specialized tools and environments (e.g., load testing tools).</li>
+<li>Typically conducted after functional testing to ensure the system is robust and user-friendly.</li>
+</ul>
+<p><strong>Examples in .NET</strong>:</p>
+<ul>
+<li><strong>Performance Testing</strong>: Measuring the response time of an ASP.NET Core API under load using JMeter.
+<pre><code class="language-bash">jmeter -n -t load_test.jmx -l results.csv
+</code></pre>
+Ensures the API responds within 200ms under 100 concurrent users.</li>
+<li><strong>Security Testing</strong>: Scanning an ASP.NET Core app for vulnerabilities like SQL injection using OWASP ZAP.</li>
+<li><strong>Usability Testing</strong>: Evaluating a Blazor app’s UI to ensure it’s intuitive for users (e.g., manual testing or tools like Microsoft Power Apps Test Studio).</li>
+<li><strong>Scalability Testing</strong>: Testing how a .NET microservice handles increased traffic in Azure Kubernetes Service (AKS).</li>
+<li><strong>Reliability Testing</strong>: Ensuring an ASP.NET Core app recovers gracefully from a database failure.</li>
+</ul>
+<p><strong>Types of Non-Functional Testing</strong>:</p>
+<ul>
+<li><strong>Performance Testing</strong>: Measures response time, throughput, and resource usage (e.g., load, stress, or spike testing).</li>
+<li><strong>Security Testing</strong>: Identifies vulnerabilities (e.g., XSS, SQL injection).</li>
+<li><strong>Usability Testing</strong>: Assesses user-friendliness and accessibility (e.g., WCAG compliance).</li>
+<li><strong>Scalability Testing</strong>: Tests how the system handles increased load.</li>
+<li><strong>Reliability/Availability Testing</strong>: Ensures the system remains stable under failures or prolonged use.</li>
+<li><strong>Compatibility Testing</strong>: Verifies the app works across browsers, devices, or platforms (e.g., testing a Blazor app on Chrome and Edge).</li>
+<li><strong>Maintainability Testing</strong>: Evaluates how easily the codebase can be updated (e.g., analyzing technical debt with SonarQube).</li>
+</ul>
+<p><strong>Tools in .NET</strong>:</p>
+<ul>
+<li><strong>Performance</strong>: JMeter, k6, Azure Load Testing.</li>
+<li><strong>Security</strong>: OWASP ZAP, Burp Suite, SonarQube for static analysis.</li>
+<li><strong>Usability</strong>: Manual testing, Axe, or WAVE for accessibility.</li>
+<li><strong>Compatibility</strong>: Selenium, Playwright for cross-browser testing.</li>
+<li><strong>Monitoring</strong>: Application Insights for .NET apps in Azure to track performance and reliability.</li>
+</ul>
+<p><strong>When to Use</strong>:</p>
+<ul>
+<li>To ensure the application performs well under load, is secure, and provides a good user experience.</li>
+<li>To validate non-functional requirements (e.g., “The API must handle 1,000 requests per second” or “The app must be accessible to screen readers”).</li>
+</ul>
+<h3 id="key-differences">Key Differences</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Aspect</strong></th>
+<th><strong>Functional Testing</strong></th>
+<th><strong>Non-Functional Testing</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Focus</strong></td>
+<td>What the system does (features, functionality).</td>
+<td>How the system performs (quality attributes).</td>
+</tr>
+<tr>
+<td><strong>Objective</strong></td>
+<td>Verify correct behavior against requirements.</td>
+<td>Ensure performance, security, usability, etc.</td>
+</tr>
+<tr>
+<td><strong>Examples in .NET</strong></td>
+<td>Testing an ASP.NET Core API returns correct data.</td>
+<td>Testing API response time or security vulnerabilities.</td>
+</tr>
+<tr>
+<td><strong>Scope</strong></td>
+<td>Specific features (e.g., methods, endpoints, UI).</td>
+<td>System-wide qualities (e.g., speed, scalability).</td>
+</tr>
+<tr>
+<td><strong>Tools</strong></td>
+<td>xUnit, NUnit, MSTest, Moq, Selenium, SpecFlow.</td>
+<td>JMeter, OWASP ZAP, k6, Application Insights, Axe.</td>
+</tr>
+<tr>
+<td><strong>Testing Level</strong></td>
+<td>Unit, integration, system, acceptance testing.</td>
+<td>Performance, security, usability, compatibility.</td>
+</tr>
+<tr>
+<td><strong>Example Requirement</strong></td>
+<td>“The API returns a weather forecast for a valid ID.”</td>
+<td>“The API responds in &lt;200ms under 100 users.”</td>
+</tr>
+</tbody>
+</table>
+<h3 id="functional-vs.non-functional-testing-in.net-context">Functional vs. Non-Functional Testing in .NET Context</h3>
+<ul>
+<li><p><strong>Functional Testing Example</strong>:</p>
+<ul>
+<li>Scenario: Test that an ASP.NET Core API’s <code>GET /weatherforecast/1</code> endpoint returns a forecast with the correct temperature.</li>
+<li>Approach: Use <code>WebApplicationFactory</code> with an in-memory database to test the controller, service, and EF Core interaction.</li>
+<li>Outcome: Verifies the API returns <code>{ &quot;id&quot;: 1, &quot;temperatureC&quot;: 25 }</code> for a valid request.</li>
+</ul>
+</li>
+<li><p><strong>Non-Functional Testing Example</strong>:</p>
+<ul>
+<li>Scenario: Test that the same ASP.NET Core API handles 1,000 concurrent requests with an average response time under 200ms.</li>
+<li>Approach: Use JMeter to simulate 1,000 concurrent users sending <code>GET /weatherforecast/1</code> requests and measure response times.</li>
+<li>Outcome: Confirms the API scales well and meets performance requirements.</li>
+</ul>
+</li>
+</ul>
+<h3 id="best-practices-in.net">Best Practices in .NET</h3>
+<ul>
+<li><p><strong>Functional Testing</strong>:</p>
+<ul>
+<li>Use <strong>xUnit/NUnit/MSTest</strong> for unit-level functional tests.</li>
+<li>Leverage <strong>WebApplicationFactory</strong> for integration testing ASP.NET Core APIs.</li>
+<li>Mock dependencies with <strong>Moq</strong> or <strong>NSubstitute</strong> to isolate functional tests.</li>
+<li>Use <strong>SpecFlow</strong> for BDD to align tests with business requirements.</li>
+<li>Structure tests with <strong>Arrange-Act-Assert (AAA)</strong> for clarity.
+<pre><code class="language-csharp">// Arrange
+var client = _factory.CreateClient();
+// Act
+var response = await client.GetAsync(&quot;/api/WeatherForecast/1&quot;);
+// Assert
+Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Non-Functional Testing</strong>:</p>
+<ul>
+<li>Use <strong>JMeter</strong> or <strong>k6</strong> for performance testing .NET APIs.</li>
+<li>Integrate <strong>Application Insights</strong> in Azure to monitor performance and reliability.</li>
+<li>Test accessibility with <strong>Axe</strong> or <strong>WAVE</strong> for Blazor or ASP.NET MVC apps.</li>
+<li>Use <strong>SonarQube</strong> for static analysis to assess maintainability and security.</li>
+<li>Simulate production-like environments (e.g., Azure Load Testing) for accurate results.</li>
+</ul>
+</li>
+</ul>
+<h3 id="common-pitfalls">Common Pitfalls</h3>
+<ul>
+<li><strong>Functional Testing</strong>:
+<ul>
+<li>Over-testing implementation details (e.g., private methods) instead of public behavior.</li>
+<li>Not covering edge cases (e.g., invalid inputs, null values).</li>
+<li>Writing brittle tests that break with minor code changes.</li>
+</ul>
+</li>
+<li><strong>Non-Functional Testing</strong>:
+<ul>
+<li>Ignoring non-functional requirements early in development, leading to costly fixes.</li>
+<li>Testing in unrealistic environments (e.g., local machine instead of production-like setup).</li>
+<li>Focusing only on performance and neglecting security or usability.</li>
+</ul>
+</li>
+</ul>
+<h3 id="summary">Summary</h3>
+<ul>
+<li><strong>Functional Testing</strong> verifies that .NET application features (e.g., API endpoints, business logic) work as specified, using tools like xUnit, MSTest, or WebApplicationFactory.</li>
+<li><strong>Non-Functional Testing</strong> ensures the application meets quality attributes like performance, security, and usability, using tools like JMeter, OWASP ZAP, or Application Insights.</li>
+<li>Both are critical for delivering a high-quality .NET application, with functional testing ensuring correctness and non-functional testing ensuring reliability and user satisfaction.</li>
+</ul>
+<p>If you have a specific .NET testing scenario (e.g., functional testing an ASP.NET Core API or performance testing a microservice), or need more examples, let me know! What’s your next question?</p>
+
+    </div>
+</body>
+</html>"

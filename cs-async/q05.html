@@ -1,0 +1,246 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-happens-when-you-mark-a-method-as-async-differences-in-exception-handling">1. What Happens When You Mark a Method as async? Differences in Exception Handling</h3>
+<p>When you mark a method with the <code>async</code> keyword in C#, it enables the use of <code>await</code> inside the method and transforms how the method is compiled and executed. Here's what happens under the hood:</p>
+<ul>
+<li><p><strong>Compiler Transformation</strong>:</p>
+<ul>
+<li>The method is rewritten by the compiler into a <strong>state machine</strong> (implementing <code>IAsyncStateMachine</code>). This state machine tracks the method's progress, capturing local variables and the execution point at each <code>await</code>.</li>
+<li>The return type must be <code>Task</code>, <code>Task&lt;T&gt;</code>, <code>ValueTask</code>, <code>ValueTask&lt;T&gt;</code>, or <code>void</code> (avoid <code>async void</code> except for event handlers).</li>
+<li>Example:
+<pre><code class="language-csharp">async Task&lt;int&gt; ComputeAsync()
+{
+    await Task.Delay(1000);
+    return 42;
+}
+</code></pre>
+<ul>
+<li>Without <code>async</code>, you couldn't use <code>await</code>, and the method would be synchronous.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Execution Behavior</strong>:</p>
+<ul>
+<li>Calling an <code>async</code> method returns a <code>Task</code> (or similar) immediately, representing the ongoing work.</li>
+<li>At runtime, the method runs synchronously until the first <code>await</code> on an incomplete task. Then, it yields control back to the caller, freeing the thread.</li>
+<li>When the awaited task completes, the state machine resumes the method (often on a ThreadPool thread or the captured SynchronizationContext, like a UI thread).</li>
+<li>This makes the code non-blocking, ideal for I/O-bound operations.</li>
+</ul>
+</li>
+<li><p><strong>Benefits</strong>:</p>
+<ul>
+<li>Simplifies asynchronous code, making it readable like synchronous code.</li>
+<li>Integrates with TPL for task coordination.</li>
+</ul>
+</li>
+<li><p><strong>Differences in Exception Handling</strong>:</p>
+<ul>
+<li><strong>Synchronous Methods</strong>: Exceptions are thrown immediately and propagate up the call stack. You catch them directly with try-catch.
+<pre><code class="language-csharp">void SyncMethod()
+{
+    throw new Exception(&quot;Error&quot;); // Throws immediately
+}
+</code></pre>
+</li>
+<li><strong>Async Methods</strong>:
+<ul>
+<li>Exceptions before the first <code>await</code> behave like synchronous (thrown immediately).</li>
+<li>Exceptions after an <code>await</code> (or in the awaited task) are captured and stored in the returned <code>Task</code>.</li>
+<li>When you <code>await</code> the task, the exception is re-thrown (unwrapped from <code>AggregateException</code> if applicable) and can be caught.</li>
+<li>If not awaited (e.g., fire-and-forget), the exception is unobserved and may crash the app or be ignored (depending on .NET version).</li>
+<li>Example:
+<pre><code class="language-csharp">async Task AsyncMethod()
+{
+    await Task.Delay(1000);
+    throw new Exception(&quot;Async Error&quot;);
+}
+
+async Task Caller()
+{
+    try
+    {
+        await AsyncMethod(); // Exception re-thrown here
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($&quot;Caught: {ex.Message}&quot;);
+    }
+}
+</code></pre>
+</li>
+<li><strong>Key Difference</strong>: In async, exceptions are &quot;delayed&quot; until the task is observed (via <code>await</code>, <code>.Result</code>, or <code>.Wait()</code>). Use <code>try-catch</code> around <code>await</code> for handling. For multiple tasks (e.g., <code>Task.WhenAll</code>), exceptions are wrapped in <code>AggregateException</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Pitfalls</strong>: <code>async void</code> methods can't be awaited, so exceptions may crash the app. Always prefer <code>async Task</code>.</p>
+</li>
+</ul>
+<h3 id="parallel.foreach-and-plinq-when-to-use">2. Parallel.ForEach and PLINQ: When to Use?</h3>
+<p>Both <code>Parallel.ForEach</code> and <strong>PLINQ</strong> (Parallel LINQ) are tools for data parallelism in C#, distributing work across multiple CPU cores using the ThreadPool. They excel at CPU-bound tasks on large datasets.</p>
+<ul>
+<li><p><strong>Parallel.ForEach</strong>:</p>
+<ul>
+<li>From <code>System.Threading.Tasks.Parallel</code>, it's an imperative way to parallelize loops over collections.</li>
+<li>Automatically partitions the data into chunks and executes iterations concurrently.</li>
+<li>Example:
+<pre><code class="language-csharp">var data = Enumerable.Range(0, 1000).ToList();
+Parallel.ForEach(data, item =&gt;
+{
+    // Process item (e.g., compute something)
+    Console.WriteLine(item * 2);
+});
+</code></pre>
+</li>
+<li><strong>When to Use</strong>:
+<ul>
+<li>For simple, imperative loops with independent iterations (e.g., processing a list of files or images).</li>
+<li>When you need control over parallelism (e.g., <code>ParallelOptions</code> for max degree of parallelism or cancellation).</li>
+<li>CPU-bound tasks like simulations or batch transformations.</li>
+<li>Avoid for I/O-bound tasks (use <code>async/await</code> instead) or when order matters (iterations run out-of-order).</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>PLINQ</strong>:</p>
+<ul>
+<li>Extends LINQ with <code>.AsParallel()</code> to run queries in parallel.</li>
+<li>Partitions data, executes operators (e.g., <code>Where</code>, <code>Select</code>) concurrently, and merges results.</li>
+<li>Example:
+<pre><code class="language-csharp">var results = data.AsParallel()
+                  .Where(x =&gt; x % 2 == 0)
+                  .Select(x =&gt; x * 2)
+                  .ToList();
+</code></pre>
+</li>
+<li><strong>When to Use</strong>:
+<ul>
+<li>For declarative, query-based processing (e.g., filtering and transforming large datasets).</li>
+<li>When chaining operations (e.g., complex data pipelines).</li>
+<li>CPU-bound queries on big data (e.g., analytics or machine learning preprocessing).</li>
+<li>Use <code>.AsOrdered()</code> if order matters, or <code>.WithDegreeOfParallelism(n)</code> for control.</li>
+<li>Avoid for small datasets (overhead outweighs benefits) or I/O-bound work.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Key Differences and Choices</strong>:</p>
+<ul>
+<li><strong>Parallel.ForEach</strong>: More low-level, imperative; better for side-effects (e.g., updating shared state with locks).</li>
+<li><strong>PLINQ</strong>: Higher-level, declarative; integrates seamlessly with LINQ, but less flexible for custom loops.</li>
+<li>Use either for CPU-bound tasks with independent operations. Test for performance gains (e.g., on multi-core machines). Ensure thread safety (e.g., use <code>ConcurrentBag</code> for collections). For I/O-bound, switch to <code>async/await</code> with <code>Task.WhenAll</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="valuetask-vs-task-limitations-benefits-and-use-cases">3. ValueTask vs Task: Limitations, Benefits, and Use Cases</h3>
+<p><code>ValueTask&lt;T&gt;</code> and <code>ValueTask</code> are lightweight alternatives to <code>Task&lt;T&gt;</code> and <code>Task</code>, introduced for performance optimization in high-throughput scenarios.</p>
+<ul>
+<li><p><strong>Benefits of ValueTask</strong>:</p>
+<ul>
+<li><strong>Performance</strong>: Avoids allocating a <code>Task</code> object on the heap if the result is available synchronously. Instead, it can be a simple value or a <code>Task</code>.</li>
+<li><strong>Reduced Allocations</strong>: In hot paths (e.g., loops or servers), this cuts garbage collection pressure.</li>
+<li><strong>Flexibility</strong>: Can represent synchronous results without wrapping in a completed <code>Task</code>.</li>
+</ul>
+</li>
+<li><p><strong>Limitations</strong>:</p>
+<ul>
+<li><strong>Single Await Only</strong>: A <code>ValueTask</code> can be awaited only once (unlike <code>Task</code>, which can be awaited multiple times). Re-awaiting may cause issues if it's a value (not a <code>Task</code>).</li>
+<li><strong>No .Result or .Wait()</strong>: Avoid synchronous blocking; designed for async use.</li>
+<li><strong>Complexity</strong>: Requires careful handling (e.g., convert to <code>Task</code> with <code>.AsTask()</code> for multiple awaits).</li>
+<li><strong>Not for Long-Running Tasks</strong>: Best for operations that often complete synchronously.</li>
+</ul>
+</li>
+<li><p><strong>Use Cases</strong>:</p>
+<ul>
+<li><strong>Caching or Fast Operations</strong>: When a method might return synchronously (e.g., cache hit) or asynchronously (e.g., cache miss).
+<pre><code class="language-csharp">async ValueTask&lt;string&gt; GetDataAsync(bool fromCache)
+{
+    if (fromCache) return &quot;Cached&quot;; // Synchronous value
+    return await FetchFromDbAsync(); // Async Task
+}
+</code></pre>
+</li>
+<li><strong>High-Performance Libraries</strong>: Used in ASP.NET Core (e.g., <code>IAsyncEnumerable</code>), sockets, or pipelines where allocations matter.</li>
+<li><strong>IAsyncDisposable</strong>: Often returned by async dispose methods for efficiency.</li>
+<li>Avoid in general code; stick to <code>Task</code> unless profiling shows allocation bottlenecks.</li>
+</ul>
+</li>
+<li><p><strong>Task vs. ValueTask</strong>:</p>
+<ul>
+<li><code>Task</code>: Heavier, always allocated, reusable for multiple awaits. Use for most async methods.</li>
+<li><code>ValueTask</code>: Lighter, but fragile—use when synchronous completion is common and performance is critical.</li>
+<li>Pro Tip: If returning <code>ValueTask</code>, document that callers should await once or convert to <code>Task</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="techniques-to-debug-multithreaded-applications">4. Techniques to Debug Multithreaded Applications</h3>
+<p>Debugging multithreaded C# apps is challenging due to race conditions, deadlocks, and non-determinism. Use these techniques:</p>
+<ul>
+<li><p><strong>Visual Studio Tools</strong>:</p>
+<ul>
+<li><strong>Threads Window</strong>: View all threads, their IDs, states, and locations. Freeze/thaw threads to isolate issues.</li>
+<li><strong>Parallel Stacks Window</strong>: Shows call stacks across threads, helping spot what each is doing.</li>
+<li><strong>Tasks Window</strong>: For TPL-based code, tracks Tasks, their status, and continuations.</li>
+<li><strong>Breakpoints</strong>: Use conditional breakpoints (e.g., hit only on specific threads) or data breakpoints (watch variable changes).</li>
+</ul>
+</li>
+<li><p><strong>Logging and Tracing</strong>:</p>
+<ul>
+<li>Add thread-aware logs: <code>Console.WriteLine($&quot;Thread {Thread.CurrentThread.ManagedThreadId}: message&quot;)</code>.</li>
+<li>Use <code>Trace</code> or libraries like Serilog for structured logging. Enable <code>Debug.Assert</code> for invariants.</li>
+<li>Log entry/exit of critical sections (e.g., locks) to trace access order.</li>
+</ul>
+</li>
+<li><p><strong>Reproduce Issues</strong>:</p>
+<ul>
+<li>Reduce parallelism: Set <code>MaxDegreeOfParallelism = 1</code> in <code>ParallelOptions</code> or single-thread for isolation.</li>
+<li>Introduce delays: Use <code>Thread.Sleep</code> or <code>Task.Delay</code> to exaggerate race conditions (testing only).</li>
+<li>Stress Test: Run under load (e.g., multiple <code>Task.Run</code>) to trigger intermittents.</li>
+</ul>
+</li>
+<li><p><strong>Synchronization Analysis</strong>:</p>
+<ul>
+<li>Detect Deadlocks: Use Threads window to find waiting threads; avoid nested locks.</li>
+<li>Race Conditions: Use thread sanitizers (e.g., via unit tests) or tools like dotMemory for memory issues.</li>
+<li>Concurrent Collections: Prefer <code>ConcurrentDictionary</code> over locks for simpler debugging.</li>
+</ul>
+</li>
+<li><p><strong>Profiling and External Tools</strong>:</p>
+<ul>
+<li><strong>Visual Studio Profiler</strong>: Analyze CPU, threads, and contention (e.g., lock waits).</li>
+<li><strong>dotTrace or PerfView</strong>: Profile thread usage, context switches, and bottlenecks.</li>
+<li><strong>WinDbg</strong>: For advanced dumps and low-level analysis (e.g., SOS extension for .NET).</li>
+</ul>
+</li>
+<li><p><strong>Best Practices</strong>:</p>
+<ul>
+<li>Write unit tests with concurrency: Use <code>Task.WhenAll</code> to simulate parallel execution.</li>
+<li>Avoid shared state; use immutable types or message passing (e.g., channels).</li>
+<li>For async: Watch for deadlocks from <code>.Result</code> in UI/ASP.NET; use <code>ConfigureAwait(false)</code>.</li>
+</ul>
+</li>
+</ul>
+<p>Interview Tip: Emphasize starting with Visual Studio's built-in windows for most issues, and stress testing to reproduce bugs. Mention that determinism is key—make tests repeatable.</p>
+
+    </div>
+</body>
+</html>"

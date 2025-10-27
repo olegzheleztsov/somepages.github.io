@@ -1,0 +1,85 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="calculating-the-number-of-partitions-in-kafka">Calculating the Number of Partitions in Kafka</h3>
+<p>In Apache Kafka, partitions are the core unit for parallelism and scalability within a topic. The right number balances throughput (how much data you can handle), resource usage (CPU, memory, disk), and operational overhead (more partitions mean more open file handles and metadata). Too few partitions bottleneck performance; too many increase latency and costs. The calculation isn't one-size-fits-all—it's iterative, based on benchmarking your workload. Start conservative (e.g., 3-6 partitions), monitor, and scale up.</p>
+<h4 id="key-factors-to-consider">Key Factors to Consider</h4>
+<ol>
+<li><strong>Target Throughput</strong>: Measure your expected ingestion rate (messages/sec or MB/sec) and how much a single partition can handle (e.g., via load tests).</li>
+<li><strong>Consumer Parallelism</strong>: At least as many partitions as max consumers in a group to enable load balancing.</li>
+<li><strong>Producer Load</strong>: More partitions allow concurrent writes, but over-partitioning adds coordination overhead.</li>
+<li><strong>Cluster Limits</strong>: Aim for &lt;4,000 partitions per broker (or &lt;200,000 cluster-wide for ZooKeeper-managed clusters) to avoid metadata bloat.</li>
+<li><strong>Retention and Storage</strong>: Higher partitions distribute data but increase log segments.</li>
+<li><strong>Business Needs</strong>: For ordered data (e.g., per-user events), partition by key; for unordered, round-robin.</li>
+</ol>
+<h4 id="formulas-and-guidelines">Formulas and Guidelines</h4>
+<p>A common starting formula for the minimum number of partitions is:</p>
+<p><strong>Partitions = max( (Target Throughput / Partition Throughput), (Target Throughput / Consumer Throughput) )</strong></p>
+<ul>
+<li><strong>Target Throughput (t)</strong>: Your system's required MB/sec or msgs/sec.</li>
+<li><strong>Partition Throughput (p)</strong>: Benchmark: What one partition achieves on your hardware (e.g., 10 MB/sec write).</li>
+<li><strong>Consumer Throughput (c)</strong>: What one consumer processes (e.g., 5 MB/sec read).</li>
+</ul>
+<p>Example: For 100 MB/sec target, 10 MB/sec per partition, and 5 MB/sec per consumer: max(100/10, 100/5) = max(10, 20) = <strong>20 partitions</strong>.</p>
+<p>A simpler rule of thumb: <strong>Partitions = max(# Producers, # Consumers)</strong> for basic parallelism.</p>
+<p>Profile iteratively: Test with N partitions, then 2N, measuring latency and CPU. Tools like Kafka's <code>kafka-producer-perf-test</code> help benchmark.</p>
+<h4 id="best-practices">Best Practices</h4>
+<ul>
+<li><strong>Initial Setup</strong>: 1 partition per CPU core on brokers, or 10-100 per topic for most apps.</li>
+<li><strong>Scaling</strong>: Increase partitions online (via <code>kafka-topics --alter</code>), but you can't decrease without recreating the topic.</li>
+<li><strong>Monitoring</strong>: Watch partition lag, under-replicated partitions, and broker metrics (e.g., via JMX or Prometheus).</li>
+<li><strong>Edge Cases</strong>: For low-throughput topics, 1-3 partitions suffice; for high-volume (e.g., logs), aim for 100+ but cap at cluster limits.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Guideline Formula/Rule</th>
+<th>Example Scenario</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Throughput-Driven</strong></td>
+<td>max(t/p, t/c)</td>
+<td>50 MB/s target, 5 MB/s per partition → 10+</td>
+</tr>
+<tr>
+<td><strong>Parallelism-Driven</strong></td>
+<td>≥ max(# consumers, # producers)</td>
+<td>8 consumers → at least 8 partitions</td>
+</tr>
+<tr>
+<td><strong>Cluster-Wide Limit</strong></td>
+<td>&lt;200K total (ZooKeeper); &lt;4K per broker</td>
+<td>10-broker cluster → max 40K partitions</td>
+</tr>
+<tr>
+<td><strong>Benchmarking</strong></td>
+<td>Profile N, 2N, etc.</td>
+<td>Test for &lt;100ms p99 latency</td>
+</tr>
+</tbody>
+</table>
+<p>This setup ensures efficient resource use—always validate with your workload for production.</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,93 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-a-topic-in-kafka">What is a Topic in Kafka?</h3>
+<p>A <strong>topic</strong> in Kafka is a logical abstraction—a named stream or category where producers publish records (messages) and consumers subscribe to read them. It acts as the primary unit of organization in Kafka, similar to a &quot;channel&quot; or &quot;feed&quot; in messaging systems. Topics are append-only, immutable logs that store records in the order they arrive, enabling durable, ordered event storage.</p>
+<ul>
+<li><strong>Key Characteristics</strong>:
+<ul>
+<li><strong>Naming</strong>: Topics have user-defined names (e.g., &quot;user-events&quot; or &quot;orders&quot;).</li>
+<li><strong>Durability</strong>: Configurable retention policies (e.g., time-based like 7 days, or size-based like 1GB) determine how long records are kept.</li>
+<li><strong>Pub/Sub Semantics</strong>: Multiple producers can write to a topic, and multiple consumer groups can read from it independently—supporting fan-out without interference.</li>
+<li><strong>Configuration</strong>: When creating a topic, you specify replication factor (for fault tolerance) and number of partitions (for scalability).</li>
+</ul>
+</li>
+</ul>
+<p>Topics are the entry point for data in Kafka ecosystems, used for everything from real-time logs to event sourcing in microservices.</p>
+<h3 id="what-is-a-partition-in-kafka">What is a Partition in Kafka?</h3>
+<p>A <strong>partition</strong> is the fundamental unit of scalability and parallelism within a Kafka topic. Each topic is divided into one or more partitions, where each partition is an ordered, immutable sequence of records (a commit log) stored on disk across brokers. Partitions allow Kafka to distribute load horizontally: Records are assigned to partitions based on a key (for ordering) or round-robin (for even distribution).</p>
+<ul>
+<li><strong>Key Characteristics</strong>:
+<ul>
+<li><strong>Ordering</strong>: Strict FIFO order within a partition—records can't be rearranged or deleted (only compacted or truncated).</li>
+<li><strong>Distribution</strong>: Partitions are spread across brokers in the cluster; one partition leader handles reads/writes, with replicas for redundancy.</li>
+<li><strong>Offsets</strong>: Each record gets a unique offset (position) per partition, allowing consumers to track progress and replay from any point.</li>
+<li><strong>Scalability</strong>: More partitions = more parallelism (e.g., multiple consumers can process different partitions simultaneously).</li>
+</ul>
+</li>
+</ul>
+<p>Partitions make Kafka handle massive throughput (e.g., millions of messages/sec) by enabling horizontal scaling without global ordering trade-offs.</p>
+<h4 id="comparison-table">Comparison Table</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Topic</th>
+<th>Partition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Organizes data streams logically</td>
+<td>Enables parallelism and distribution</td>
+</tr>
+<tr>
+<td><strong>Scope</strong></td>
+<td>High-level (e.g., &quot;orders&quot;)</td>
+<td>Low-level subdivision of a topic</td>
+</tr>
+<tr>
+<td><strong>Ordering</strong></td>
+<td>Per-partition (no global across topic)</td>
+<td>Strict FIFO within itself</td>
+</tr>
+<tr>
+<td><strong>Storage</strong></td>
+<td>Collection of partitions</td>
+<td>Individual log file/segments on disk</td>
+</tr>
+<tr>
+<td><strong>Configuration</strong></td>
+<td>Retention, replication factor</td>
+<td>Number per topic; key-based assignment</td>
+</tr>
+<tr>
+<td><strong>Use in Scaling</strong></td>
+<td>Multiple topics for domains</td>
+<td>Add partitions for throughput</td>
+</tr>
+</tbody>
+</table>
+<p>In an interview, tie this to design: &quot;Start with 3-6 partitions per topic for most apps, and use keys like user_id to preserve order.&quot; What's next on Kafka or your prep?</p>
+
+    </div>
+</body>
+</html>"

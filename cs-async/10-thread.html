@@ -1,0 +1,144 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-a-thread-in-c">What is a Thread in C#?</h3>
+<p>A <strong>Thread</strong> in C# is a unit of execution within a process, allowing concurrent or parallel execution of code. The <code>System.Threading.Thread</code> class is used to create and manage threads explicitly. Each thread has its own call stack and can run independently, but all threads in a process share the same memory space, enabling data sharing (with synchronization to avoid race conditions).</p>
+<p>Creating a thread:</p>
+<pre><code class="language-csharp">Thread thread = new Thread(() =&gt; Console.WriteLine(&quot;New thread running!&quot;));
+thread.Start();
+</code></pre>
+<p>Threads are more low-level compared to the ThreadPool or Tasks, giving you fine-grained control but requiring manual management (e.g., starting, joining, or aborting). Use threads for long-running or custom tasks where ThreadPool's short-lived task model isn't suitable.</p>
+<h3 id="foreground-threads-vs.background-threads">Foreground Threads vs. Background Threads</h3>
+<p>Threads in .NET are classified as either <strong>foreground</strong> or <strong>background</strong>, based on their behavior when the main application terminates.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Foreground Threads</th>
+<th>Background Threads</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Definition</strong></td>
+<td>Threads that keep the application alive until they complete.</td>
+<td>Threads that terminate automatically when the main thread (or all foreground threads) exit.</td>
+</tr>
+<tr>
+<td><strong>Default Behavior</strong></td>
+<td>Threads created with <code>new Thread()</code> are foreground by default.</td>
+<td>ThreadPool threads and threads with <code>IsBackground = true</code> are background.</td>
+</tr>
+<tr>
+<td><strong>Use Case</strong></td>
+<td>Critical tasks that must finish, like saving data or completing a transaction.</td>
+<td>Non-critical tasks, like logging, monitoring, or cleanup, that can be abandoned if the app exits.</td>
+</tr>
+<tr>
+<td><strong>Property Control</strong></td>
+<td>Set <code>Thread.IsBackground = false</code> (default).</td>
+<td>Set <code>Thread.IsBackground = true</code>.</td>
+</tr>
+<tr>
+<td><strong>Impact on App Exit</strong></td>
+<td>App won't terminate until all foreground threads finish.</td>
+<td>App can exit even if background threads are running; they are terminated abruptly.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-in-c">Example in C#</h3>
+<pre><code class="language-csharp">using System;
+using System.Threading;
+
+class Program
+{
+    static void Main()
+    {
+        // Foreground thread
+        Thread foregroundThread = new Thread(() =&gt;
+        {
+            Console.WriteLine(&quot;Foreground thread started.&quot;);
+            Thread.Sleep(3000);
+            Console.WriteLine(&quot;Foreground thread finished.&quot;);
+        });
+        foregroundThread.Start();
+
+        // Background thread
+        Thread backgroundThread = new Thread(() =&gt;
+        {
+            Console.WriteLine(&quot;Background thread started.&quot;);
+            Thread.Sleep(3000);
+            Console.WriteLine(&quot;Background thread finished.&quot;);
+        });
+        backgroundThread.IsBackground = true;
+        backgroundThread.Start();
+
+        Console.WriteLine(&quot;Main thread exiting...&quot;);
+        // App stays alive until foregroundThread completes (~3s).
+        // backgroundThread may not print &quot;finished&quot; if it’s still running when foregroundThread ends.
+    }
+}
+</code></pre>
+<h3 id="key-points-for-interviews">Key Points for Interviews</h3>
+<ol>
+<li><p><strong>Foreground Threads</strong>:</p>
+<ul>
+<li>Keep the process alive, useful for critical operations.</li>
+<li>Example: A console app processing a file must complete before exit.</li>
+<li>Drawback: Can delay app shutdown if not managed properly.</li>
+</ul>
+</li>
+<li><p><strong>Background Threads</strong>:</p>
+<ul>
+<li>Ideal for non-essential tasks (e.g., logging, periodic checks).</li>
+<li>Used implicitly by ThreadPool and Task-based operations.</li>
+<li>Caveat: Abrupt termination can lead to incomplete work, so avoid critical logic.</li>
+</ul>
+</li>
+<li><p><strong>When to Use Threads vs. ThreadPool</strong>:</p>
+<ul>
+<li>Use <code>Thread</code> for long-running or highly customized tasks (e.g., a dedicated thread for a game loop).</li>
+<li>Use ThreadPool (or <code>Task</code>) for short-lived, fire-and-forget tasks to leverage automatic thread management.</li>
+<li>Note: <code>Task.Run()</code> uses ThreadPool threads, which are always background.</li>
+</ul>
+</li>
+<li><p><strong>Common Pitfalls</strong>:</p>
+<ul>
+<li>Forgetting to set <code>IsBackground = true</code> for non-critical threads can prevent app termination.</li>
+<li>Explicit threads are costly (memory, startup time); prefer <code>Task</code> or ThreadPool for most scenarios.</li>
+<li>Synchronization (e.g., locks, <code>Monitor</code>, or <code>Semaphore</code>) is needed to avoid race conditions when threads share data.</li>
+</ul>
+</li>
+</ol>
+<h3 id="advanced-notes">Advanced Notes</h3>
+<ul>
+<li><strong>ThreadPool Integration</strong>: ThreadPool threads are always background, making them unsuitable for tasks that must complete before app exit unless explicitly managed.</li>
+<li><strong>Task Parallel Library (TPL)</strong>: Modern C# favors <code>async/await</code> and <code>Task</code> over raw threads for most concurrency needs, as they abstract thread management and integrate with ThreadPool.</li>
+<li><strong>Thread Priority</strong>: You can set <code>Thread.Priority</code> (e.g., <code>ThreadPriority.Lowest</code>), but this is rarely used as ThreadPool/Task schedulers handle prioritization automatically.</li>
+<li><strong>.NET Core/5+</strong>: Thread behavior remains consistent, but the runtime optimizes scheduling and resource usage better than older .NET Framework versions.</li>
+</ul>
+<h3 id="interview-tip">Interview Tip</h3>
+<ul>
+<li>Be ready to explain why you</li>
+</ul>
+
+    </div>
+</body>
+</html>"

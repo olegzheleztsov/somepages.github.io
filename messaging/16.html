@@ -1,0 +1,126 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="rabbitmq-exchange-strategies">RabbitMQ Exchange Strategies</h3>
+<p>In RabbitMQ, <strong>exchanges</strong> are the routing engines that receive messages from producers and forward them to queues (or other exchanges) based on predefined rules. The &quot;strategy&quot; refers to the exchange type, which determines how messages are routed via bindings (connections with routing keys or headers). There are four core types (direct, fanout, topic, headers), plus the default exchange and specialized ones. Exchanges can be durable (persistent) or transient, and support features like alternate exchanges (for unroutable messages) and exchange-to-exchange (E2E) bindings for complex topologies.</p>
+<p>As of RabbitMQ 4.1 (stable in 2025), no major new exchange types have been added, but upcoming 4.x changes include dropping transient bindings and Khepri metadata store enhancements for better reliability.</p>
+<h4 id="core-exchange-types-and-strategies">Core Exchange Types and Strategies</h4>
+<ol>
+<li><p><strong>Direct Exchange</strong>:</p>
+<ul>
+<li><strong>Routing Strategy</strong>: Exact match between the message's routing key and the binding's key (e.g., key &quot;order.process&quot; routes only to bindings with that exact key).</li>
+<li><strong>Use Cases</strong>: Point-to-point or task-specific routing, like directing &quot;high-priority&quot; tasks to a dedicated queue. Ideal for simple, targeted delivery.</li>
+<li><strong>Example</strong>: Producer sends with key &quot;user.update&quot;; binds queue with same key to receive it.</li>
+</ul>
+</li>
+<li><p><strong>Fanout Exchange</strong>:</p>
+<ul>
+<li><strong>Routing Strategy</strong>: Broadcasts every message to <em>all</em> bound queues, ignoring routing keys—unconditional fan-out.</li>
+<li><strong>Use Cases</strong>: Pub/sub broadcasting, like sending stock updates to all subscribers or logging to multiple handlers.</li>
+<li><strong>Example</strong>: News alerts exchange pushes to all bound news-queue consumers without filtering.</li>
+</ul>
+</li>
+<li><p><strong>Topic Exchange</strong>:</p>
+<ul>
+<li><strong>Routing Strategy</strong>: Pattern matching on routing keys using dots (e.g., &quot;region.city.event&quot;) and wildcards: <code>*</code> (one word, e.g., &quot;logs.*.error&quot;) or <code>#</code> (zero or more, e.g., &quot;logs.#&quot; matches any log path).</li>
+<li><strong>Use Cases</strong>: Flexible, hierarchical routing like event categorization (e.g., &quot;audit.events.users.signup&quot; to security queues).</li>
+<li><strong>Example</strong>: Binding &quot;kernel.*&quot; routes &quot;kernel.info&quot; but not &quot;kernel.error.warning&quot;.</li>
+</ul>
+</li>
+<li><p><strong>Headers Exchange</strong>:</p>
+<ul>
+<li><strong>Routing Strategy</strong>: Matches message headers (key-value metadata, e.g., <code>{format: &quot;pdf&quot;, size: &quot;large&quot;}</code>) against binding arguments; supports &quot;all&quot; (exact match) or &quot;any&quot; (partial) modes.</li>
+<li><strong>Use Cases</strong>: Attribute-based routing when keys are insufficient, like content-type filtering for media processing.</li>
+<li><strong>Example</strong>: Bind with headers <code>{type: &quot;report&quot;}</code>; matches messages with that header.</li>
+</ul>
+</li>
+<li><p><strong>Default Exchange</strong>:</p>
+<ul>
+<li><strong>Routing Strategy</strong>: Pre-declared direct exchange (empty name) that auto-binds queues by name—publish with queue name as routing key.</li>
+<li><strong>Use Cases</strong>: Simple direct-to-queue publishing without custom exchanges; great for beginners.</li>
+<li><strong>Note</strong>: Avoid explicit bindings; use custom directs for production.</li>
+</ul>
+</li>
+</ol>
+<h4 id="specialized-and-advanced-strategies">Specialized and Advanced Strategies</h4>
+<ul>
+<li><strong>Alternate Exchanges</strong>: If no binding matches, route to a fallback exchange (set via arguments or policies). Use for error handling or migrations (e.g., collect dead messages).</li>
+<li><strong>Exchange-to-Exchange (E2E) Bindings</strong>: Chain exchanges for composed routing (e.g., fanout to a topic). Efficient—no republishing; metrics flow through.</li>
+<li><strong>Other Types</strong>:
+<ul>
+<li><strong>Local Random</strong>: Routes randomly to local queues for load balancing.</li>
+<li><strong>JMS Topic</strong>: For JMS client compatibility, emulating topic semantics.</li>
+</ul>
+</li>
+</ul>
+<h4 id="comparison-table">Comparison Table</h4>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Routing Strategy</th>
+<th>Pros</th>
+<th>Cons</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Direct</strong></td>
+<td>Exact key match</td>
+<td>Precise, low overhead</td>
+<td>Inflexible for patterns</td>
+<td>Task queues, RPC</td>
+</tr>
+<tr>
+<td><strong>Fanout</strong></td>
+<td>Broadcast to all</td>
+<td>Simple multicast</td>
+<td>No filtering; high fan-out cost</td>
+<td>Pub/sub broadcasts</td>
+</tr>
+<tr>
+<td><strong>Topic</strong></td>
+<td>Pattern/wildcards on keys</td>
+<td>Flexible hierarchies</td>
+<td>Complex patterns can be error-prone</td>
+<td>Event logging, categorization</td>
+</tr>
+<tr>
+<td><strong>Headers</strong></td>
+<td>Metadata key-value matching</td>
+<td>Rich, key-independent</td>
+<td>Header bloat; slower matching</td>
+<td>Attribute-based routing</td>
+</tr>
+<tr>
+<td><strong>Default</strong></td>
+<td>Auto-bind by queue name</td>
+<td>Zero-setup simplicity</td>
+<td>Limited topology control</td>
+<td>Prototypes, direct queuing</td>
+</tr>
+</tbody>
+</table>
+<p>In a tech lead interview, emphasize trade-offs: &quot;Use topic for evolvable systems; fanout for speed in broadcasts. Always declare exchanges durable and test bindings.&quot; For complex setups, combine via E2E. Next question?</p>
+
+    </div>
+</body>
+</html>"

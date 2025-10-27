@@ -1,0 +1,73 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="internal-architecture-of-kong-api-gateway">Internal Architecture of Kong API Gateway</h3>
+<p>Kong Gateway is an open-source, cloud-native API gateway built primarily on NGINX (via OpenResty) and Lua for extensibility. Its architecture emphasizes separation of concerns for scalability and resilience, dividing responsibilities into a <strong>Control Plane (CP)</strong> and <strong>Data Plane (DP)</strong>. This design supports hybrid and multi-cloud deployments, allowing centralized configuration management while distributing traffic handling. In traditional (non-hybrid) mode, a single Kong node handles both planes; in <strong>hybrid mode</strong> (recommended for production), they are decoupled for better isolation and scaling.</p>
+<h4 id="core-components">Core Components</h4>
+<p>Kong's internals revolve around a modular, plugin-driven system where requests flow through a high-performance proxy. Here's a breakdown:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role</th>
+<th>Key Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Proxy Layer</strong></td>
+<td>Handles incoming requests and proxies them to upstream services.</td>
+<td>Built on OpenResty (NGINX + LuaJIT) for non-blocking I/O. Processes routing, load balancing, and plugins in phases (e.g., header filter, body transformer). Supports protocols like HTTP/HTTPS, gRPC, and TCP/UDP.</td>
+</tr>
+<tr>
+<td><strong>Control Plane (CP)</strong></td>
+<td>Manages configuration, state, and administration.</td>
+<td>Serves the Admin API (RESTful interface on port 8001) for CRUD operations on entities (e.g., Services, Routes, Plugins). Stores configs in a database (PostgreSQL for self-hosted; managed by Kong for Konnect). Tracks connected DPs and pushes updates declaratively.</td>
+</tr>
+<tr>
+<td><strong>Data Plane (DP)</strong></td>
+<td>Executes runtime traffic processing without direct DB access.</td>
+<td>Consists of one or more proxy nodes; receives configs from CP via secure streams (mTLS over port 8005 or 443). Handles actual API traffic, applying plugins and telemetry. Scales horizontally independently of CP.</td>
+</tr>
+<tr>
+<td><strong>Database</strong></td>
+<td>Persistent storage for configurations (in CP-only setups).</td>
+<td>Uses PostgreSQL or Cassandra for high availability. In DB-less mode, configs are loaded from YAML/JSON files for stateless DPs. Konnect (SaaS) abstracts this entirely.</td>
+</tr>
+<tr>
+<td><strong>Plugins System</strong></td>
+<td>Extends functionality via Lua modules.</td>
+<td>Over 100 built-in/community plugins (e.g., rate-limiting, JWT auth) executed at specific request/response phases. Custom plugins can be written in Lua without restarting Kong.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="how-components-interact">How Components Interact</h4>
+<ol>
+<li><strong>Configuration Flow</strong>: Admins configure via CP's Admin API or Konnect UI (SaaS). CP persists changes to the DB and notifies connected DPs via a streaming connection (e.g., WebSocket-like over mTLS). DPs apply updates atomically without downtime.</li>
+<li><strong>Traffic Flow</strong>: Clients hit a DP proxy (e.g., on port 8000). The proxy evaluates Routes against Services, executes plugins (e.g., auth, transformation), load-balances to backends, and returns responses. Telemetry (metrics, logs) flows back to CP for analytics/billing.</li>
+<li><strong>Hybrid Mode Specifics</strong>: DPs register with CP on startup; CP validates versions (exact match required for managed DPs). No queuing of missed updates—DPs sync fully on reconnect. Supports multi-tenancy via Control Plane Groups, where multiple CPs merge configs for shared DPs.</li>
+<li><strong>Declarative Config</strong>: Tools like DecK or Terraform manage state as code, syncing to CP for propagation to DPs.</li>
+</ol>
+<p>This architecture ensures high throughput (10k+ req/s per node) and fault tolerance—e.g., DP failures don't affect CP configs. For multi-cloud, Konnect's CP is hosted by Kong, with self-hosted DPs. In Kubernetes, the Kong Ingress Controller automates DP deployments.</p>
+<p>For your interview prep, how does this compare to the architecture of AWS API Gateway, which is more serverless-oriented?</p>
+
+    </div>
+</body>
+</html>"

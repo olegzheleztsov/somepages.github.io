@@ -1,0 +1,116 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="kong-an-open-source-api-gateway-framework">Kong: An Open-Source API Gateway Framework</h3>
+<p>As a tech lead, one API gateway framework I've worked extensively with is <strong>Kong</strong>, an open-source, lightweight, and highly extensible platform built on NGINX and Lua. It's particularly popular for its plugin-based architecture, which allows seamless handling of cross-cutting concerns like those we discussed earlier (e.g., security, throttling). Kong is cloud-agnostic, self-hosted or managed (via Kong Cloud), and excels in high-traffic environments due to its non-blocking I/O model. I've used it in production for e-commerce platforms to route traffic across 20+ microservices, integrating with Kubernetes for auto-scaling.</p>
+<h4 id="core-architecture-and-components">Core Architecture and Components</h4>
+<p>Kong operates as a reverse proxy layer:</p>
+<ul>
+<li><strong>Proxy Layer</strong>: Built on OpenResty (NGINX + LuaJIT), it processes incoming requests and forwards them to upstream services.</li>
+<li><strong>Admin API</strong>: A RESTful interface for configuration (e.g., CRUD for routes, services, plugins) via <code>/admin</code> endpoint.</li>
+<li><strong>Data Plane</strong>: The runtime proxy handling traffic; scales horizontally.</li>
+<li><strong>Control Plane</strong>: Manages configs; in distributed setups, uses databases like PostgreSQL or Cassandra for persistence.</li>
+</ul>
+<p>Key entities:</p>
+<ul>
+<li><strong>Services</strong>: Define backend microservices (e.g., URL, protocol).</li>
+<li><strong>Routes</strong>: Match incoming requests (e.g., path <code>/orders/*</code> to Order Service).</li>
+<li><strong>Plugins</strong>: Modular extensions for features—e.g., <code>rate-limiting</code>, <code>jwt</code>, <code>prometheus</code>.</li>
+</ul>
+<h4 id="key-features-and-how-ive-used-them">Key Features and How I've Used Them</h4>
+<p>Here's a breakdown of standout capabilities, with real-world application notes:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+<th>Usage Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Routing &amp; Load Balancing</strong></td>
+<td>Dynamic routing with service discovery (integrates with Consul, Kubernetes). Supports weighted round-robin, least connections.</td>
+<td>Routed <code>/api/v1/users</code> to User Service instances; auto-discovered pods via K8s Ingress.</td>
+</tr>
+<tr>
+<td><strong>Security Plugins</strong></td>
+<td>Out-of-box support for OAuth2, JWT validation, mTLS, ACLs. Custom Lua auth via <code>serverless-functions</code>.</td>
+<td>Enforced JWT from Keycloak; blocked unauthorized routes, reducing service-side auth overhead by 80%.</td>
+</tr>
+<tr>
+<td><strong>Rate Limiting &amp; Throttling</strong></td>
+<td>Leaky bucket or fixed-window algorithms; Redis-backed for distributed counters (e.g., 100 req/min per API key).</td>
+<td>Protected against DDoS in a Black Friday spike—throttled anonymous users to 10 req/s.</td>
+</tr>
+<tr>
+<td><strong>Circuit Breaker &amp; Resilience</strong></td>
+<td>Built-in via <code>request-termination</code> or integrate Resilience4j; health checks for upstreams.</td>
+<td>Configured 5xx error thresholds to open circuits, with fallbacks to cached responses during outages.</td>
+</tr>
+<tr>
+<td><strong>Observability</strong></td>
+<td>Plugins for Prometheus metrics, Zipkin tracing, Datadog logging.</td>
+<td>Exported metrics to Grafana; traced requests end-to-end, identifying latency in Saga orchestrations.</td>
+</tr>
+<tr>
+<td><strong>Extensibility</strong></td>
+<td>100+ community plugins; write custom ones in Lua for domain-specific logic (e.g., A/B testing).</td>
+<td>Built a custom plugin for request transformation in API composition patterns.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="pros-and-cons-in-practice">Pros and Cons in Practice</h4>
+<ul>
+<li><strong>Pros</strong>: Extremely performant (handles 10k+ req/s per node); declarative config via Deck (YAML); easy CI/CD integration. Zero-downtime deploys via blue-green.</li>
+<li><strong>Cons</strong>: Lua learning curve for custom plugins; database dependency adds ops overhead (mitigated by DB-less mode). Not ideal for serverless without managed options.</li>
+</ul>
+<h4 id="deployment-example-kubernetes">Deployment Example (Kubernetes)</h4>
+<p>Using Helm charts:</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kong-config
+data:
+  kong.yml: |
+    plugins: bundled  # Includes rate-limiting, etc.
+    database: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong-proxy
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: proxy
+        image: kong:latest
+        ports:
+        - containerPort: 8000  # Proxy
+        - containerPort: 8001  # Admin
+</code></pre>
+<p>In my experience, Kong shines when paired with a service mesh like Istio for finer-grained control, but it's overkill for monoliths. For alternatives, I've also used AWS API Gateway for serverless pay-per-use and Spring Cloud Gateway for Java ecosystems.</p>
+<p>What API gateway have you implemented in past projects, and what challenges did you face with it?</p>
+
+    </div>
+</body>
+</html>"

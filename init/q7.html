@@ -1,0 +1,194 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>The ordering of threads waiting for synchronization primitives in C#/.NET depends on the specific primitive and the underlying operating system's thread scheduler. Below is a concise explanation of how threads are ordered when waiting for common synchronization primitives, along with relevant details.</p>
+<h3 id="general-overview">General Overview</h3>
+<ul>
+<li>In .NET, synchronization primitives like <code>lock</code>, <code>Monitor</code>, <code>Semaphore</code>, <code>SemaphoreSlim</code>, <code>Mutex</code>, and <code>EventWaitHandle</code> rely on the CLR and the operating system (typically Windows) for thread scheduling.</li>
+<li>The <strong>order in which waiting threads are granted access</strong> is generally <strong>not guaranteed</strong> to be deterministic (e.g., FIFO) unless explicitly stated, as it depends on the OS thread scheduler, priority, and implementation details.</li>
+<li>The Windows thread scheduler uses a <strong>priority-based, preemptive scheduling model</strong>, which can influence the order. Threads with higher priority or those ready to run first may be favored, but fairness is not strictly enforced unless the primitive or system explicitly supports it.</li>
+</ul>
+<h3 id="synchronization-primitives-and-thread-ordering">Synchronization Primitives and Thread Ordering</h3>
+<ol>
+<li><p><strong>lock (Monitor)</strong>:</p>
+<ul>
+<li><strong>How it works</strong>: The <code>lock</code> keyword (implemented via <code>Monitor</code>) places waiting threads in a <strong>ready queue</strong> managed by the CLR and OS.</li>
+<li><strong>Ordering</strong>: No strict guarantee of FIFO (first-in, first-out). The OS scheduler decides which thread gets the monitor next based on thread priority, CPU availability, and scheduling policies.</li>
+<li><strong>Details</strong>:
+<ul>
+<li>Threads waiting via <code>Monitor.Enter</code> or <code>lock</code> are in a blocked state, and the CLR uses the OS's synchronization mechanisms (e.g., Windows kernel events).</li>
+<li>If multiple threads are waiting, the order is <strong>non-deterministic</strong> but influenced by thread priority and scheduling heuristics.</li>
+<li><code>Monitor.Pulse</code>/<code>PulseAll</code> (for signaling) moves threads to the ready queue, but the OS decides which runs first.</li>
+</ul>
+</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">private readonly object _syncLock = new object();
+lock (_syncLock) { /* Critical section */ }
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Monitor (System.Threading.Monitor)</strong>:</p>
+<ul>
+<li><strong>How it works</strong>: Similar to <code>lock</code>, but with additional features like <code>Wait</code>, <code>Pulse</code>, and <code>PulseAll</code>.</li>
+<li><strong>Ordering</strong>:
+<ul>
+<li>For <code>Monitor.Enter</code>: Same as <code>lock</code>—no strict FIFO; depends on OS scheduler and thread priority.</li>
+<li>For <code>Wait</code>/<code>Pulse</code>: Threads waiting on <code>Wait</code> are placed in a <strong>wait queue</strong>. When <code>Pulse</code> is called, <strong>one thread</strong> is moved to the ready queue (non-deterministic selection). <code>PulseAll</code> moves all waiting threads to the ready queue, but the OS determines execution order.</li>
+</ul>
+</li>
+<li><strong>Details</strong>: Explicit use of <code>Monitor</code> allows more control but still relies on the OS for final scheduling.</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">Monitor.Enter(_syncLock);
+try { /* Critical section */ }
+finally { Monitor.Exit(_syncLock); }
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Semaphore (System.Threading.Semaphore)</strong>:</p>
+<ul>
+<li><strong>How it works</strong>: A kernel-level semaphore allows a fixed number of threads/processes to proceed based on available slots.</li>
+<li><strong>Ordering</strong>: No guaranteed FIFO order for waiting threads. The OS scheduler selects which waiting thread gets a slot when one is released via <code>Release</code>.</li>
+<li><strong>Details</strong>:
+<ul>
+<li>Named semaphores support inter-process synchronization, but the kernel’s thread dispatcher determines the order.</li>
+<li>Thread priority or readiness can influence which thread is selected.</li>
+</ul>
+</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">using (Semaphore semaphore = new Semaphore(2, 2, &quot;Global\\MySemaphore&quot;))
+{
+    semaphore.WaitOne();
+    try { /* Access resource */ }
+    finally { semaphore.Release(); }
+}
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>SemaphoreSlim (System.Threading.SemaphoreSlim)</strong>:</p>
+<ul>
+<li><strong>How it works</strong>: A lightweight, user-mode semaphore for intra-process synchronization, with async support (<code>WaitAsync</code>).</li>
+<li><strong>Ordering</strong>: No strict FIFO guarantee. Waiting threads (or tasks for <code>WaitAsync</code>) are managed by the CLR, and the order depends on the thread pool or task scheduler.</li>
+<li><strong>Details</strong>:
+<ul>
+<li>For synchronous <code>Wait</code>, the CLR’s internal queue and OS scheduler determine the order (non-deterministic).</li>
+<li>For <code>WaitAsync</code>, the Task-based continuation order is influenced by the .NET task scheduler, which may prioritize based on task creation time or thread pool heuristics.</li>
+</ul>
+</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(2);
+await _semaphore.WaitAsync();
+try { /* Access resource */ }
+finally { _semaphore.Release(); }
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Mutex (System.Threading.Mutex)</strong>:</p>
+<ul>
+<li><strong>How it works</strong>: A kernel-level mutual exclusion primitive, often used for inter-process synchronization.</li>
+<li><strong>Ordering</strong>: No guaranteed FIFO order. The OS scheduler picks the next thread to acquire the mutex based on priority and readiness.</li>
+<li><strong>Details</strong>: Named mutexes (<code>Global\\</code>) work across processes, but the kernel’s scheduling policies dictate the order, similar to <code>Semaphore</code>.</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">using (Mutex mutex = new Mutex(false, &quot;Global\\MyMutex&quot;))
+{
+    mutex.WaitOne();
+    try { /* Critical section */ }
+    finally { mutex.ReleaseMutex(); }
+}
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>EventWaitHandle (System.Threading.EventWaitHandle)</strong>:</p>
+<ul>
+<li><strong>How it works</strong>: Used for signaling between threads/processes (<code>AutoResetEvent</code>, <code>ManualResetEvent</code>).</li>
+<li><strong>Ordering</strong>:
+<ul>
+<li><strong>AutoResetEvent</strong>: When <code>Set</code> is called, <strong>one waiting thread</strong> is released (non-deterministic, based on OS scheduling).</li>
+<li><strong>ManualResetEvent</strong>: When <code>Set</code> is called, <strong>all waiting threads</strong> are released, but the order of execution depends on the OS scheduler.</li>
+</ul>
+</li>
+<li><strong>Details</strong>: Named events support inter-process signaling, but the kernel decides which thread proceeds first.</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">using (EventWaitHandle ewh = new EventWaitHandle(false, EventResetMode.AutoReset, &quot;Global\\MyEvent&quot;))
+{
+    ewh.WaitOne(); /* Wait for signal */
+}
+</code></pre>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="key-points-on-thread-ordering">Key Points on Thread Ordering</h3>
+<ul>
+<li><strong>Non-deterministic by default</strong>: Most primitives (<code>lock</code>, <code>Monitor</code>, <code>Semaphore</code>, <code>Mutex</code>, etc.) do not guarantee FIFO ordering because the OS scheduler prioritizes threads based on factors like thread priority, CPU availability, and system load.</li>
+<li><strong>Thread priority</strong>: Higher-priority threads may be favored when a resource becomes available, but this is not guaranteed.</li>
+<li><strong>Fairness</strong>: .NET does not enforce fairness (e.g., FIFO) unless explicitly implemented (e.g., using a custom queue with <code>ConcurrentQueue&lt;T&gt;</code>). Windows kernel primitives prioritize performance over strict fairness.</li>
+<li><strong>Async scenarios</strong>: For primitives like <code>SemaphoreSlim</code> with <code>WaitAsync</code>, the .NET task scheduler manages continuations, which may follow task creation order but are still influenced by thread pool dynamics.</li>
+<li><strong>Inter-process vs. intra-process</strong>: Inter-process primitives (<code>Semaphore</code>, <code>Mutex</code>, <code>EventWaitHandle</code>) rely on kernel scheduling, which is less predictable than intra-process primitives like <code>SemaphoreSlim</code>.</li>
+</ul>
+<h3 id="practical-considerations">Practical Considerations</h3>
+<ul>
+<li><strong>Avoid relying on order</strong>: Do not assume threads will be released in a specific order unless you implement a custom mechanism (e.g., a queue-based lock manager).</li>
+<li><strong>Custom ordering</strong>: To enforce FIFO or priority-based ordering, use a <code>ConcurrentQueue&lt;T&gt;</code> to track waiting threads/tasks and signal them explicitly using <code>ManualResetEvent</code> or <code>TaskCompletionSource</code>.</li>
+<li><strong>Performance</strong>: Frequent contention on primitives can lead to thread starvation or priority inversion. Use alternatives like <code>Concurrent</code> collections or lock-free techniques (<code>Interlocked</code>) when possible.</li>
+<li><strong>Testing</strong>: Test under high contention to observe behavior, as ordering issues may only appear under load. Tools like Visual Studio’s concurrency visualizer can help analyze thread interactions.</li>
+</ul>
+<h3 id="example-enforcing-fifo-with-custom-logic">Example: Enforcing FIFO with Custom Logic</h3>
+<p>To guarantee FIFO ordering, you can implement a custom queue-based lock:</p>
+<pre><code class="language-csharp">private readonly ConcurrentQueue&lt;TaskCompletionSource&lt;bool&gt;&gt; _queue = new ConcurrentQueue&lt;TaskCompletionSource&lt;bool&gt;&gt;();
+private readonly object _lock = new object();
+
+public async Task AcquireAsync()
+{
+    var tcs = new TaskCompletionSource&lt;bool&gt;();
+    lock (_lock)
+    {
+        _queue.Enqueue(tcs);
+        if (_queue.Count == 1) tcs.SetResult(true); // First in queue gets access
+    }
+    await tcs.Task;
+}
+
+public void Release()
+{
+    lock (_lock)
+    {
+        if (_queue.TryDequeue(out var tcs))
+        {
+            if (_queue.TryPeek(out var next)) next.SetResult(true); // Signal next
+        }
+    }
+}
+</code></pre>
+<h3 id="summary">Summary</h3>
+<ul>
+<li><strong>Ordering</strong>: Most synchronization primitives (<code>lock</code>, <code>Monitor</code>, <code>Semaphore</code>, <code>SemaphoreSlim</code>, <code>Mutex</code>, <code>EventWaitHandle</code>) do not guarantee FIFO or any specific order for waiting threads. The OS or CLR scheduler determines the order based on priority and heuristics.</li>
+<li><strong>Influencing factors</strong>: Thread priority, CPU scheduling, and system load affect which thread runs next.</li>
+<li><strong>Workarounds</strong>: Use custom logic (e.g., <code>ConcurrentQueue</code> with signaling) for strict ordering requirements.</li>
+<li><strong>Best practice</strong>: Design systems to be robust against non-deterministic ordering, and minimize contention to avoid performance issues.</li>
+</ul>
+
+    </div>
+</body>
+</html>"

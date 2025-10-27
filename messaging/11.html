@@ -1,0 +1,95 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="apache-kafka-architecture-explained">Apache Kafka Architecture Explained</h3>
+<p>Apache Kafka is a distributed, fault-tolerant streaming platform designed for high-throughput, low-latency handling of real-time data pipelines and event-driven applications. It treats data as an immutable, append-only log of records (messages) organized into topics, enabling scalable publish-subscribe semantics with strong durability guarantees. Unlike traditional message queues, Kafka acts as a distributed commit log, allowing multiple consumers to read independently at their own pace, with replayability for recovery or backfilling.</p>
+<p>Kafka's architecture is horizontal and cluster-based, scaling by adding brokers (nodes) to handle petabytes of data across thousands of clients. As of 2025, it supports both ZooKeeper-coordinated clusters (legacy) and the production-ready KRaft mode for metadata management without ZooKeeper.</p>
+<h4 id="key-components">Key Components</h4>
+<ol>
+<li><p><strong>Producers</strong>: Applications that publish records to Kafka topics. They serialize data (e.g., JSON, Avro) and assign keys for partitioning. Producers can batch messages for efficiency and use idempotent settings for exactly-once semantics.</p>
+</li>
+<li><p><strong>Consumers</strong>: Applications that subscribe to topics and read records. They track progress via offsets (positions in the log) and can form consumer groups for load balancing (parallel processing across partitions). Supports pull-based polling for control over throughput.</p>
+</li>
+<li><p><strong>Brokers</strong>: Kafka server instances forming the cluster. Each broker stores partitions of topics and handles replication, compaction, and serving reads/writes. A cluster typically has 3+ brokers for high availability; one acts as the controller for metadata.</p>
+</li>
+<li><p><strong>Topics</strong>: Logical channels for categorizing records (e.g., &quot;user-events&quot;). Topics are partitioned for parallelism and replicated across brokers for fault tolerance. Configurable retention (time/size-based) keeps data durable.</p>
+</li>
+<li><p><strong>Partitions</strong>: Ordered, immutable sequences of records within a topic. Each partition is a log segmented into files on disk; records are appended sequentially. Partitioning by key ensures ordering for related data (e.g., all events for a user in one partition).</p>
+</li>
+<li><p><strong>ZooKeeper (Legacy) or KRaft</strong>: Metadata service. ZooKeeper tracks cluster state (e.g., leader elections); KRaft (Kafka Raft) replaces it with a built-in consensus protocol for simpler ops and better scalability.</p>
+</li>
+<li><p><strong>Replicas</strong>: Copies of partitions for redundancy. One leader handles reads/writes; followers sync via replication logs. In-sync replicas (ISR) ensure data safety before acknowledgments.</p>
+</li>
+</ol>
+<h4 id="how-it-works">How It Works</h4>
+<ul>
+<li><strong>Publishing (Producing)</strong>: Producers connect to any broker (which routes to the leader for the target partition). Records are appended to the log with offsets; acks (0/1/all) control durability.</li>
+<li><strong>Consuming</strong>: Consumers poll leaders for batches of records starting from their offset. For fan-out, multiple groups can read the same topic without interference—e.g., one group for real-time alerts, another for batch analytics.</li>
+<li><strong>Storage</strong>: Logs are append-only on disk (OS cache for speed); compaction can merge duplicates for key-value stores.</li>
+<li><strong>Stream Processing</strong>: Built-in with Kafka Streams API for transformations (e.g., joins, aggregations) directly on topics.</li>
+</ul>
+<h4 id="replication-and-fault-tolerance">Replication and Fault Tolerance</h4>
+<p>Kafka achieves 99.99%+ availability through:</p>
+<ul>
+<li><strong>Leader-Follower Replication</strong>: Asynchronous sync to followers; configurable min ISR for writes.</li>
+<li><strong>Partition Assignment</strong>: Even distribution across brokers; rebalancing on failures.</li>
+<li><strong>Self-Healing</strong>: Automatic leader elections (via controller) and offset commits ensure no data loss.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role</th>
+<th>Scalability Aspect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Producers</strong></td>
+<td>Write records to topics</td>
+<td>Batch for throughput; async retries</td>
+</tr>
+<tr>
+<td><strong>Consumers</strong></td>
+<td>Read via offsets/groups</td>
+<td>Parallel per partition; independent pace</td>
+</tr>
+<tr>
+<td><strong>Brokers</strong></td>
+<td>Store/serve partitions</td>
+<td>Horizontal scale; replication for HA</td>
+</tr>
+<tr>
+<td><strong>Topics</strong></td>
+<td>Categorize data</td>
+<td>Partitioned logs for ordering/parallelism</td>
+</tr>
+<tr>
+<td><strong>Partitions</strong></td>
+<td>Core unit of parallelism and ordering</td>
+<td>Replicated; key-based assignment</td>
+</tr>
+</tbody>
+</table>
+<p>In practice, start with 3 brokers for production; use tools like Confluent Platform for managed features. For deeper dives, explore KRaft migration for ZooKeeper-free setups. This architecture makes Kafka ideal for use cases like log aggregation, IoT telemetry, or microservices eventing.</p>
+
+    </div>
+</body>
+</html>"

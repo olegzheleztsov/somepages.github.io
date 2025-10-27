@@ -1,0 +1,155 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>Synchronization primitives for inter-process communication (IPC) in C#/.NET are used to coordinate access to shared resources or synchronize execution between different processes (unlike intra-process primitives like <code>lock</code> or <code>Monitor</code>, which work within a single process). Below are the key synchronization primitives available in .NET for inter-process synchronization:</p>
+<h3 id="synchronization-primitives-for-inter-process-communication">Synchronization Primitives for Inter-Process Communication</h3>
+<ol>
+<li><p><strong>Mutex (System.Threading.Mutex)</strong>:</p>
+<ul>
+<li><strong>Purpose</strong>: Provides mutual exclusion across processes, ensuring only one process accesses a shared resource at a time.</li>
+<li><strong>How it works</strong>: A named <code>Mutex</code> can be shared across processes. Only one process can own the mutex at a time.</li>
+<li><strong>Use case</strong>: Protecting shared resources like files, shared memory, or global counters.</li>
+<li><strong>Key methods</strong>: <code>WaitOne()</code> (acquire), <code>ReleaseMutex()</code> (release).</li>
+<li><strong>Features</strong>: Supports timeouts, named mutexes for cross-process use, and can detect abandoned mutexes.</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">using (Mutex mutex = new Mutex(false, &quot;Global\\MyMutex&quot;))
+{
+    if (mutex.WaitOne(Timeout.Infinite))
+    {
+        try { /* Critical section */ }
+        finally { mutex.ReleaseMutex(); }
+    }
+}
+</code></pre>
+</li>
+<li><strong>Note</strong>: Use <code>Global\\</code> prefix for system-wide named mutexes in Windows.</li>
+</ul>
+</li>
+<li><p><strong>Semaphore (System.Threading.Semaphore)</strong>:</p>
+<ul>
+<li><strong>Purpose</strong>: Limits the number of processes (or threads) that can access a resource concurrently, useful for resource pools.</li>
+<li><strong>How it works</strong>: A named <code>Semaphore</code> maintains a count of available slots. Processes can acquire (<code>WaitOne</code>) or release (<code>Release</code>) slots.</li>
+<li><strong>Use case</strong>: Controlling access to a fixed number of resources, like database connections or file handles.</li>
+<li><strong>Key methods</strong>: <code>WaitOne()</code>, <code>Release(int)</code>.</li>
+<li><strong>Features</strong>: Supports named semaphores for cross-process use, configurable max count.</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">using (Semaphore semaphore = new Semaphore(3, 3, &quot;Global\\MySemaphore&quot;))
+{
+    if (semaphore.WaitOne())
+    {
+        try { /* Access resource */ }
+        finally { semaphore.Release(); }
+    }
+}
+</code></pre>
+</li>
+<li><strong>Note</strong>: Semaphores are less restrictive than mutexes, allowing multiple processes to proceed if slots are available.</li>
+</ul>
+</li>
+<li><p><strong>EventWaitHandle (System.Threading.EventWaitHandle)</strong>:</p>
+<ul>
+<li><strong>Purpose</strong>: Signals between processes to coordinate execution (e.g., one process waits for another to complete a task).</li>
+<li><strong>Types</strong>:
+<ul>
+<li><strong>AutoResetEvent</strong>: Automatically resets after signaling one waiting process.</li>
+<li><strong>ManualResetEvent</strong>: Stays signaled until manually reset, allowing multiple processes to proceed.</li>
+</ul>
+</li>
+<li><strong>How it works</strong>: A named <code>EventWaitHandle</code> allows one process to signal (<code>Set</code>) and others to wait (<code>WaitOne</code>).</li>
+<li><strong>Use case</strong>: Producer-consumer scenarios, or signaling when a process completes initialization.</li>
+<li><strong>Key methods</strong>: <code>Set()</code>, <code>Reset()</code>, <code>WaitOne()</code>.</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">using (EventWaitHandle ewh = new EventWaitHandle(false, EventResetMode.AutoReset, &quot;Global\\MyEvent&quot;))
+{
+    if (ewh.WaitOne(Timeout.Infinite))
+    {
+        /* Process signaled */
+    }
+}
+</code></pre>
+</li>
+<li><strong>Note</strong>: Use <code>AutoResetEvent</code> for one-to-one signaling, <code>ManualResetEvent</code> for broadcasting.</li>
+</ul>
+</li>
+<li><p><strong>Named Pipes (System.IO.Pipes.NamedPipeServerStream/NamedPipeClientStream)</strong>:</p>
+<ul>
+<li><strong>Purpose</strong>: While primarily for communication, named pipes can be used for synchronization by passing messages or signals between processes.</li>
+<li><strong>How it works</strong>: A server process creates a named pipe, and clients connect to it. Messages can act as synchronization signals.</li>
+<li><strong>Use case</strong>: Synchronizing processes that need to exchange data or coordinate actions (e.g., client-server apps).</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">using (NamedPipeServerStream pipe = new NamedPipeServerStream(&quot;MyPipe&quot;))
+{
+    pipe.WaitForConnection();
+    /* Signal or exchange data */
+}
+</code></pre>
+</li>
+<li><strong>Note</strong>: Not a traditional primitive but useful for complex IPC scenarios.</li>
+</ul>
+</li>
+<li><p><strong>File Locks (System.IO.FileStream.Lock/Unlock)</strong>:</p>
+<ul>
+<li><strong>Purpose</strong>: Synchronizes access to shared files across processes.</li>
+<li><strong>How it works</strong>: A process can lock a region of a file, preventing others from accessing it until unlocked.</li>
+<li><strong>Use case</strong>: Coordinating file access in multiple processes (e.g., log files, shared data files).</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">using (FileStream fs = new FileStream(&quot;file.txt&quot;, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+{
+    fs.Lock(0, fs.Length);
+    try { /* Access file */ }
+    finally { fs.Unlock(0, fs.Length); }
+}
+</code></pre>
+</li>
+<li><strong>Note</strong>: Limited to file-based synchronization; not as flexible as <code>Mutex</code> or <code>Semaphore</code>.</li>
+</ul>
+</li>
+<li><p><strong>Shared Memory with Synchronization</strong>:</p>
+<ul>
+<li><strong>Purpose</strong>: Processes share data via memory-mapped files (<code>System.IO.MemoryMappedFiles</code>), with synchronization provided by <code>Mutex</code> or <code>Semaphore</code>.</li>
+<li><strong>How it works</strong>: A memory-mapped file acts as shared memory, and a named <code>Mutex</code> or <code>Semaphore</code> controls access.</li>
+<li><strong>Use case</strong>: High-performance data sharing between processes, like real-time analytics or cross-process caches.</li>
+<li><strong>Example</strong>:
+<pre><code class="language-csharp">using (MemoryMappedFile mmf = MemoryMappedFile.CreateOrOpen(&quot;MySharedMemory&quot;, 1024))
+using (Mutex mutex = new Mutex(false, &quot;Global\\MyMutex&quot;))
+{
+    mutex.WaitOne();
+    try { /* Access shared memory */ }
+    finally { mutex.ReleaseMutex(); }
+}
+</code></pre>
+</li>
+<li><strong>Note</strong>: Requires explicit synchronization for safe access.</li>
+</ul>
+</li>
+</ol>
+<h3 id="key-notes">Key Notes:</h3>
+<ul>
+<li><strong>Named primitives</strong>: Use <code>Global\\</code> prefix for system-wide names in Windows to ensure cross-process accessibility.</li>
+<li><strong>Performance</strong>: <code>Mutex</code> and <code>Semaphore</code> are kernel objects, so they’re slower than intra-process primitives like <code>lock</code>. Use sparingly and prefer intra-process alternatives when possible.</li>
+<li><strong>Deadlock prevention</strong>: Avoid nested locks across processes; use timeouts with <code>WaitOne</code> to handle failures.</li>
+<li><strong>Cleanup</strong>: Properly dispose of named primitives (e.g., <code>Mutex</code>, <code>Semaphore</code>) to avoid resource leaks.</li>
+<li><strong>Testing</strong>: Test IPC under load to ensure reliability, as inter-process synchronization is prone to timing issues.</li>
+</ul>
+<p>These primitives cover most inter-process synchronization needs in .NET. Choose based on the scenario: <code>Mutex</code> for exclusive access, <code>Semaphore</code> for limited concurrent access, <code>EventWaitHandle</code> for signaling, and others for specialized cases like file or memory sharing.</p>
+
+    </div>
+</body>
+</html>"

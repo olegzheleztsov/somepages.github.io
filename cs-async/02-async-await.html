@@ -1,0 +1,75 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>In C#, <code>async</code> and <code>await</code> are keywords used to simplify asynchronous programming, allowing non-blocking execution of code, especially for I/O-bound or long-running operations.</p>
+<ul>
+<li><p><strong><code>async</code> Modifier</strong>:</p>
+<ul>
+<li>Marks a method as asynchronous, allowing it to use <code>await</code>.</li>
+<li>Must return <code>Task</code>, <code>Task&lt;T&gt;</code>, or <code>ValueTask&lt;T&gt;</code> (or <code>void</code> in rare cases, e.g., event handlers).</li>
+<li>Indicates the method can perform asynchronous operations.</li>
+</ul>
+</li>
+<li><p><strong><code>await</code> Keyword</strong>:</p>
+<ul>
+<li>Used inside <code>async</code> methods to pause execution until a <code>Task</code> completes, without blocking the calling thread.</li>
+<li>Returns control to the caller (e.g., UI thread) while the task runs, resuming when the task finishes.</li>
+<li>Unwraps the result of a <code>Task&lt;T&gt;</code> (e.g., <code>int result = await GetNumberAsync()</code>).</li>
+</ul>
+</li>
+<li><p><strong>How It Works</strong>:</p>
+<ul>
+<li><code>async</code> methods run synchronously until the first <code>await</code> is encountered.</li>
+<li><code>await</code> schedules the rest of the method to resume after the task completes, using a state machine under the hood.</li>
+<li>Enables responsive apps (e.g., UI stays active during network calls).</li>
+</ul>
+</li>
+<li><p><strong>Key Points</strong>:</p>
+<ul>
+<li>Use for I/O-bound tasks (e.g., HTTP requests, file operations) or CPU-bound tasks (with <code>Task.Run</code>).</li>
+<li>Exceptions are captured and propagated through the <code>Task</code>, caught with <code>try-catch</code> around <code>await</code>.</li>
+<li>Avoid <code>async void</code> except for event handlers; prefer <code>async Task</code>.</li>
+<li>Use <code>ConfigureAwait(false)</code> for library code if context (e.g., UI thread) isn’t needed.</li>
+</ul>
+</li>
+<li><p><strong>Example</strong>:</p>
+</li>
+</ul>
+<pre><code class="language-csharp">public async Task&lt;string&gt; GetDataAsync()
+{
+    HttpClient client = new HttpClient();
+    string result = await client.GetStringAsync(&quot;https://api.example.com&quot;);
+    return result;
+}
+</code></pre>
+<ul>
+<li><strong>Benefits</strong>:
+<ul>
+<li>Cleaner code than callbacks or manual thread management.</li>
+<li>Improves scalability by freeing threads during I/O waits.</li>
+<li>Maintains responsiveness in UI applications.</li>
+</ul>
+</li>
+</ul>
+<p>Ask for more specifics or examples if needed!</p>
+
+    </div>
+</body>
+</html>"

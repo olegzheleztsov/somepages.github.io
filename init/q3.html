@@ -1,0 +1,107 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="is-the-default-list-thread-safe">Is the Default List<T> Thread-Safe?</h3>
+<p>No, the default <code>List&lt;T&gt;</code> in C# (from <code>System.Collections.Generic</code>) is <strong>not thread-safe</strong>. It is designed for single-threaded scenarios, and concurrent access by multiple threads can lead to race conditions, data corruption, or exceptions (e.g., <code>InvalidOperationException</code> if the list is modified during enumeration).</p>
+<ul>
+<li><strong>Issues with List<T> in multi-threading</strong>:
+<ul>
+<li>Adding, removing, or modifying elements concurrently can corrupt the internal state (e.g., resizing the array).</li>
+<li>Reading while writing can produce inconsistent results or throw exceptions.</li>
+</ul>
+</li>
+<li><strong>Solutions</strong>:
+<ul>
+<li>Use synchronization mechanisms like <code>lock</code> or <code>Monitor</code> around <code>List&lt;T&gt;</code> operations.</li>
+<li>Use thread-safe alternatives from <code>System.Collections.Concurrent</code> (see below).</li>
+<li>Create a synchronized wrapper with <code>List&lt;T&gt;.AsReadOnly()</code> for read-only access or custom synchronization.</li>
+</ul>
+</li>
+</ul>
+<p>Example with <code>lock</code>:</p>
+<pre><code class="language-csharp">private readonly List&lt;int&gt; _list = new List&lt;int&gt;();
+private readonly object _syncLock = new object();
+
+public void Add(int value)
+{
+    lock (_syncLock)
+    {
+        _list.Add(value);
+    }
+}
+</code></pre>
+<h3 id="which-concurrent-data-structures-do-you-know">Which Concurrent Data Structures Do You Know?</h3>
+<p>C# provides thread-safe data structures in the <code>System.Collections.Concurrent</code> namespace, designed for multi-threaded scenarios without external synchronization. Key concurrent data structures include:</p>
+<ol>
+<li><p><strong>ConcurrentDictionary&lt;TKey, TValue&gt;</strong>:</p>
+<ul>
+<li>Thread-safe dictionary for key-value pairs.</li>
+<li>Supports atomic operations like <code>AddOrUpdate</code>, <code>GetOrAdd</code>, and <code>TryRemove</code>.</li>
+<li>Use case: Caching, shared configuration, or key-based lookups in multi-threaded apps.</li>
+<li>Example: <code>ConcurrentDictionary&lt;string, int&gt; cache = new ConcurrentDictionary&lt;string, int&gt;();</code></li>
+</ul>
+</li>
+<li><p><strong>ConcurrentQueue<T></strong>:</p>
+<ul>
+<li>Thread-safe FIFO (first-in, first-out) queue.</li>
+<li>Methods: <code>Enqueue</code>, <code>TryDequeue</code>, <code>TryPeek</code>.</li>
+<li>Use case: Producer-consumer scenarios, task queues in background workers.</li>
+<li>Example: <code>ConcurrentQueue&lt;int&gt; queue = new ConcurrentQueue&lt;int&gt;(); queue.Enqueue(42);</code></li>
+</ul>
+</li>
+<li><p><strong>ConcurrentStack<T></strong>:</p>
+<ul>
+<li>Thread-safe LIFO (last-in, first-out) stack.</li>
+<li>Methods: <code>Push</code>, <code>TryPop</code>, <code>TryPeek</code>.</li>
+<li>Use case: Undo/redo operations, backtracking algorithms.</li>
+<li>Example: <code>ConcurrentStack&lt;int&gt; stack = new ConcurrentStack&lt;int&gt;(); stack.Push(42);</code></li>
+</ul>
+</li>
+<li><p><strong>ConcurrentBag<T></strong>:</p>
+<ul>
+<li>Thread-safe unordered collection of objects.</li>
+<li>Optimized for scenarios where threads add and remove their own items (less contention).</li>
+<li>Methods: <code>Add</code>, <code>TryTake</code>, <code>TryPeek</code>.</li>
+<li>Use case: Parallel processing where order doesn’t matter, like job pools.</li>
+<li>Example: <code>ConcurrentBag&lt;int&gt; bag = new ConcurrentBag&lt;int&gt;(); bag.Add(42);</code></li>
+</ul>
+</li>
+<li><p><strong>BlockingCollection<T></strong>:</p>
+<ul>
+<li>Thread-safe collection that provides blocking and bounding capabilities.</li>
+<li>Wraps other concurrent collections (e.g., <code>ConcurrentQueue&lt;T&gt;</code> or <code>ConcurrentBag&lt;T&gt;</code>).</li>
+<li>Methods: <code>Add</code>, <code>Take</code>, <code>CompleteAdding</code> (signals no more items).</li>
+<li>Use case: Producer-consumer patterns with blocking behavior (e.g., waiting for items).</li>
+<li>Example: <code>BlockingCollection&lt;int&gt; collection = new BlockingCollection&lt;int&gt;(new ConcurrentQueue&lt;int&gt;());</code></li>
+</ul>
+</li>
+</ol>
+<h3 id="key-notes">Key Notes:</h3>
+<ul>
+<li>These collections use lock-free or fine-grained locking internally for better performance than wrapping a <code>List&lt;T&gt;</code> with <code>lock</code>.</li>
+<li>Always use <code>Try*</code> methods (e.g., <code>TryDequeue</code>, <code>TryAdd</code>) to avoid exceptions in concurrent scenarios.</li>
+<li>Choose the right collection based on the access pattern (e.g., <code>ConcurrentQueue</code> for FIFO, <code>ConcurrentDictionary</code> for key-value).</li>
+<li>For scenarios not covered by these collections, use <code>lock</code>, <code>Monitor</code>, or other primitives like <code>Interlocked</code> for custom thread-safe implementations.</li>
+</ul>
+<p>These structures simplify concurrent programming in .NET, but always test for correctness and performance under load.</p>
+
+    </div>
+</body>
+</html>"

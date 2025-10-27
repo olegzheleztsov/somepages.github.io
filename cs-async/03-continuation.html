@@ -1,0 +1,87 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>In C#, <strong>Task Continuation</strong> refers to scheduling additional work to execute after a <code>Task</code> completes, using methods like <code>ContinueWith</code>. It allows chaining operations that depend on the result or state of a prior task.</p>
+<ul>
+<li><p><strong>Key Method</strong>: <code>Task.ContinueWith</code></p>
+<ul>
+<li>Takes a delegate (action or function) to run when the antecedent task finishes.</li>
+<li>Returns a new <code>Task</code> representing the continuation.</li>
+<li>Can specify conditions (e.g., only run on success, failure, or cancellation).</li>
+</ul>
+</li>
+<li><p><strong>Syntax</strong>:</p>
+</li>
+</ul>
+<pre><code class="language-csharp">Task task = Task.Run(() =&gt; DoWork());
+Task continuation = task.ContinueWith(antecedent =&gt; FollowUpWork(antecedent));
+</code></pre>
+<ul>
+<li><p><strong>Parameters</strong>:</p>
+<ul>
+<li>The delegate receives the antecedent <code>Task</code>, providing access to its result, status, or exceptions.</li>
+<li>Optional <code>TaskContinuationOptions</code> (e.g., <code>OnlyOnRanToCompletion</code>, <code>OnlyOnFaulted</code>) control when the continuation runs.</li>
+</ul>
+</li>
+<li><p><strong>Common Use Cases</strong>:</p>
+<ul>
+<li>Process results of an async operation (e.g., transform data after a network call).</li>
+<li>Handle errors or cleanup after a task.</li>
+<li>Chain multiple async operations.</li>
+</ul>
+</li>
+<li><p><strong>Example</strong>:</p>
+</li>
+</ul>
+<pre><code class="language-csharp">Task&lt;int&gt; task = Task.Run(() =&gt; 42);
+task.ContinueWith(antecedent =&gt;
+{
+    if (antecedent.IsCompletedSuccessfully)
+        Console.WriteLine($&quot;Result: {antecedent.Result}&quot;); // Outputs: Result: 42
+}, TaskContinuationOptions.OnlyOnRanToCompletion);
+</code></pre>
+<ul>
+<li><strong>Async/Await Alternative</strong>:
+<ul>
+<li>While <code>ContinueWith</code> is explicit, <code>async/await</code> often replaces it for cleaner, sequential code:</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-csharp">async Task DoWorkAsync()
+{
+    int result = await Task.Run(() =&gt; 42);
+    Console.WriteLine($&quot;Result: {result}&quot;);
+}
+</code></pre>
+<ul>
+<li><strong>Key Points</strong>:
+<ul>
+<li><code>ContinueWith</code> is lower-level; <code>async/await</code> is preferred for readability.</li>
+<li>Use <code>TaskContinuationOptions</code> to handle specific task outcomes (e.g., <code>OnlyOnFaulted</code> for errors).</li>
+<li>Ensure proper synchronization context (e.g., <code>ConfigureAwait</code> for library code).</li>
+<li>Exceptions in continuations are wrapped in the new <code>Task</code>.</li>
+</ul>
+</li>
+</ul>
+<p>Ask for more details or scenarios if needed!</p>
+
+    </div>
+</body>
+</html>"

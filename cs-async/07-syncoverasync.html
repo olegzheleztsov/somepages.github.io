@@ -1,0 +1,88 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>The <strong>&quot;sync over async&quot;</strong> principle in C# refers to avoiding synchronous blocking calls (e.g., <code>.Result</code>, <code>.Wait()</code>) on asynchronous operations (<code>Task</code>, <code>Task&lt;T&gt;</code>). Instead, prefer using <code>async/await</code> throughout the call chain to maintain asynchronous execution, improve performance, and avoid common pitfalls like deadlocks.</p>
+<h3 id="why-avoid-sync-over-async">Why Avoid Sync Over Async?</h3>
+<ul>
+<li><strong>Deadlocks</strong>: Calling <code>.Result</code> or <code>.Wait()</code> on a <code>Task</code> in a context with a synchronization context (e.g., UI thread or ASP.NET) can cause deadlocks. The synchronous wait blocks the context, but the task needs the same context to complete, leading to a stalemate.
+<ul>
+<li>Example: <code>Task.Run(async () =&gt; await DoWorkAsync()).Result</code> in a UI app can deadlock if <code>DoWorkAsync</code> uses <code>await</code> expecting the UI context.</li>
+</ul>
+</li>
+<li><strong>Performance</strong>: Blocking defeats the purpose of async, tying up threads (e.g., thread pool threads in ASP.NET), reducing scalability.</li>
+<li><strong>Error Handling</strong>: Sync calls wrap exceptions in <code>AggregateException</code>, complicating error handling compared to <code>await</code>, which unwraps the first exception.</li>
+</ul>
+<h3 id="preferred-approach-async-all-the-way">Preferred Approach: Async All the Way</h3>
+<ul>
+<li>Use <code>async Task</code> or <code>async Task&lt;T&gt;</code> methods and <code>await</code> to propagate asynchrony up the call stack.</li>
+<li>Example:
+<pre><code class="language-csharp">public async Task&lt;int&gt; GetDataAsync()
+{
+    return await Task.Run(() =&gt; 42); // Non-blocking
+}
+
+public async Task CallAsync()
+{
+    int result = await GetDataAsync(); // Await, don't block
+    Console.WriteLine(result);
+}
+</code></pre>
+</li>
+</ul>
+<h3 id="when-sync-over-async-might-be-tempting">When Sync Over Async Might Be Tempting</h3>
+<ul>
+<li>Legacy code requiring synchronous APIs.</li>
+<li>Console apps or simple scripts where deadlocks aren't a concern (no synchronization context).</li>
+<li>Initializing a library where async initialization isn't supported.</li>
+</ul>
+<h3 id="how-to-handle-unavoidable-sync-scenarios">How to Handle Unavoidable Sync Scenarios</h3>
+<ul>
+<li>Use <code>ConfigureAwait(false)</code> in library code to avoid capturing the synchronization context, reducing deadlock risks:
+<pre><code class="language-csharp">await Task.Delay(100).ConfigureAwait(false);
+</code></pre>
+</li>
+<li>If forced to use sync, wrap in a safe context (e.g., <code>Task.Run</code> to offload to a thread pool thread):
+<pre><code class="language-csharp">int result = Task.Run(() =&gt; GetDataAsync()).Result; // Risky, but avoids deadlock in simple cases
+</code></pre>
+</li>
+</ul>
+<h3 id="best-practices">Best Practices</h3>
+<ul>
+<li>Always prefer <code>async/await</code> over <code>.Result</code> or <code>.Wait()</code>.</li>
+<li>Ensure all methods in the call chain are <code>async</code> if any part is asynchronous.</li>
+<li>Use <code>ConfigureAwait(false)</code> in library code for better performance and safety.</li>
+<li>If sync is unavoidable, understand the context (e.g., no sync context in console apps) and test thoroughly.</li>
+</ul>
+<h3 id="example-of-bad-vs.good">Example of Bad vs. Good</h3>
+<ul>
+<li><strong>Bad (Sync over Async)</strong>:
+<pre><code class="language-csharp">public int GetData() =&gt; Task.Run(() =&gt; 42).Result; // Blocks, risks deadlock
+</code></pre>
+</li>
+<li><strong>Good (Async All the Way)</strong>:
+<pre><code class="language-csharp">public async Task&lt;int&gt; GetDataAsync() =&gt; await Task.Run(() =&gt; 42); // Non-blocking
+</code></pre>
+</li>
+</ul>
+<p>This principle ensures scalable, deadlock-free, and maintainable async code. Ask for more details or examples if needed!</p>
+
+    </div>
+</body>
+</html>"

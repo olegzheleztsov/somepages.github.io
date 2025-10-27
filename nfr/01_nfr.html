@@ -1,0 +1,83 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-nfr">What is NFR?</h3>
+<p>NFR stands for <strong>Non-Functional Requirements</strong> in software engineering and system design. These are the criteria that specify how a system should perform or behave, rather than what it should do. In contrast to <strong>Functional Requirements (FRs)</strong>—which define the core features and functionalities (e.g., &quot;The app must allow users to log in via email&quot;)—NFRs focus on qualities like speed, security, and usability (e.g., &quot;The login process must complete in under 2 seconds for 99% of users&quot;).</p>
+<p>NFRs are often derived from stakeholder needs, business goals, and regulatory standards. They're harder to define upfront because they're measurable and context-dependent, but they're crucial for ensuring the system is viable in production.</p>
+<h3 id="common-examples-of-nfrs">Common Examples of NFRs</h3>
+<p>Here's a quick table of typical NFR categories with examples:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Description/Example</th>
+<th>Measurement Metric</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Performance</strong></td>
+<td>How fast the system responds (e.g., low latency).</td>
+<td>Response time &lt; 200ms; throughput = 1k requests/sec.</td>
+</tr>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>Ability to handle growth (e.g., more users).</td>
+<td>Horizontal scaling to 10x load without &gt;10% degradation.</td>
+</tr>
+<tr>
+<td><strong>Reliability/Availability</strong></td>
+<td>Uptime and fault tolerance (e.g., no single point of failure).</td>
+<td>99.99% uptime (Four Nines); MTBF &gt; 1 year.</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>Protection against threats (e.g., data encryption).</td>
+<td>Compliance with GDPR; zero unauthorized access incidents.</td>
+</tr>
+<tr>
+<td><strong>Usability</strong></td>
+<td>Ease of use (e.g., intuitive UI).</td>
+<td>User satisfaction score &gt; 8/10 via NPS.</td>
+</tr>
+<tr>
+<td><strong>Maintainability</strong></td>
+<td>Ease of updates/fixes (e.g., modular code).</td>
+<td>Code coverage &gt; 80%; deployment time &lt; 1 hour.</td>
+</tr>
+<tr>
+<td><strong>Cost/Portability</strong></td>
+<td>Efficiency and adaptability (e.g., cloud-agnostic).</td>
+<td>Monthly cost &lt; $10k for 1M users; runs on AWS/GCP.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="impact-on-system-design">Impact on System Design</h3>
+<p>NFRs profoundly shape system architecture, often driving trade-offs and decisions that go beyond just implementing features. Here's how they influence design:</p>
+<ol>
+<li><p><strong>Architectural Choices</strong>: High scalability NFRs might push you toward microservices or serverless architectures (e.g., using Kubernetes for auto-scaling) instead of a monolith. Reliability could require redundancy like multi-region deployments or circuit breakers (e.g., via Hystrix or Resilience4j).</p>
+</li>
+<li><p><strong>Trade-Offs and Prioritization</strong>: Not all NFRs can be maximized simultaneously—e.g., optimizing for ultra-low latency might increase costs or reduce security. In interviews, discuss how you'd prioritize (e.g., using MoSCoW method: Must/Should/Could/Won't) based on</p>
+</li>
+</ol>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,91 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-event-sourcing">What is Event Sourcing?</h3>
+<p>Event Sourcing is an architectural pattern in software design where the state of an application (or aggregate in DDD) is derived by replaying a sequence of immutable, time-ordered <strong>events</strong>—rather than storing the current state directly in a database. Each event represents a factual change or decision in the system's history (e.g., &quot;OrderCreated&quot;, &quot;ItemAdded&quot;), and the current state is computed on-demand by applying these events in order. This contrasts with traditional CRUD approaches, where you overwrite state in a table.</p>
+<p>Pioneered by Greg Young and popularized in the 2010s, Event Sourcing is often combined with CQRS (as we discussed) for separating command (event-emitting) and query (event-replaying) sides. It's ideal for systems needing auditability, like finance or logistics, where &quot;why&quot; and &quot;how&quot; the state changed matters as much as &quot;what&quot; it is now.</p>
+<h4 id="how-it-works">How It Works</h4>
+<ol>
+<li><strong>Capture Events</strong>: On a command (e.g., &quot;Place Order&quot;), validate and append an event to an append-only log (e.g., Event Store DB).</li>
+<li><strong>Rebuild State</strong>: To get current state, start from an empty snapshot and fold (replay) all events for that entity: <code>state = initial + event1 + event2 + ...</code>.</li>
+<li><strong>Projections</strong>: For queries, pre-compute views (e.g., via materialized views or read models) from events for efficiency.</li>
+<li><strong>Snapshots</strong>: Periodically store compressed state to speed up replays (e.g., every 1,000 events).</li>
+</ol>
+<p>Events are immutable and include metadata like timestamp, version, and user ID for traceability.</p>
+<h4 id="key-concepts">Key Concepts</h4>
+<ul>
+<li><strong>Event</strong>: A lightweight, domain-specific fact (e.g., <code>OrderItemAdded { orderId: 123, item: &quot;Laptop&quot;, quantity: 1 }</code>).</li>
+<li><strong>Event Store</strong>: Specialized DB (e.g., EventStoreDB, Kafka) for durable, ordered storage.</li>
+<li><strong>Projections/Handlers</strong>: Functions that listen to events and update read models (e.g., for dashboards).</li>
+<li><strong>Idempotency</strong>: Events are replay-safe; handlers check for duplicates.</li>
+</ul>
+<h4 id="why-is-it-useful">Why Is It Useful?</h4>
+<p>Event Sourcing provides a complete, tamper-proof history, enabling temporal queries (e.g., &quot;What was the state on March 1?&quot;) and easier debugging. It aligns with DDD by treating events as Domain Events, supporting bounded contexts. In CQRS, the command side emits events, while the query side projects them—boosting scalability (e.g., replay events to new query stores without downtime).</p>
+<p>Benefits in practice:</p>
+<ul>
+<li><strong>Auditability &amp; Compliance</strong>: Full change log for regulations like GDPR or SOX.</li>
+<li><strong>Flexibility</strong>: Easily introduce new views or fix bugs by replaying with updated logic.</li>
+<li><strong>Resilience</strong>: No single source of truth for state; rebuild from events if corrupted.</li>
+</ul>
+<h4 id="example-in-an-e-commerce-system">Example in an E-Commerce System</h4>
+<p>For an Order aggregate:</p>
+<ul>
+<li>Events: <code>OrderCreated {id: 123, items: []}</code>, <code>ItemAdded {item: &quot;Book&quot;, qty: 2}</code>, <code>PaymentProcessed {amount: 20}</code>.</li>
+<li>Current State: Replay yields <code>{total: 20, status: Paid, items: [{Book: 2}]}</code>.</li>
+<li>Query: A &quot;Order Summary&quot; projection aggregates totals for reports.</li>
+</ul>
+<p>If a bug overcharges, fix the projection logic and replay—no data loss.</p>
+<h4 id="pros-and-cons">Pros and Cons</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Traceability</strong></td>
+<td>Immutable history for debugging, analytics, and compliance.</td>
+<td>Complex to query historical states without tools.</td>
+</tr>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>Efficient replays for new features; pairs well with CQRS/ES.</td>
+<td>High storage needs (events accumulate); slower initial loads.</td>
+</tr>
+<tr>
+<td><strong>Maintainability</strong></td>
+<td>Easy to evolve models by appending events; supports testing via mocks.</td>
+<td>Steep learning curve; requires event versioning to handle schema changes.</td>
+</tr>
+<tr>
+<td><strong>Overall</strong></td>
+<td>Great for complex domains (e.g., Uber's trip tracking).</td>
+<td>Overkill for simple apps; eventual consistency adds sync challenges.</td>
+</tr>
+</tbody>
+</table>
+<p>In a tech lead interview, emphasize: &quot;I'd use Event Sourcing with CQRS for a fraud detection system, storing detection events for replayable audits while optimizing queries for real-time alerts.&quot; Builds perfectly on our CQRS chat—pros like auditability tie into security NFRs. Your take, or next question?</p>
+
+    </div>
+</body>
+</html>"

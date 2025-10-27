@@ -1,0 +1,70 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="downsides-of-api-gateways-in-microservices">Downsides of API Gateways in Microservices</h3>
+<p>While API Gateways centralize routing, security, and other cross-cutting concerns to simplify client interactions, they introduce several trade-offs that can impact reliability, performance, and maintainability. These downsides often stem from the added layer of abstraction, making it crucial to evaluate them against your system's scale and needs. Below is a summary of the primary drawbacks, drawn from established patterns and real-world experiences.</p>
+<table>
+<thead>
+<tr>
+<th>Downside</th>
+<th>Description</th>
+<th>Potential Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Single Point of Failure</strong></td>
+<td>The gateway becomes a critical chokepoint; if it fails, all downstream services are inaccessible, reducing overall system availability.</td>
+<td>Deploy multiple gateway instances with load balancing (e.g., via Kubernetes) and health checks; use circuit breakers for graceful degradation.</td>
+</tr>
+<tr>
+<td><strong>Increased Latency and Performance Overhead</strong></td>
+<td>Every request passes through an extra network hop, adding processing time for routing, auth, or transformations—potentially slowing apps by 10-50ms per call.</td>
+<td>Optimize configs (e.g., caching at the gateway) and monitor with tools like Prometheus; consider edge-optimized gateways like AWS API Gateway for low-latency.</td>
+</tr>
+<tr>
+<td><strong>Added Complexity in Development and Ops</strong></td>
+<td>Introduces another component to design, deploy, configure, and debug, increasing the learning curve and operational overhead for teams.</td>
+<td>Use declarative tools (e.g., Kong's YAML configs) and automate with CI/CD; start simple and layer features gradually.</td>
+</tr>
+<tr>
+<td><strong>Coupling and Tight Dependencies</strong></td>
+<td>Clients and services become reliant on the gateway's logic, making independent evolution harder (e.g., schema changes propagate through it).</td>
+<td>Design for loose coupling with service meshes (e.g., Istio) or fallback direct routing; regularly audit for over-reliance.</td>
+</tr>
+<tr>
+<td><strong>Scalability Bottlenecks</strong></td>
+<td>Under high load, the gateway can become a throughput limiter, especially if handling heavy aggregation or custom plugins.</td>
+<td>Horizontal scaling and sharding; offload non-essential features to service-level proxies.</td>
+</tr>
+<tr>
+<td><strong>Higher Costs (for Managed Services)</strong></td>
+<td>Cloud-managed gateways (e.g., Azure API Management) incur per-request fees, which can add up in high-volume scenarios.</td>
+<td>Opt for open-source like Kong or NGINX for self-hosted; benchmark costs early.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="example-in-practice">Example in Practice</h4>
+<p>In a high-traffic e-commerce setup, a misconfigured Kong gateway led to cascading failures during peak hours—routing delays spiked latency to 200ms, and a brief outage took down the entire frontend. Mitigation involved adding redundancy and auto-scaling, but it highlighted the need for robust monitoring from day one.</p>
+<p>These downsides are why some teams skip gateways in early-stage microservices, opting for direct communication until complexity warrants it. For your interview, how would you balance these trade-offs when deciding on a gateway for a team migrating from a monolith?</p>
+
+    </div>
+</body>
+</html>"

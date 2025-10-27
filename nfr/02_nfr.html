@@ -1,0 +1,152 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="types-of-non-functional-requirements-nfrs">Types of Non-Functional Requirements (NFRs)</h3>
+<p>Non-Functional Requirements (NFRs) are qualities or constraints that define how a system operates, rather than its specific features. They ensure the system is robust, efficient, and user-friendly in real-world scenarios. Based on standard software engineering practices (e.g., from ISO/IEC 25010 quality model), here are the main types of NFRs I know, grouped into categories for clarity. I'll describe each with key characteristics, examples, and why it matters in system design.</p>
+<h4 id="performance-nfrs">1. <strong>Performance NFRs</strong></h4>
+<ul>
+<li><strong>Description</strong>: Focus on speed, efficiency, and resource usage under load. These ensure the system responds quickly and handles data without bottlenecks.</li>
+<li><strong>Sub-types/Examples</strong>:
+<ul>
+<li>Latency: Time to complete a task (e.g., API response &lt; 100ms).</li>
+<li>Throughput: Volume of work processed (e.g., 500 transactions/sec).</li>
+<li>Resource Utilization: CPU/memory limits (e.g., &lt; 70% under peak load).</li>
+</ul>
+</li>
+<li><strong>Design Impact</strong>: Influences caching (e.g., Redis), load balancing, or async processing. Trade-off: High performance might increase costs.</li>
+</ul>
+<h4 id="scalability-nfrs">2. <strong>Scalability NFRs</strong></h4>
+<ul>
+<li><strong>Description</strong>: Ability to grow or shrink resources to match demand without degrading quality.</li>
+<li><strong>Sub-types/Examples</strong>:
+<ul>
+<li>Horizontal Scaling: Adding more instances (e.g., auto-scale to 10x users).</li>
+<li>Vertical Scaling: Upgrading hardware (e.g., more RAM for database).</li>
+<li>Elasticity: Quick adaptation to traffic spikes (e.g., handle Black Friday surges).</li>
+</ul>
+</li>
+<li><strong>Design Impact</strong>: Favors distributed systems like microservices or cloud-native designs (e.g., AWS Auto Scaling Groups). Trade-off: Complexity vs. cost.</li>
+</ul>
+<h4 id="reliability-availability-nfrs">3. <strong>Reliability &amp; Availability NFRs</strong></h4>
+<ul>
+<li><strong>Description</strong>: Ensures the system is dependable, with minimal downtime and quick recovery from failures.</li>
+<li><strong>Sub-types/Examples</strong>:
+<ul>
+<li>Availability: Uptime percentage (e.g., 99.99% or &quot;four nines&quot;).</li>
+<li>Fault Tolerance: Graceful degradation (e.g., circuit breakers for failed services).</li>
+<li>Recoverability: Backup/restore time (e.g., RTO &lt; 1 hour).</li>
+</ul>
+</li>
+<li><strong>Design Impact</strong>: Requires redundancy (e.g., multi-AZ deployments) and monitoring (e.g., Prometheus). Trade-off: Higher reliability means more infrastructure overhead.</li>
+</ul>
+<h4 id="security-nfrs">4. <strong>Security NFRs</strong></h4>
+<ul>
+<li><strong>Description</strong>: Protects data, users, and the system from threats like breaches or unauthorized access.</li>
+<li><strong>Sub-types/Examples</strong>:
+<ul>
+<li>Authentication/Authorization: Secure login (e.g., OAuth 2.0, MFA).</li>
+<li>Data Protection: Encryption (e.g., AES-256 at rest/transit).</li>
+<li>Compliance: Adherence to standards (e.g., GDPR, HIPAA).</li>
+</ul>
+</li>
+<li><strong>Design Impact</strong>: Integrates firewalls, encryption libraries, and audit logs. Trade-off: Security can slow performance if not optimized.</li>
+</ul>
+<h4 id="usability-accessibility-nfrs">5. <strong>Usability &amp; Accessibility NFRs</strong></h4>
+<ul>
+<li><strong>Description</strong>: Makes the system intuitive and inclusive for diverse users.</li>
+<li><strong>Sub-types/Examples</strong>:
+<ul>
+<li>Learnability: Ease of onboarding (e.g., &lt; 5 minutes to first use).</li>
+<li>Accessibility: WCAG compliance (e.g., screen reader support).</li>
+<li>User Experience: Intuitive navigation (e.g., mobile-responsive UI).</li>
+</ul>
+</li>
+<li><strong>Design Impact</strong>: Guides UI/UX frameworks (e.g., React with ARIA tags). Trade-off: Usability testing adds dev time.</li>
+</ul>
+<h4 id="maintainability-operability-nfrs">6. <strong>Maintainability &amp; Operability NFRs</strong></h4>
+<ul>
+<li><strong>Description</strong>: Ensures the system is easy to update, debug, and operate over time.</li>
+<li><strong>Sub-types/Examples</strong>:
+<ul>
+<li>Modularity: Loose coupling (e.g., clean architecture patterns).</li>
+<li>Testability: Coverage goals (e.g., 80% unit tests).</li>
+<li>Deployability: CI/CD pipelines (e.g., zero-downtime deploys).</li>
+</ul>
+</li>
+<li><strong>Design Impact</strong>: Promotes SOLID principles and tools like Docker. Trade-off: Modular designs increase initial complexity.</li>
+</ul>
+<h4 id="otheremerging-nfrs">7. <strong>Other/Emerging NFRs</strong></h4>
+<ul>
+<li><strong>Description</strong>: Less universal but increasingly important, especially for modern systems.</li>
+<li><strong>Sub-types/Examples</strong>:
+<ul>
+<li>Sustainability: Energy efficiency (e.g., green cloud practices).</li>
+<li>Portability: Cross-platform compatibility (e.g., runs on AWS or Azure).</li>
+<li>Internationalization: Multi-language support (e.g., i18n in code).</li>
+</ul>
+</li>
+<li><strong>Design Impact</strong>: Influences vendor-agnostic choices or eco-friendly optimizations.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Key Metric Example</th>
+<th>Common Trade-Off</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Performance</td>
+<td>&lt; 200ms response time</td>
+<td>Cost vs. Speed</td>
+</tr>
+<tr>
+<td>Scalability</td>
+<td>10x load without failure</td>
+<td>Complexity vs. Agility</td>
+</tr>
+<tr>
+<td>Reliability</td>
+<td>99.99% uptime</td>
+<td>Redundancy vs. Budget</td>
+</tr>
+<tr>
+<td>Security</td>
+<td>Zero breaches/year</td>
+<td>Performance vs. Protection</td>
+</tr>
+<tr>
+<td>Usability</td>
+<td>NPS &gt; 8/10</td>
+<td>Speed vs. Polish</td>
+</tr>
+<tr>
+<td>Maintainability</td>
+<td>&lt; 1 day for hotfix</td>
+<td>Upfront Effort vs. Long-term Ease</td>
+</tr>
+</tbody>
+</table>
+<p>In interviews, interviewers often probe how you'd measure, prioritize, or trade off these (e.g., &quot;How would you handle a scalability NFR conflicting with security?&quot;). Solid! What's your take on this, or hit me with the next question?</p>
+
+    </div>
+</body>
+</html>"

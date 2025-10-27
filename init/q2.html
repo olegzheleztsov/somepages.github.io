@@ -1,0 +1,104 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-the-lock-keyword">What is the Lock Keyword?</h3>
+<p>The <code>lock</code> keyword in C# is a synchronization primitive that provides mutual exclusion for a block of code, ensuring only one thread can execute it at a time. It prevents concurrent access to shared resources, avoiding race conditions in multi-threaded applications.</p>
+<ul>
+<li><strong>Syntax</strong>: <code>lock (syncObject) { /* critical section */ }</code>
+<ul>
+<li><code>syncObject</code> is a reference type (e.g., object, class instance) used as the lock token. It should be private to avoid unintended locking from outside the class.</li>
+</ul>
+</li>
+<li><strong>How it works internally</strong>: It's syntactic sugar for <code>Monitor.Enter(syncObject)</code> in a <code>try</code> block, followed by the critical section, and <code>Monitor.Exit(syncObject)</code> in a <code>finally</code> block. This ensures the lock is released even if an exception occurs.</li>
+<li><strong>Use cases</strong>: Protecting shared variables, collections, or methods in threaded environments like async tasks, background workers, or parallel loops.</li>
+<li><strong>Best practices</strong>:
+<ul>
+<li>Use on non-null, non-value-type objects (value types cause boxing, leading to issues).</li>
+<li>Avoid locking on <code>this</code>, strings (due to interning), or <code>typeof(Type)</code> to prevent deadlocks or broad locks.</li>
+<li>Keep locked sections short to minimize contention.</li>
+</ul>
+</li>
+<li><strong>Limitations</strong>: Can lead to deadlocks if locks are nested improperly; doesn't support timeouts or signaling like condition variables.</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-csharp">private readonly object _syncLock = new object();
+private int _counter = 0;
+
+public void Increment()
+{
+    lock (_syncLock)
+    {
+        _counter++;
+    }
+}
+</code></pre>
+<h3 id="what-is-the-difference-between-lock-and-monitor">What is the Difference Between Lock and Monitor?</h3>
+<p><code>lock</code> is a high-level, simplified wrapper around the <code>Monitor</code> class for basic mutual exclusion. <code>Monitor</code> provides more advanced synchronization features. Key differences:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Lock Keyword</th>
+<th>Monitor Class</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Syntax/Usage</strong></td>
+<td>Simple: <code>lock (obj) { ... }</code></td>
+<td>Explicit: <code>Monitor.Enter(obj); try { ... } finally { Monitor.Exit(obj); }</code></td>
+</tr>
+<tr>
+<td><strong>Exception Handling</strong></td>
+<td>Automatically releases lock in <code>finally</code> (safe)</td>
+<td>Manual <code>try-finally</code> required; error-prone if forgotten</td>
+</tr>
+<tr>
+<td><strong>Features</strong></td>
+<td>Basic mutual exclusion only</td>
+<td>Advanced: <code>TryEnter</code> (with timeout), <code>Wait</code> (release and reacquire), <code>Pulse</code>/<code>PulseAll</code> (signal waiting threads)</td>
+</tr>
+<tr>
+<td><strong>Flexibility</strong></td>
+<td>Limited to simple scenarios</td>
+<td>More control, e.g., conditional waiting, timeouts</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td>Slight overhead from compiler-generated code</td>
+<td>Direct, potentially more efficient in complex cases</td>
+</tr>
+<tr>
+<td><strong>Error Proneness</strong></td>
+<td>Safer for beginners; less boilerplate</td>
+<td>Requires careful handling to avoid leaks or deadlocks</td>
+</tr>
+<tr>
+<td><strong>When to Use</strong></td>
+<td>Quick, thread-safe critical sections (e.g., counters)</td>
+<td>Producer-consumer patterns, semaphores, or when timeouts/signaling needed</td>
+</tr>
+</tbody>
+</table>
+<p>In summary, use <code>lock</code> for straightforward synchronization; switch to <code>Monitor</code> for fine-grained control. Both operate on the same underlying CLR monitor mechanism, so they're interchangeable but <code>Monitor</code> exposes the full API from <code>System.Threading</code>.</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,95 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-are-consumer-groups-in-kafka">What Are Consumer Groups in Kafka?</h3>
+<p>In Apache Kafka, a <strong>consumer group</strong> is a logical abstraction that allows multiple consumers to work together to consume messages from one or more topics in a coordinated, scalable way. It enables <strong>parallelism</strong> (distributing workload across consumers) and <strong>fault tolerance</strong> (automatic failover). All consumers in a group share the responsibility of consuming the full set of partitions for the subscribed topics, ensuring no overlap—each partition is assigned to exactly one consumer in the group at a time.</p>
+<p>Consumer groups are identified by a unique <code>group.id</code> (a string). Different groups can consume the same topic independently (e.g., one group for real-time processing, another for batch jobs), each maintaining its own offsets (positions in the log).</p>
+<p>This is a core feature for building scalable event-driven systems, like microservices or data pipelines, where a single consumer couldn't handle the load.</p>
+<h4 id="how-do-consumer-groups-work">How Do Consumer Groups Work?</h4>
+<p>Consumer groups operate through a <strong>cooperative protocol</strong> involving consumers, brokers, and a group coordinator. Here's the step-by-step flow:</p>
+<ol>
+<li><p><strong>Subscription and Joining</strong>:</p>
+<ul>
+<li>A consumer starts by subscribing to topics (e.g., via <code>subscribe()</code> in the Kafka API) and joins a group using its <code>group.id</code>.</li>
+<li>It sends periodic heartbeats to the <strong>group coordinator</strong> (a designated broker that manages the group). Heartbeats signal &quot;I'm alive.&quot;</li>
+</ul>
+</li>
+<li><p><strong>Partition Assignment</strong>:</p>
+<ul>
+<li>The coordinator assigns partitions across the group members using a <strong>partition assignor</strong> (e.g., RangeAssignor for even distribution or CooperativeStickyAssignor for minimal disruption during rebalances).</li>
+<li>Example: For a topic with 4 partitions and 2 consumers in a group, Consumer A might get partitions 0-1, Consumer B gets 2-3. This ensures load balancing.</li>
+</ul>
+</li>
+<li><p><strong>Consumption</strong>:</p>
+<ul>
+<li>Each consumer polls the broker for records from its assigned partitions, starting from the committed offset for the group.</li>
+<li>Consumers process records asynchronously (e.g., in batches) and commit offsets periodically (auto or manual) to the broker's <code>__consumer_offsets</code> topic. This offset is shared group-wide per partition.</li>
+</ul>
+</li>
+<li><p><strong>Rebalancing</strong>:</p>
+<ul>
+<li>Triggered when the group changes: A new consumer joins, an existing one fails (misses heartbeats), or a topic's partitions change.</li>
+<li>The coordinator detects the change, pauses consumption, revokes assignments from members, and reassigns partitions.</li>
+<li>In cooperative rebalancing (default since Kafka 2.4), only affected consumers are impacted, reducing downtime compared to eager rebalancing.</li>
+<li>Post-rebalance, consumers resume from the last committed offsets.</li>
+</ul>
+</li>
+<li><p><strong>Fault Tolerance</strong>:</p>
+<ul>
+<li>If a consumer dies, the coordinator detects it via missed heartbeats (configurable <code>session.timeout.ms</code>), removes it, and reassigns its partitions to survivors.</li>
+<li>Offsets ensure no data loss or duplication (with at-least-once semantics; exactly-once via transactions).</li>
+</ul>
+</li>
+</ol>
+<h4 id="key-configurations">Key Configurations</h4>
+<ul>
+<li><code>group.id</code>: Mandatory unique identifier.</li>
+<li><code>max.poll.interval.ms</code>: Time between polls before considered dead.</li>
+<li><code>enable.auto.commit</code>: For automatic offset commits.</li>
+<li><code>partition.assignment.strategy</code>: Customizable assignor.</li>
+</ul>
+<h4 id="pros-cons-and-use-cases">Pros, Cons, and Use Cases</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pros</strong></td>
+<td>Scalable parallelism; independent consumption per group; built-in failover.</td>
+</tr>
+<tr>
+<td><strong>Cons</strong></td>
+<td>Rebalancing can cause temporary pauses (mitigate with static membership in Kafka 2.3+); overhead for small groups.</td>
+</tr>
+<tr>
+<td><strong>Use Cases</strong></td>
+<td>- Parallel ETL: Multiple workers processing a log stream.<br>- Streaming apps: Kafka Streams uses groups internally.<br>- Microservices: Fan-out events to groups for different handlers (e.g., notifications vs. analytics).</td>
+</tr>
+</tbody>
+</table>
+<p>In a tech lead interview, highlight: &quot;Consumer groups turn Kafka from a simple queue into a distributed processor—use them for horizontal scaling, but tune rebalance timeouts to avoid 'zombie' consumers.&quot; If you're designing a system, start with 1:1 consumer-to-partition ratio for even load. What's next?</p>
+
+    </div>
+</body>
+</html>"

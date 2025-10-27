@@ -1,0 +1,76 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-an-api-gateway">What is an API Gateway?</h3>
+<p>An <strong>API Gateway</strong> is a reverse proxy and load balancer that serves as a single entry point for client requests to a collection of backend services, typically in a microservices architecture. It acts as a &quot;front door&quot; for APIs, abstracting the complexity of downstream services from clients (e.g., mobile apps, web frontends). By centralizing cross-cutting concerns like routing, security, and monitoring, it simplifies client interactions and enhances system manageability.</p>
+<p>Key functions include:</p>
+<ul>
+<li><strong>Request Routing</strong>: Directs incoming requests to the appropriate microservice based on paths, headers, or query params.</li>
+<li><strong>Authentication &amp; Authorization</strong>: Validates tokens (e.g., JWT, OAuth) and enforces policies before forwarding requests.</li>
+<li><strong>Rate Limiting &amp; Throttling</strong>: Controls traffic to prevent overload, often with quotas per user/API key.</li>
+<li><strong>Response Caching &amp; Transformation</strong>: Aggregates data from multiple services or modifies responses for client needs.</li>
+<li><strong>Observability</strong>: Logs requests, metrics, and traces for monitoring (e.g., integration with Prometheus or Zipkin).</li>
+<li><strong>Service Discovery</strong>: Dynamically routes to instances via registries like Consul or Eureka.</li>
+</ul>
+<p>It's often deployed as a managed service (e.g., AWS API Gateway, Kong, Azure API Management) or open-source (e.g., NGINX, Envoy).</p>
+<h4 id="pros-and-cons">Pros and Cons</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Client Simplicity</strong></td>
+<td>Single endpoint reduces client-side complexity (no direct service discovery).</td>
+<td>Adds a potential single point of failure or latency bottleneck.</td>
+</tr>
+<tr>
+<td><strong>Security &amp; Control</strong></td>
+<td>Centralized enforcement of policies; hides internal service details.</td>
+<td>Requires careful configuration to avoid misrouting or security gaps.</td>
+</tr>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>Offloads common tasks from services; supports horizontal scaling.</td>
+<td>Can become a monolith if overloaded with custom logic.</td>
+</tr>
+<tr>
+<td><strong>Maintainability</strong></td>
+<td>Easier versioning and deprecation of APIs.</td>
+<td>Overhead in setup for dynamic environments (e.g., Kubernetes).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="example-in-action">Example in Action</h4>
+<p>In an e-commerce app:</p>
+<ul>
+<li>Client sends <code>GET /orders/123</code> to the gateway.</li>
+<li>Gateway authenticates the user, rate-limits the request, routes to the Order Service, and optionally aggregates data from Inventory Service before returning a unified JSON response.</li>
+</ul>
+<p>This pattern complements Sagas by providing a secure facade for orchestrated workflows. Tools like Ambassador or Tyk make it Kubernetes-native.</p>
+<p>For your interview, how would you handle API Gateway failures in a high-traffic system—e.g., circuit breakers or failover strategies?</p>
+
+    </div>
+</body>
+</html>"

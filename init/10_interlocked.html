@@ -1,0 +1,456 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>In C#, the <strong><code>Interlocked</code></strong> class, located in the <code>System.Threading</code> namespace, is a synchronization primitive designed to perform <strong>atomic operations</strong> on shared variables in a multithreaded environment. Atomic operations are indivisible, meaning they complete in a single step without interference from other threads, preventing race conditions without the need for locks in certain scenarios. <code>Interlocked</code> is particularly useful for simple, high-performance operations like incrementing counters, updating shared variables, or implementing lock-free algorithms. Below, I’ll provide a comprehensive explanation of the <code>Interlocked</code> class, including its purpose, usage, key methods, and best practices, tailored to help you excel in your C# interview.</p>
+<hr />
+<h3 id="what-is-interlocked"><strong>What is Interlocked?</strong></h3>
+<p>The <code>Interlocked</code> class provides methods to perform atomic operations on shared variables, ensuring that operations like incrementing, decrementing, exchanging, or comparing values are executed as a single, uninterruptible step. This eliminates the need for locks (<code>Monitor</code>/<code>lock</code>, <code>SpinLock</code>, etc.) in scenarios where simple updates are required, reducing overhead and improving performance.</p>
+<ul>
+<li><p><strong>Namespace</strong>: <code>System.Threading</code></p>
+</li>
+<li><p><strong>Purpose</strong>: Enables thread-safe, atomic operations on shared variables without explicit locking, ideal for lock-free programming and high-performance scenarios.</p>
+</li>
+<li><p><strong>Key Concept</strong>:</p>
+<ul>
+<li>Atomic operations ensure that a variable is read, modified, and written back in a single step, preventing race conditions.</li>
+<li><code>Interlocked</code> operates directly on memory locations, typically for primitive types like <code>int</code>, <code>long</code>, or references.</li>
+<li>It’s lightweight because it uses hardware-level atomic instructions (e.g., CPU compare-and-swap operations).</li>
+</ul>
+</li>
+<li><p><strong>Use Cases</strong>:</p>
+<ul>
+<li>Incrementing or decrementing a shared counter (e.g., counting events or active tasks).</li>
+<li>Updating shared flags or references in a thread-safe manner.</li>
+<li>Implementing lock-free data structures or algorithms (e.g., thread-safe counters, flags, or queues).</li>
+<li>Coordinating simple state changes between threads without the overhead of locks.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="key-methods-of-interlocked"><strong>Key Methods of Interlocked</strong></h3>
+<p>The <code>Interlocked</code> class provides static methods for atomic operations. Below are the most commonly used methods:</p>
+<ul>
+<li><p><strong>Increment and Decrement</strong>:</p>
+<ul>
+<li><code>Interlocked.Increment(ref int/long location)</code>: Atomically increments the specified variable and returns the new value.</li>
+<li><code>Interlocked.Decrement(ref int/long location)</code>: Atomically decrements the specified variable and returns the new value.</li>
+<li>Example: Thread-safe counter increment without a lock.</li>
+</ul>
+</li>
+<li><p><strong>Exchange</strong>:</p>
+<ul>
+<li><code>Interlocked.Exchange(ref T location, T value)</code>: Atomically sets the specified variable to a new value and returns the original value.</li>
+<li>Supported types: <code>int</code>, <code>long</code>, <code>float</code>, <code>double</code>, <code>IntPtr</code>, and reference types (<code>T</code> where <code>T</code> is a reference type).</li>
+<li>Example: Swapping a shared reference (e.g., updating a configuration object).</li>
+</ul>
+</li>
+<li><p><strong>CompareExchange</strong>:</p>
+<ul>
+<li><code>Interlocked.CompareExchange(ref T location, T value, T comparand)</code>: Atomically compares the variable with <code>comparand</code> and, if equal, sets it to <code>value</code>. Returns the original value.</li>
+<li>Supported types: Same as <code>Exchange</code>.</li>
+<li>Example: Implementing lock-free updates or state transitions.</li>
+</ul>
+</li>
+<li><p><strong>Add</strong>:</p>
+<ul>
+<li><code>Interlocked.Add(ref int/long location, int/long value)</code>: Atomically adds the specified value to the variable and returns the new value.</li>
+<li>Example: Accumulating values in a shared variable.</li>
+</ul>
+</li>
+<li><p><strong>Read</strong>:</p>
+<ul>
+<li><code>Interlocked.Read(ref long location)</code>: Atomically reads a 64-bit value (useful on 32-bit systems where <code>long</code> reads are not atomic).</li>
+<li>Example: Safely reading a <code>long</code> counter.</li>
+</ul>
+</li>
+<li><p><strong>MemoryBarrier</strong>:</p>
+<ul>
+<li><code>Interlocked.MemoryBarrier()</code>: Ensures memory operations are completed in the correct order, preventing reordering by the compiler or CPU.</li>
+<li>Example: Used in advanced lock-free algorithms to enforce memory visibility.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="how-interlocked-works"><strong>How Interlocked Works</strong></h3>
+<ol>
+<li><p><strong>Atomic Operation</strong>:</p>
+<ul>
+<li><code>Interlocked</code> methods use hardware-level instructions (e.g., <code>LOCK CMPXCHG</code> on x86/x64) to ensure operations are indivisible.</li>
+<li>This guarantees that no other thread can interrupt the operation, preventing race conditions.</li>
+</ul>
+</li>
+<li><p><strong>No Blocking</strong>:</p>
+<ul>
+<li>Unlike <code>Monitor</code> or <code>Mutex</code>, <code>Interlocked</code> does not block threads or involve kernel transitions, making it extremely fast for simple operations.</li>
+<li>However, it’s limited to specific operations (e.g., increment, exchange) and cannot protect complex critical sections.</li>
+</ul>
+</li>
+<li><p><strong>Lock-Free Programming</strong>:</p>
+<ul>
+<li><code>Interlocked</code> is often used in lock-free algorithms, where threads retry operations (e.g., using <code>CompareExchange</code>) until successful.</li>
+<li>This requires careful design to ensure correctness and avoid infinite loops.</li>
+</ul>
+</li>
+</ol>
+<hr />
+<h3 id="example-thread-safe-counter-with-interlocked"><strong>Example: Thread-Safe Counter with Interlocked</strong></h3>
+<p>Here’s an example of using <code>Interlocked</code> to increment a shared counter in a multithreaded application:</p>
+<pre><code class="language-csharp">using System;
+using System.Threading;
+
+class Program
+{
+    private static int counter = 0;
+
+    static void Main()
+    {
+        Thread[] threads = new Thread[5];
+        for (int i = 0; i &lt; 5; i++)
+        {
+            threads[i] = new Thread(IncrementCounter);
+            threads[i].Start();
+        }
+
+        foreach (var thread in threads)
+        {
+            thread.Join();
+        }
+
+        Console.WriteLine($&quot;Final counter value: {counter}&quot;);
+    }
+
+    static void IncrementCounter()
+    {
+        for (int i = 0; i &lt; 100000; i++)
+        {
+            Interlocked.Increment(ref counter); // Atomic increment
+        }
+    }
+}
+</code></pre>
+<ul>
+<li><p><strong>Output</strong>:</p>
+<pre><code>Final counter value: 500000
+</code></pre>
+</li>
+<li><p><strong>Explanation</strong>:</p>
+<ul>
+<li>The <code>counter</code> is incremented atomically using <code>Interlocked.Increment</code>, ensuring thread safety without a lock.</li>
+<li>Each thread performs 100,000 increments, and the final value is correct because <code>Interlocked</code> prevents race conditions.</li>
+<li>This is more efficient than using <code>lock</code> for such a simple operation.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="example-lock-free-flag-update-with-compareexchange"><strong>Example: Lock-Free Flag Update with CompareExchange</strong></h3>
+<p>Here’s an example of using <code>Interlocked.CompareExchange</code> to implement a lock-free flag update:</p>
+<pre><code class="language-csharp">using System;
+using System.Threading;
+
+class Program
+{
+    private static int flag = 0; // 0 = unset, 1 = set
+
+    static void Main()
+    {
+        Thread[] threads = new Thread[3];
+        for (int i = 0; i &lt; 3; i++)
+        {
+            int threadId = i + 1;
+            threads[i] = new Thread(() =&gt; TrySetFlag(threadId));
+            threads[i].Start();
+        }
+
+        foreach (var thread in threads)
+        {
+            thread.Join();
+        }
+
+        Console.WriteLine($&quot;Final flag value: {flag}&quot;);
+    }
+
+    static void TrySetFlag(int threadId)
+    {
+        // Try to set flag from 0 to 1
+        if (Interlocked.CompareExchange(ref flag, 1, 0) == 0)
+        {
+            Console.WriteLine($&quot;Thread {threadId} successfully set the flag.&quot;);
+        }
+        else
+        {
+            Console.WriteLine($&quot;Thread {threadId} failed to set the flag; it was already set.&quot;);
+        }
+    }
+}
+</code></pre>
+<ul>
+<li><p><strong>Output (example)</strong>:</p>
+<pre><code>Thread 1 successfully set the flag.
+Thread 2 failed to set the flag; it was already set.
+Thread 3 failed to set the flag; it was already set.
+Final flag value: 1
+</code></pre>
+</li>
+<li><p><strong>Explanation</strong>:</p>
+<ul>
+<li><code>Interlocked.CompareExchange</code> atomically checks if <code>flag</code> is 0 and, if so, sets it to 1.</li>
+<li>Only one thread succeeds in setting the flag; others detect it was already set (original value is 1).</li>
+<li>This implements a lock-free &quot;first-come, first-serve&quot; flag update.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="example-lock-free-linked-list-push"><strong>Example: Lock-Free Linked List Push</strong></h3>
+<p>Here’s a more advanced example of using <code>Interlocked</code> to implement a lock-free push operation on a singly linked list:</p>
+<pre><code class="language-csharp">using System;
+using System.Threading;
+
+class Program
+{
+    private class Node
+    {
+        public int Value { get; set; }
+        public Node Next { get; set; }
+        public Node(int value) =&gt; Value = value;
+    }
+
+    private static Node head = null;
+
+    static void Main()
+    {
+        Thread[] threads = new Thread[3];
+        for (int i = 0; i &lt; 3; i++)
+        {
+            int value = i + 1;
+            threads[i] = new Thread(() =&gt; Push(value));
+            threads[i].Start();
+        }
+
+        foreach (var thread in threads)
+        {
+            thread.Join();
+        }
+
+        // Print the list
+        Node current = head;
+        while (current != null)
+        {
+            Console.WriteLine($&quot;Node value: {current.Value}&quot;);
+            current = current.Next;
+        }
+    }
+
+    static void Push(int value)
+    {
+        Node newNode = new Node(value);
+        Node oldHead;
+        do
+        {
+            oldHead = head;
+            newNode.Next = oldHead;
+        } while (Interlocked.CompareExchange(ref head, newNode, oldHead) != oldHead);
+        Console.WriteLine($&quot;Thread pushed value: {value}&quot;);
+    }
+}
+</code></pre>
+<ul>
+<li><strong>Explanation</strong>:
+<ul>
+<li>The <code>Push</code> method adds a new node to the head of a linked list using <code>Interlocked.CompareExchange</code>.</li>
+<li>The loop retries if another thread updates <code>head</code> before the current thread’s <code>CompareExchange</code> succeeds.</li>
+<li>This ensures thread-safe, lock-free insertion into the list.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="interlocked-vs.other-synchronization-primitives"><strong>Interlocked vs. Other Synchronization Primitives</strong></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th><code>Interlocked</code></th>
+<th><code>SpinLock</code></th>
+<th><code>Monitor</code>/<code>lock</code></th>
+<th><code>ReaderWriterLockSlim</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Atomic operations on variables</td>
+<td>Lightweight mutual exclusion</td>
+<td>Mutual exclusion</td>
+<td>Concurrent reads, exclusive writes</td>
+</tr>
+<tr>
+<td><strong>Scope</strong></td>
+<td>Intra-process only</td>
+<td>Intra-process only</td>
+<td>Intra-process only</td>
+<td>Intra-process only</td>
+</tr>
+<tr>
+<td><strong>Concurrency</strong></td>
+<td>Atomic updates, no exclusion</td>
+<td>One thread at a time</td>
+<td>One thread at a time</td>
+<td>Multiple readers, one writer</td>
+</tr>
+<tr>
+<td><strong>Waiting Mechanism</strong></td>
+<td>No waiting (atomic)</td>
+<td>Spin-waiting</td>
+<td>Blocking (kernel wait)</td>
+<td>Blocking (user-mode)</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td>Extremely lightweight</td>
+<td>Lightweight for short locks</td>
+<td>Moderate (kernel if contended)</td>
+<td>Moderate (user-mode)</td>
+</tr>
+<tr>
+<td><strong>Async Support</strong></td>
+<td>No async support</td>
+<td>No async support</td>
+<td>No async support</td>
+<td>Limited (via <code>Task</code>)</td>
+</tr>
+<tr>
+<td><strong>Use Case</strong></td>
+<td>Simple variable updates, lock-free</td>
+<td>Short critical sections</td>
+<td>General-purpose synchronization</td>
+<td>Read-heavy scenarios</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Interlocked vs. SpinLock</strong>:
+<ul>
+<li><code>Interlocked</code> performs atomic operations without enforcing a critical section; <code>SpinLock</code> protects a critical section with mutual exclusion.</li>
+<li>Use <code>Interlocked</code> for simple updates (e.g., incrementing a counter); use <code>SpinLock</code> for short critical sections.</li>
+</ul>
+</li>
+<li><strong>Interlocked vs. Monitor/lock</strong>:
+<ul>
+<li><code>Interlocked</code> is faster for single-variable updates; <code>Monitor</code>/<code>lock</code> is better for protecting complex critical sections.</li>
+<li>Use <code>Interlocked</code> for lock-free updates; use <code>lock</code> for general-purpose synchronization.</li>
+</ul>
+</li>
+<li><strong>Interlocked vs. ReaderWriterLockSlim</strong>:
+<ul>
+<li><code>Interlocked</code> is for atomic updates; <code>ReaderWriterLockSlim</code> is for read/write scenarios with multiple readers.</li>
+<li>Use <code>Interlocked</code> for simple, lock-free updates; use <code>ReaderWriterLockSlim</code> for read-heavy workloads.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="key-considerations-for-interview"><strong>Key Considerations for Interview</strong></h3>
+<ol>
+<li><p><strong>When to Use Interlocked</strong>:</p>
+<ul>
+<li>Use <code>Interlocked</code> for simple, atomic operations like incrementing counters, updating flags, or swapping references.</li>
+<li>Avoid for complex critical sections requiring multiple operations; use <code>lock</code> or <code>ReaderWriterLockSlim</code> instead.</li>
+<li>Ideal for lock-free programming or high-performance scenarios where locks are too costly.</li>
+</ul>
+</li>
+<li><p><strong>Performance</strong>:</p>
+<ul>
+<li><code>Interlocked</code> is extremely efficient because it uses hardware atomic instructions, avoiding kernel transitions.</li>
+<li>For complex operations, the overhead of retry loops (e.g., with <code>CompareExchange</code>) may outweigh the benefits of lock-free code.</li>
+</ul>
+</li>
+<li><p><strong>Thread Safety</strong>:</p>
+<ul>
+<li><code>Interlocked</code> ensures atomicity but does not provide mutual exclusion for multiple operations.</li>
+<li>Use with <code>volatile</code> or <code>MemoryBarrier</code> to ensure memory visibility across threads.</li>
+</ul>
+</li>
+<li><p><strong>Lock-Free Programming</strong>:</p>
+<ul>
+<li><code>Interlocked</code> is a cornerstone of lock-free algorithms, but these require careful design to avoid issues like infinite loops or incorrect updates.</li>
+<li>Always verify the correctness of lock-free code through thorough testing.</li>
+</ul>
+</li>
+<li><p><strong>Common Pitfalls</strong>:</p>
+<ul>
+<li><strong>Non-Atomic Operations</strong>: <code>Interlocked</code> only protects single operations; combining multiple <code>Interlocked</code> calls is not atomic unless carefully coordinated.</li>
+<li><strong>Incorrect CompareExchange Usage</strong>: Misusing <code>CompareExchange</code> (e.g., wrong comparand) can lead to incorrect updates or infinite loops.</li>
+<li><strong>Memory Visibility</strong>: Without <code>volatile</code> or <code>MemoryBarrier</code>, updates may not be immediately visible to other threads on some architectures.</li>
+<li><strong>No Async Support</strong>: <code>Interlocked</code> is not suitable for <code>async</code>/<code>await</code> scenarios; use <code>SemaphoreSlim</code> or concurrent collections for async code.</li>
+</ul>
+</li>
+<li><p><strong>Common Interview Questions</strong>:</p>
+<ul>
+<li><strong>What’s the difference between <code>Interlocked</code> and <code>lock</code>?</strong>
+<ul>
+<li><code>Interlocked</code> performs atomic operations without locking; <code>lock</code> protects a critical section with mutual exclusion.</li>
+</ul>
+</li>
+<li><strong>When would you use <code>Interlocked</code> instead of <code>SpinLock</code>?</strong>
+<ul>
+<li>Use <code>Interlocked</code> for single-variable updates (e.g., incrementing a counter); use <code>SpinLock</code> for short critical sections involving multiple operations.</li>
+</ul>
+</li>
+<li><strong>How does <code>Interlocked.CompareExchange</code> work?</strong>
+<ul>
+<li>It atomically compares a variable with a value and, if equal, sets it to a new value, returning the original value.</li>
+</ul>
+</li>
+<li><strong>What is a lock-free algorithm, and how does <code>Interlocked</code> support it?</strong>
+<ul>
+<li>A lock-free algorithm avoids locks by using atomic operations; <code>Interlocked</code> provides atomic primitives like <code>CompareExchange</code> for such algorithms.</li>
+</ul>
+</li>
+<li><strong>What happens if you use <code>Interlocked</code> on a non-atomic variable?</strong>
+<ul>
+<li><code>Interlocked</code> only works on supported types (<code>int</code>, <code>long</code>, etc.); using it on unsupported types or complex operations requires locks.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<hr />
+<h3 id="best-practices"><strong>Best Practices</strong></h3>
+<ul>
+<li>Use <code>Interlocked</code> for simple, atomic operations like incrementing counters or updating flags.</li>
+<li>Combine with <code>volatile</code> or <code>Interlocked.MemoryBarrier</code> to ensure memory visibility across threads.</li>
+<li>Use <code>CompareExchange</code> for lock-free updates, but ensure retry loops terminate correctly.</li>
+<li>Keep critical sections minimal; for complex operations, prefer <code>lock</code> or <code>ReaderWriterLockSlim</code>.</li>
+<li>Test lock-free code thoroughly to verify correctness under contention.</li>
+<li>Avoid <code>Interlocked</code> in async code; use <code>SemaphoreSlim</code> or concurrent collections instead.</li>
+<li>Consider higher-level constructs like <code>ConcurrentDictionary</code> or <code>ConcurrentBag</code> before implementing custom lock-free logic.</li>
+</ul>
+<hr />
+<h3 id="why-this-matters-for-your-interview"><strong>Why This Matters for Your Interview</strong></h3>
+<p>Interviewers ask about <code>Interlocked</code> to evaluate:</p>
+<ul>
+<li><strong>Multithreading Knowledge</strong>: Your understanding of atomic operations and lock-free programming.</li>
+<li><strong>Performance Optimization</strong>: Your ability to choose lightweight synchronization for high-performance scenarios.</li>
+<li><strong>Concurrency Design</strong>: Your approach to handling simple updates without locks.</li>
+<li><strong>Problem-Solving</strong>: How you implement and debug lock-free algorithms or handle edge cases.</li>
+</ul>
+<p>If you have a specific scenario, coding problem, or follow-up question about <code>Interlocked</code> (e.g., implementing a lock-free data structure or optimizing a counter), let me know, and I’ll provide a tailored example or deeper explanation. What’s your next question?</p>
+
+    </div>
+</body>
+</html>"

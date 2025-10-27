@@ -1,0 +1,120 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-are-grpc-streams">What are gRPC Streams?</h3>
+<p>gRPC (gRPC Remote Procedure Calls) is an open-source, high-performance framework developed by Google for building distributed systems, using Protocol Buffers (protobuf) for serialization and HTTP/2 for transport. While gRPC supports simple unary RPCs (single request, single response), <strong>streams</strong> extend this to handle ongoing, multi-message interactions. Streams enable efficient, bidirectional communication over a single connection, leveraging HTTP/2's multiplexing to send multiple messages concurrently without polling or long-lived connections.</p>
+<p>Streams are declared in your <code>.proto</code> file using the <code>stream</code> keyword on parameters. For example:</p>
+<pre><code class="language-proto">service ChatService {
+  rpc SendMessage(stream MessageRequest) returns (stream MessageResponse);  // Bidirectional stream
+}
+</code></pre>
+<p>The gRPC runtime handles framing, flow control, and error management automatically.</p>
+<h4 id="types-of-grpc-streams">Types of gRPC Streams</h4>
+<p>gRPC supports four RPC types, with the last three being streaming variants. Here's a comparison:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+<th>Proto Syntax Example</th>
+<th>When to Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Unary</strong> (Non-Streaming)</td>
+<td>Single request message followed by a single response. No streams involved.</td>
+<td><code>rpc GetUser(UserRequest) returns (UserResponse);</code></td>
+<td>Simple queries like fetching a single record (e.g., user profile).</td>
+</tr>
+<tr>
+<td><strong>Server Streaming</strong></td>
+<td>Client sends one request; server responds with a stream of messages (client iterates until end).</td>
+<td><code>rpc WatchUpdates(WatchRequest) returns (stream Update);</code></td>
+<td>Real-time feeds, like stock price updates or log tailing (server pushes as data arrives).</td>
+</tr>
+<tr>
+<td><strong>Client Streaming</strong></td>
+<td>Client sends a stream of requests; server responds with one aggregated response after processing all.</td>
+<td><code>rpc UploadFile(stream Chunk) returns (UploadResponse);</code></td>
+<td>Uploading large data in chunks (e.g., file uploads or voice input).</td>
+</tr>
+<tr>
+<td><strong>Bidirectional Streaming</strong></td>
+<td>Both client and server send independent streams of messages; either can read/write at any time until closed.</td>
+<td><code>rpc Chat(stream Message) returns (stream Message);</code></td>
+<td>Interactive sessions like chat apps or video calls (full-duplex communication).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="how-grpc-streams-work-high-level">How gRPC Streams Work (High-Level)</h4>
+<ol>
+<li><strong>Connection Setup</strong>: Uses HTTP/2 for a persistent connection with multiplexing (multiple streams over one TCP connection).</li>
+<li><strong>Message Framing</strong>: Protobuf messages are prefixed with length headers; streams are delimited by flags (e.g., END_STREAM).</li>
+<li><strong>Flow Control</strong>: HTTP/2 windowing prevents overwhelming the receiver; gRPC adds backpressure handling.</li>
+<li><strong>Lifecycle</strong>:
+<ul>
+<li>Client initiates with a request (or stream start).</li>
+<li>Messages flow asynchronously; use iterators (e.g., in Go: <code>for { msg, err := stream.Recv() }</code>) to read.</li>
+<li>Close via <code>stream.CloseSend()</code> or errors; half-closed states allow graceful shutdown.</li>
+</ul>
+</li>
+<li><strong>Error Handling</strong>: Uses status codes (e.g., <code>grpc.StatusUnavailable</code>) and trailers for metadata.</li>
+</ol>
+<p>Implementation varies by language (e.g., Java's <code>StreamObserver</code>, Python's async iterators), but the protocol is language-agnostic.</p>
+<h4 id="pros-and-cons-of-grpc-streams">Pros and Cons of gRPC Streams</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th><strong>Pros</strong></th>
+<th><strong>Cons</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Performance</strong></td>
+<td>- Efficient for high-throughput: Reduces overhead vs. multiple unary calls (e.g., one connection for 1000s of messages).<br>- HTTP/2 multiplexing avoids head-of-line blocking.</td>
+<td>- Higher memory use for buffering large streams.<br>- Debugging complex bidirectional flows requires tools like gRPCurl or Wireshark.</td>
+</tr>
+<tr>
+<td><strong>Flexibility</strong></td>
+<td>- Supports real-time, duplex comms without WebSockets (built-in flow control).<br>- Backpressure and cancellation built-in.</td>
+<td>- Steeper learning curve than REST; requires protobuf schema evolution.<br>- Not ideal for simple requests (overkill vs. unary).</td>
+</tr>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>- Great for microservices: Enables pub/sub-like patterns without extra brokers.<br>- Compresses well with protobuf.</td>
+<td>- Network-sensitive: Latency spikes affect streams; firewalls may block HTTP/2.<br>- Ordering not guaranteed in bidirectional (use sequence IDs).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="use-cases">Use Cases</h4>
+<ul>
+<li><strong>Real-Time Apps</strong>: Server streaming for live notifications (e.g., Uber's ride updates).</li>
+<li><strong>Data Pipelines</strong>: Client streaming for ingesting logs or sensor data.</li>
+<li><strong>Interactive Services</strong>: Bidirectional for collaborative tools (e.g., Google Docs-like editing).</li>
+<li><strong>When to Avoid</strong>: For fire-and-forget events (use async queues like Kafka) or very low-latency needs (consider WebSockets if not in gRPC ecosystem).</li>
+</ul>
+<p>In a tech lead interview, emphasize streams' role in reducing API chatter and enabling reactive patterns—pair with interceptors for auth/logging. If scaling, consider gRPC-Web for browser support.</p>
+
+    </div>
+</body>
+</html>"

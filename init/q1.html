@@ -1,0 +1,53 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="when-should-one-use-synchronization">When Should One Use Synchronization?</h3>
+<p>Synchronization is essential in multi-threaded applications to coordinate access to shared resources (e.g., variables, objects, or files) among multiple threads. Use it when:</p>
+<ul>
+<li><strong>Multiple threads access shared mutable state</strong>: Without synchronization, threads might read/write simultaneously, causing data corruption or inconsistencies.</li>
+<li><strong>Ensuring atomicity</strong>: For operations that must complete as a single unit (e.g., incrementing a counter: read-modify-write).</li>
+<li><strong>Preventing race conditions</strong>: To enforce ordering, like one thread waiting for another to finish.</li>
+<li><strong>In scenarios like</strong>: Producer-consumer patterns, parallel processing (e.g., in async tasks or parallel loops), or when using collections like <code>ConcurrentDictionary</code> that require thread-safe access.</li>
+</ul>
+<p>In C#, use mechanisms like <code>lock</code>, <code>Monitor</code>, <code>Mutex</code>, <code>Semaphore</code>, <code>Interlocked</code> operations, or higher-level constructs like <code>Concurrent</code> collections from <code>System.Collections.Concurrent</code>. Avoid over-synchronization to prevent deadlocks or performance bottlenecks—prefer lock-free alternatives when possible.</p>
+<h3 id="what-is-thread-safety">What is Thread Safety?</h3>
+<p>Thread safety refers to the property of a class, method, or code block that ensures it can be accessed and modified by multiple threads concurrently without causing data races, corruption, or unexpected behavior. A thread-safe object either:</p>
+<ul>
+<li><strong>Handles concurrency internally</strong>: Using locks, atomic operations, or immutable designs (e.g., <code>readonly</code> fields or <code>ConcurrentQueue&lt;T&gt;</code>).</li>
+<li><strong>Is immutable</strong>: Cannot be changed after creation, so threads can read it safely without synchronization (e.g., <code>string</code> in C#).</li>
+<li><strong>Requires external synchronization</strong>: The user must provide locks (e.g., a non-thread-safe list like <code>List&lt;T&gt;</code>).</li>
+</ul>
+<p>Benefits include reliability in multi-threaded environments (e.g., web servers, async APIs). Drawbacks: Added complexity and potential performance overhead. In .NET, check for <code>ThreadSafe</code> attributes or use tools like <code>lock</code> for custom implementations. Always test with tools like ThreadSanitizer or stress tests.</p>
+<h3 id="what-is-race-condition">What is Race Condition?</h3>
+<p>A race condition is a concurrency bug where the program's behavior depends on the unpredictable timing or interleaving of threads' execution, leading to incorrect results. It occurs when:</p>
+<ul>
+<li><strong>Two or more threads access a shared resource simultaneously</strong>: One reads a value while another writes, causing one thread to see stale or partial data.</li>
+<li><strong>No synchronization is in place</strong>: E.g., two threads increment a shared counter <code>counter++</code>—if both read 5, increment to 6, and write back, the final value might be 6 instead of 7.</li>
+</ul>
+<p>Types:</p>
+<ul>
+<li><strong>Read-modify-write race</strong>: Common in counters or lists.</li>
+<li><strong>Check-then-act race</strong>: Thread A checks if a resource is available, then Thread B takes it before A acts (e.g., TOCTOU—Time-of-Check to Time-of-Use).</li>
+</ul>
+<p>In C#, examples include unsynchronized access to static fields in async methods. Prevent with synchronization primitives like <code>lock</code> or <code>Interlocked.Increment</code>. Detect via unit tests with multiple threads or tools like Visual Studio's concurrency visualizer. Race conditions are non-deterministic, making them hard to reproduce—always design defensively.</p>
+
+    </div>
+</body>
+</html>"

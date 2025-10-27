@@ -1,0 +1,84 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>In C#, <strong><code>AsyncLocal&lt;T&gt;</code></strong> is a class in the <code>System.Threading</code> namespace (introduced in .NET Framework 4.7.2 and .NET Core 2.0) that provides ambient, flowable storage for values in asynchronous execution contexts. It allows data to &quot;flow&quot; automatically through <code>async/await</code> chains without explicit parameter passing, unlike <code>ThreadLocal&lt;T&gt;</code> which is thread-bound and doesn't survive async continuations.</p>
+<ul>
+<li><p><strong>Purpose</strong>: Stores values (e.g., correlation IDs, current user, transaction context) that need to be accessible across async method calls, even on different threads. It's ideal for scenarios like logging, tracing, or dependency injection in async apps.</p>
+</li>
+<li><p><strong>Key Behavior</strong>:</p>
+<ul>
+<li>Values are scoped to the async execution flow (via the <code>ExecutionContext</code>).</li>
+<li>Changes are propagated to continuations after <code>await</code>, but not to child tasks created with <code>Task.Run()</code> unless explicitly configured.</li>
+<li>It's cooperative: Use <code>AsyncLocalFlowExecutionContext</code> to enable/disable flow if needed (default is enabled).</li>
+</ul>
+</li>
+<li><p><strong>Usage</strong>:</p>
+<ul>
+<li>Create: <code>var al = new AsyncLocal&lt;T&gt;();</code></li>
+<li>Set/Access: <code>al.Value = value;</code> or <code>var current = al.Value;</code></li>
+<li>No inheritance by default; each <code>AsyncLocal</code> is independent.</li>
+</ul>
+</li>
+<li><p><strong>Example</strong>:</p>
+</li>
+</ul>
+<pre><code class="language-csharp">using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+class Program
+{
+    static AsyncLocal&lt;string&gt; asyncLocal = new AsyncLocal&lt;string&gt;();
+
+    static async Task Main()
+    {
+        asyncLocal.Value = &quot;Initial Value&quot;;
+        Console.WriteLine($&quot;Main: {asyncLocal.Value}&quot;); // Outputs: Initial Value
+
+        await DoAsyncWork();
+        Console.WriteLine($&quot;After Await: {asyncLocal.Value}&quot;); // Outputs: Modified Value (flows through)
+    }
+
+    static async Task DoAsyncWork()
+    {
+        Console.WriteLine($&quot;DoAsyncWork Start: {asyncLocal.Value}&quot;); // Outputs: Initial Value
+        asyncLocal.Value = &quot;Modified Value&quot;;
+        await Task.Delay(100); // Simulates async work
+        Console.WriteLine($&quot;DoAsyncWork End: {asyncLocal.Value}&quot;); // Outputs: Modified Value
+    }
+}
+</code></pre>
+<ul>
+<li><p><strong>Limitations</strong>:</p>
+<ul>
+<li>Doesn't flow through <code>ConfigureAwait(false)</code> if context isn't captured.</li>
+<li>Not suitable for synchronous code; use <code>ThreadLocal&lt;T&gt;</code> instead.</li>
+<li>Potential for misuse (e.g., hidden dependencies); prefer explicit parameters when possible.</li>
+<li>In ASP.NET Core, it's often used with <code>IHttpContextAccessor</code> or middleware for request-scoped data.</li>
+</ul>
+</li>
+<li><p><strong>Best Practices</strong>: Use for truly ambient data; avoid overuse to maintain code clarity. It's thread-safe but can lead to subtle bugs if flow is misunderstood.</p>
+</li>
+</ul>
+<p>Ask for more specifics or examples if needed!</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,98 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="common-integration-patterns-for-microservices">Common Integration Patterns for Microservices</h3>
+<p>As a tech lead, I've worked with various integration patterns in microservices architectures to ensure loose coupling, scalability, and reliability. These patterns help services communicate without tight dependencies. Here's a breakdown of the key ones I know, categorized by synchronous vs. asynchronous styles for clarity:</p>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Type</th>
+<th>Description</th>
+<th>Pros</th>
+<th>Cons</th>
+<th>When to Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Request-Response (e.g., REST/HTTP or gRPC)</strong></td>
+<td>Synchronous</td>
+<td>One service sends a request to another and waits for a direct response. Often routed through an API Gateway.</td>
+<td>Simple, easy to implement and debug; immediate feedback.</td>
+<td>Tight coupling; can lead to cascading failures if a service is slow.</td>
+<td>Real-time interactions like user queries or simple CRUD operations.</td>
+</tr>
+<tr>
+<td><strong>Messaging (e.g., Point-to-Point with RabbitMQ)</strong></td>
+<td>Asynchronous</td>
+<td>Services send messages to a queue, and a consumer processes them independently.</td>
+<td>Decouples sender and receiver; handles load spikes via buffering.</td>
+<td>Potential for message loss if not configured for persistence; harder to trace.</td>
+<td>Workflows where order matters but immediate response isn't required, like order processing.</td>
+</tr>
+<tr>
+<td><strong>Publish-Subscribe (e.g., Kafka Topics)</strong></td>
+<td>Asynchronous</td>
+<td>A publisher broadcasts events to a topic, and multiple subscribers react independently.</td>
+<td>High scalability for fan-out scenarios; supports event sourcing.</td>
+<td>Eventual consistency; debugging complex event flows.</td>
+<td>Broadcasting updates, like inventory changes notifying multiple services (e.g., pricing, shipping).</td>
+</tr>
+<tr>
+<td><strong>Event Sourcing</strong></td>
+<td>Asynchronous</td>
+<td>Services store state as a sequence of immutable events, replayable for queries.</td>
+<td>Auditability and easy state reconstruction; great for CQRS integration.</td>
+<td>Storage overhead; complexity in event versioning.</td>
+<td>Systems needing historical traceability, like financial transactions.</td>
+</tr>
+<tr>
+<td><strong>Saga Pattern</strong></td>
+<td>Orchestrated (Sync/Async Mix)</td>
+<td>Coordinates distributed transactions across services using a saga orchestrator or choreographer, compensating on failures.</td>
+<td>Handles long-running transactions without 2PC; maintains consistency.</td>
+<td>Choreography can lead to brittle flows; requires careful error handling.</td>
+<td>E-commerce checkouts involving multiple services (payment, inventory, notification).</td>
+</tr>
+<tr>
+<td><strong>API Composition/Gateway Aggregation</strong></td>
+<td>Synchronous</td>
+<td>An API Gateway or BFF (Backend for Frontend) aggregates data from multiple services into a single response.</td>
+<td>Reduces client complexity; enforces security/cross-cutting concerns.</td>
+<td>Single point of failure; latency adds up from multiple calls.</td>
+<td>Mobile/web apps needing unified views from disparate services.</td>
+</tr>
+<tr>
+<td><strong>Service Mesh (e.g., Istio/Linkerd)</strong></td>
+<td>Sidecar Proxy (Sync/Async)</td>
+<td>Injects proxies alongside services for traffic management, observability, and security without code changes.</td>
+<td>Transparent resilience (retries, circuit breaking); promotes polyglot services.</td>
+<td>Overhead from additional network hops; steep learning curve.</td>
+<td>Mature microservices ecosystems needing advanced observability and fault tolerance.</td>
+</tr>
+</tbody>
+</table>
+<p>These patterns often overlap—for instance, combining Pub-Sub with Sagas for resilient event-driven systems. In practice, I evaluate based on requirements like latency tolerance, data consistency needs, and team expertise.</p>
+<p>To make this more concrete, could you share an example from your experience where one of these patterns was particularly effective (or challenging)? I'd love to hear how it played out in a real project.</p>
+
+    </div>
+</body>
+</html>"

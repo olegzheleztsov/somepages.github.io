@@ -1,0 +1,53 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>In C#, a <code>Task</code> represents an asynchronous operation, part of the Task Parallel Library (TPL) introduced in .NET Framework 4.0. It enables asynchronous programming, allowing operations to run concurrently without blocking the main thread.</p>
+<ul>
+<li><strong>Definition</strong>: A <code>Task</code> is an object that encapsulates a piece of work that can execute asynchronously, typically on a thread pool thread.</li>
+<li><strong>Key Types</strong>:
+<ul>
+<li><code>Task</code>: Represents an operation without a return value.</li>
+<li><code>Task&lt;T&gt;</code>: Represents an operation that returns a value of type <code>T</code>.</li>
+</ul>
+</li>
+<li><strong>Creation</strong>:
+<ul>
+<li><code>Task.Run()</code>: Runs a delegate or lambda on a thread pool thread (e.g., <code>Task.Run(() =&gt; DoWork())</code>).</li>
+<li><code>Task.Factory.StartNew()</code>: More customizable but less common.</li>
+<li><code>new Task()</code>: Creates a task but requires manual starting with <code>.Start()</code>.</li>
+</ul>
+</li>
+<li><strong>Awaiting</strong>: Use <code>await</code> with <code>async</code> methods to wait for task completion without blocking (e.g., <code>await Task.Delay(1000)</code>).</li>
+<li><strong>Status</strong>: Tasks have states like <code>Running</code>, <code>Completed</code>, <code>Faulted</code>, or <code>Canceled</code>.</li>
+<li><strong>Cancellation</strong>: Use <code>CancellationToken</code> to cancel tasks gracefully.</li>
+<li><strong>Exception Handling</strong>: Use <code>try-catch</code> around <code>await</code> or check <code>Task.Exception</code> for errors.</li>
+<li><strong>Common Use Cases</strong>: I/O-bound operations (e.g., file/network access), CPU-bound work, parallel processing.</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-csharp">async Task DoWorkAsync()
+{
+    await Task.Run(() =&gt; Console.WriteLine(&quot;Running...&quot;));
+}
+</code></pre>
+<p>Ask away for more details or specific scenarios!</p>
+
+    </div>
+</body>
+</html>"

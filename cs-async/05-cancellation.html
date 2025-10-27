@@ -1,0 +1,92 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>In C#, <strong>Task Cancellation</strong> allows you to gracefully stop a running <code>Task</code> or asynchronous operation using the <strong>CancellationToken</strong> system in the Task Parallel Library (TPL).</p>
+<ul>
+<li><p><strong>Key Components</strong>:</p>
+<ul>
+<li><strong>CancellationTokenSource (CTS)</strong>: Creates and manages a <code>CancellationToken</code>. Call <code>Cancel()</code> to signal cancellation.</li>
+<li><strong>CancellationToken</strong>: A lightweight struct passed to tasks to monitor cancellation requests.</li>
+</ul>
+</li>
+<li><p><strong>How It Works</strong>:</p>
+<ul>
+<li>Create a <code>CancellationTokenSource</code>.</li>
+<li>Pass its <code>Token</code> to a task or method.</li>
+<li>The task checks the token (e.g., <code>IsCancellationRequested</code>) or throws an exception if canceled.</li>
+<li>Call <code>CTS.Cancel()</code> to trigger cancellation.</li>
+</ul>
+</li>
+<li><p><strong>Usage</strong>:</p>
+<ul>
+<li><strong>Cooperative Cancellation</strong>: The task must check <code>token.IsCancellationRequested</code> and exit gracefully.</li>
+<li><strong>ThrowIfCancellationRequested</strong>: Throws <code>OperationCanceledException</code> if the token is canceled.</li>
+<li>Used in async methods, <code>Task.Run</code>, or APIs like <code>HttpClient</code>.</li>
+</ul>
+</li>
+<li><p><strong>Example</strong>:</p>
+</li>
+</ul>
+<pre><code class="language-csharp">CancellationTokenSource cts = new CancellationTokenSource();
+CancellationToken token = cts.Token;
+
+Task task = Task.Run(() =&gt;
+{
+    for (int i = 0; i &lt; 100; i++)
+    {
+        token.ThrowIfCancellationRequested(); // Throws if canceled
+        Console.WriteLine(i);
+        Thread.Sleep(100);
+    }
+}, token);
+
+cts.CancelAfter(500); // Cancel after 500ms
+try
+{
+    await task;
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine(&quot;Task was canceled.&quot;);
+}
+</code></pre>
+<ul>
+<li><p><strong>Key Points</strong>:</p>
+<ul>
+<li>Cancellation is cooperative; tasks must explicitly check the token.</li>
+<li>Use <code>OperationCanceledException</code> to handle cancellation in <code>try-catch</code>.</li>
+<li>Call <code>CTS.Dispose()</code> when done to free resources.</li>
+<li>Combine with <code>async/await</code> for clean cancellation in async code.</li>
+<li>Use <code>CancelAfter</code> for timeouts or <code>Cancel</code> for manual cancellation.</li>
+</ul>
+</li>
+<li><p><strong>Best Practices</strong>:</p>
+<ul>
+<li>Always pass <code>CancellationToken</code> to APIs that support it (e.g., <code>HttpClient.GetAsync</code>).</li>
+<li>Avoid ignoring cancellation requests in long-running tasks.</li>
+<li>Handle <code>OperationCanceledException</code> separately from other exceptions.</li>
+</ul>
+</li>
+</ul>
+<p>Ask for more details or examples if needed!</p>
+
+    </div>
+</body>
+</html>"

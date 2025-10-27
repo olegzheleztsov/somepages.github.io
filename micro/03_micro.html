@@ -1,0 +1,118 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="deciding-microservice-boundaries-a-decision-framework">Deciding Microservice Boundaries: A Decision Framework</h3>
+<p>Deciding what part of code becomes a microservice is crucial to avoid &quot;nanoservices&quot; (too granular, increasing overhead) or &quot;distributed monoliths&quot; (too coarse, losing modularity benefits). As a tech lead, this involves balancing business needs, technical cohesion, and operational simplicity. Use <strong>Domain-Driven Design (DDD)</strong> as a foundation: Identify <strong>bounded contexts</strong>—self-contained domains where a model or language is consistent (e.g., &quot;Order Management&quot; vs. &quot;User Authentication&quot;).</p>
+<h4 id="step-by-step-decision-process">Step-by-Step Decision Process</h4>
+<ol>
+<li><p><strong>Map Business Domains</strong>:</p>
+<ul>
+<li>Analyze the application's core capabilities. Ask: What are the independent business functions? (E.g., in e-commerce: User profiles, payments, inventory.)</li>
+<li>Use event storming workshops with stakeholders to visualize workflows and identify natural seams (e.g., where data flows cross domains).</li>
+</ul>
+</li>
+<li><p><strong>Apply Single Responsibility Principle (SRP)</strong>:</p>
+<ul>
+<li>A microservice should own one cohesive responsibility: Handle a specific domain model, including its data and logic.</li>
+<li>Criteria: Does it have its own data store? Can it be deployed independently? If changes in one area rarely affect another, it's a good boundary.</li>
+</ul>
+</li>
+<li><p><strong>Evaluate Coupling and Cohesion</strong>:</p>
+<ul>
+<li><strong>High Cohesion</strong>: Code within the service is tightly related (e.g., all order-related CRUD and rules in one service).</li>
+<li><strong>Low Coupling</strong>: Minimal dependencies on other services (e.g., communicate via APIs/events, not shared DBs).</li>
+<li>Test: If you &quot;cut&quot; the code into modules, do they make logical sense standalone?</li>
+</ul>
+</li>
+<li><p><strong>Consider Operational and Team Factors</strong>:</p>
+<ul>
+<li><strong>Team Size and Ownership</strong>: Align with Conway's Law—one team per service (ideally 5-9 people, &quot;two-pizza team&quot;).</li>
+<li><strong>Scalability Needs</strong>: Isolate high-traffic parts (e.g., recommendation engine as its own service).</li>
+<li><strong>Deployment Frequency</strong>: If parts need different release cadences, separate them.</li>
+</ul>
+</li>
+<li><p><strong>Validate with Prototyping</strong>:</p>
+<ul>
+<li>Start with a monolith and use the &quot;strangler fig&quot; pattern: Gradually extract services.</li>
+<li>Metrics: Monitor latency, error rates, and deployment frequency post-extraction.</li>
+</ul>
+</li>
+</ol>
+<h4 id="key-criteria-table">Key Criteria Table</h4>
+<p>Use this table during design reviews to score potential boundaries (e.g., 1-5 scale per criterion).</p>
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Description</th>
+<th>Why It Matters</th>
+<th>Example Boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Business Alignment</strong></td>
+<td>Does it map to a single business subdomain or capability?</td>
+<td>Ensures services evolve with the business.</td>
+<td>&quot;Payment Processing&quot; (handles billing, refunds; separate from &quot;Shipping&quot;).</td>
+</tr>
+<tr>
+<td><strong>Data Independence</strong></td>
+<td>Can it own its data without tight coupling to others? (Polyglot persistence)</td>
+<td>Prevents shared DB anti-patterns.</td>
+<td>User service with its own auth DB, not querying order DB directly.</td>
+</tr>
+<tr>
+<td><strong>API Stability</strong></td>
+<td>Does it expose a clear, versioned API (e.g., REST/gRPC)?</td>
+<td>Reduces ripple effects from changes.</td>
+<td>Event-driven: Emit &quot;OrderPlaced&quot; event for other services to react.</td>
+</tr>
+<tr>
+<td><strong>Change Frequency</strong></td>
+<td>Are changes infrequent or isolated from the rest?</td>
+<td>Minimizes coordination overhead.</td>
+<td>Analytics service (batch updates) vs. real-time chat (frequent deploys).</td>
+</tr>
+<tr>
+<td><strong>Fault Isolation</strong></td>
+<td>Can failures be contained without cascading?</td>
+<td>Improves resilience.</td>
+<td>Inventory service outage doesn't halt user logins.</td>
+</tr>
+<tr>
+<td><strong>Tech Stack Fit</strong></td>
+<td>Does it benefit from a specific language/tool (e.g., Node.js for I/O-heavy)?</td>
+<td>Enables polyglotism without monolith constraints.</td>
+<td>ML-based recommendation in Python, rest in Java.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="common-pitfalls-and-tips">Common Pitfalls and Tips</h4>
+<ul>
+<li><strong>Pitfalls</strong>: Over-granularity (e.g., one service per function like &quot;GetUserName&quot;) leads to network bloat; under-granularity creates a &quot;big ball of mud.&quot;</li>
+<li><strong>Interview Tip</strong>: Frame your answer around trade-offs—&quot;I'd prioritize business value over tech purity, starting with high-impact domains and iterating based on metrics like MTTR (Mean Time to Recovery).&quot;</li>
+<li><strong>Tools for Aid</strong>: Use DDD tools like Context Mapper or Axon Framework for modeling; monitor with service meshes like Istio.</li>
+</ul>
+<p>This framework scales from startups (few services) to enterprises (hundreds), ensuring microservices deliver agility without chaos.</p>
+
+    </div>
+</body>
+</html>"

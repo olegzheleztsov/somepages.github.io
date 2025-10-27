@@ -1,0 +1,126 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="pubsub-model-vs.event-stream-model">Pub/Sub Model vs. Event Stream Model</h3>
+<p>In distributed systems and messaging architectures, both the <strong>Publish-Subscribe (Pub/Sub)</strong> and <strong>Event Stream</strong> models handle asynchronous communication and event-driven processing, but they differ in design, guarantees, and use cases. Pub/Sub emphasizes loose coupling and fan-out distribution, while Event Streams focus on durability, ordering, and replayability. Below, I'll break it down step by step, followed by a comparison table.</p>
+<h4 id="core-concepts">1. <strong>Core Concepts</strong></h4>
+<ul>
+<li><p><strong>Pub/Sub Model</strong>:</p>
+<ul>
+<li>Publishers (&quot;producers&quot;) send messages to <strong>topics</strong> or channels without knowing who will receive them.</li>
+<li>Subscribers (&quot;consumers&quot;) register interest in specific topics and receive relevant messages.</li>
+<li>It's a <strong>many-to-many</strong> pattern: One message can fan out to multiple subscribers, and one publisher can send to many topics.</li>
+<li>Delivery is often &quot;at-least-once&quot; or &quot;at-most-once,&quot; with possible acknowledgments (e.g., via queues).</li>
+<li>Examples: Google Pub/Sub, AWS SNS/SQS, RabbitMQ.</li>
+</ul>
+</li>
+<li><p><strong>Event Stream Model</strong>:</p>
+<ul>
+<li>Events are produced as an ordered, immutable sequence (a &quot;stream&quot; or log) that grows append-only.</li>
+<li>Consumers read from the stream at their own pace, often starting from a specific offset (position in the log) for replayability.</li>
+<li>It's a <strong>log-based</strong> system where events represent state changes, enabling event sourcing (reconstructing state by replaying events).</li>
+<li>Guarantees strong ordering within partitions and durability for auditing/replay.</li>
+<li>Examples: Apache Kafka (topics as partitioned logs), AWS Kinesis, Azure Event Hubs.</li>
+</ul>
+</li>
+</ul>
+<h4 id="key-differences">2. <strong>Key Differences</strong></h4>
+<ul>
+<li><strong>Coupling and Scalability</strong>: Pub/Sub is highly decoupled (publishers/subscribers unaware of each other), ideal for real-time notifications. Event Streams are more structured around shared logs, scaling via partitioning for high-throughput pipelines.</li>
+<li><strong>Ordering and Durability</strong>: Pub/Sub may not guarantee order across subscribers; delivery can be fire-and-forget. Event Streams enforce per-partition ordering and persist events indefinitely for replay.</li>
+<li><strong>Processing Style</strong>: Pub/Sub is pull/push-based for immediate consumption. Event Streams support stream processing (e.g., with Kafka Streams) for transformations, aggregations, and stateful computations.</li>
+<li><strong>Fault Tolerance</strong>: Pub/Sub relies on retries/acks; Event Streams use offsets and snapshots for exactly-once semantics in processing.</li>
+</ul>
+<h4 id="pros-and-cons">3. <strong>Pros and Cons</strong></h4>
+<ul>
+<li><strong>Pub/Sub</strong>:
+<ul>
+<li><strong>Pros</strong>: Simple, low-latency for broadcasts; easy to implement microservices communication.</li>
+<li><strong>Cons</strong>: Harder to debug (no replay); potential message loss without extra config.</li>
+</ul>
+</li>
+<li><strong>Event Streams</strong>:
+<ul>
+<li><strong>Pros</strong>: Replayable for debugging/backfills; supports complex analytics (e.g., CDC - Change Data Capture).</li>
+<li><strong>Cons</strong>: Higher storage/complexity; overkill for simple notifications.</li>
+</ul>
+</li>
+</ul>
+<h4 id="use-cases">4. <strong>Use Cases</strong></h4>
+<ul>
+<li><strong>Pub/Sub</strong>: Real-time alerts (e.g., stock price updates), fan-out in web apps (e.g., user notifications), decoupled services.</li>
+<li><strong>Event Streams</strong>: Data pipelines (e.g., ETL), event sourcing in apps (e.g., e-commerce order history), real-time analytics (e.g., fraud detection).</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Pub/Sub Model</th>
+<th>Event Stream Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Message Flow</strong></td>
+<td>Fan-out to subscribers via topics</td>
+<td>Append-only log read by consumers</td>
+</tr>
+<tr>
+<td><strong>Ordering</strong></td>
+<td>No global order; per-topic possible</td>
+<td>Strict per-partition/sequence order</td>
+</tr>
+<tr>
+<td><strong>Durability</strong></td>
+<td>Ephemeral (configurable retention)</td>
+<td>Immutable, long-term retention</td>
+</tr>
+<tr>
+<td><strong>Replayability</strong></td>
+<td>Limited (no built-in history)</td>
+<td>Full (via offsets)</td>
+</tr>
+<tr>
+<td><strong>Semantics</strong></td>
+<td>At-least/at-most-once</td>
+<td>Exactly-once possible</td>
+</tr>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>Horizontal via topics</td>
+<td>Horizontal via partitions</td>
+</tr>
+<tr>
+<td><strong>Complexity</strong></td>
+<td>Low (simple messaging)</td>
+<td>Higher (stream processing tools needed)</td>
+</tr>
+<tr>
+<td><strong>Examples</strong></td>
+<td>AWS SNS, Google Pub/Sub</td>
+<td>Kafka, Kinesis</td>
+</tr>
+</tbody>
+</table>
+<p>In an interview, emphasize trade-offs: Choose Pub/Sub for lightweight, decoupled events; go with Event Streams for systems needing auditability and processing power. If they probe deeper, discuss hybrids (e.g., Kafka's Pub/Sub-like topics with stream semantics). What's your next question?</p>
+
+    </div>
+</body>
+</html>"

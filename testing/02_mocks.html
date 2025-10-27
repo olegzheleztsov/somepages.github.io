@@ -1,0 +1,207 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>In the context of testing .NET applications (or any software), <strong>mocks</strong>, <strong>stubs</strong>, and <strong>spies</strong> are test doubles used to isolate the code under test by simulating the behavior of dependencies. Each serves a distinct purpose, and understanding their differences is key for effective unit testing. Below, I explain what they are, their differences, and when to use each, with a focus on .NET testing.</p>
+<h3 id="definitions-and-differences">Definitions and Differences</h3>
+<ol>
+<li><p><strong>Stub</strong>:</p>
+<ul>
+<li><strong>What it is</strong>: A stub is a test double that provides predefined responses to method calls, simulating the behavior of a dependency. It doesn’t care about how the dependency is used; it just returns canned data.</li>
+<li><strong>Purpose</strong>: Used to isolate the system under test by providing controlled, predictable responses to avoid external dependencies (e.g., database, API).</li>
+<li><strong>Key Characteristics</strong>:
+<ul>
+<li>Stubs are passive; they don’t track interactions or verify how they were called.</li>
+<li>Focus is on <strong>state verification</strong> (e.g., checking the output of the system under test based on stubbed data).</li>
+</ul>
+</li>
+<li><strong>Example in .NET</strong>:
+<pre><code class="language-csharp">public interface IRepository { string GetData(int id); }
+
+// Stub implementation
+public class StubRepository : IRepository
+{
+    public string GetData(int id) =&gt; &quot;Stubbed Data&quot;;
+}
+
+[Fact]
+public void Test_Service_Using_Stub()
+{
+    var stubRepo = new StubRepository();
+    var service = new MyService(stubRepo);
+    var result = service.GetData(1);
+    Assert.Equal(&quot;Stubbed Data&quot;, result); // State verification
+}
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Mock</strong>:</p>
+<ul>
+<li><strong>What it is</strong>: A mock is a test double that not only provides predefined responses but also allows you to set expectations about how it should be called (e.g., which methods, how many times, with what arguments).</li>
+<li><strong>Purpose</strong>: Used to verify the <strong>behavior</strong> of the system under test, ensuring it interacts with dependencies as expected.</li>
+<li><strong>Key Characteristics</strong>:
+<ul>
+<li>Mocks are active; they track interactions and verify them (behavior verification).</li>
+<li>Commonly used with mocking frameworks like <strong>Moq</strong> or <strong>NSubstitute</strong> in .NET.</li>
+</ul>
+</li>
+<li><strong>Example in .NET (using Moq)</strong>:
+<pre><code class="language-csharp">public interface IRepository { string GetData(int id); }
+
+[Fact]
+public void Test_Service_Using_Mock()
+{
+    var mockRepo = new Mock&lt;IRepository&gt;();
+    mockRepo.Setup(r =&gt; r.GetData(1)).Returns(&quot;Mocked Data&quot;);
+    var service = new MyService(mockRepo.Object);
+    var result = service.GetData(1);
+    Assert.Equal(&quot;Mocked Data&quot;, result);
+    mockRepo.Verify(r =&gt; r.GetData(1), Times.Once()); // Behavior verification
+}
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Spy</strong>:</p>
+<ul>
+<li><strong>What it is</strong>: A spy is a test double that records interactions with it (e.g., method calls, arguments) for later verification, while typically delegating to the real implementation or providing simple responses.</li>
+<li><strong>Purpose</strong>: Used to observe how the system under test interacts with dependencies without necessarily controlling the responses as strictly as a mock.</li>
+<li><strong>Key Characteristics</strong>:
+<ul>
+<li>Spies focus on <strong>recording interactions</strong> rather than enforcing strict expectations upfront.</li>
+<li>They can wrap real objects or act as partial mocks.</li>
+<li>In .NET, spies are often implemented using mocking frameworks with partial mocks or by manually tracking calls.</li>
+</ul>
+</li>
+<li><strong>Example in .NET (using Moq)</strong>:
+<pre><code class="language-csharp">public interface IRepository { void Save(string data); }
+
+[Fact]
+public void Test_Service_Using_Spy()
+{
+    var mockRepo = new Mock&lt;IRepository&gt;();
+    var service = new MyService(mockRepo.Object);
+    service.SaveData(&quot;Test&quot;);
+    mockRepo.Verify(r =&gt; r.Save(&quot;Test&quot;), Times.Once()); // Spy verifies interaction
+}
+</code></pre>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="key-differences">Key Differences</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Aspect</strong></th>
+<th><strong>Stub</strong></th>
+<th><strong>Mock</strong></th>
+<th><strong>Spy</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Provide canned responses for testing state</td>
+<td>Verify behavior and interactions</td>
+<td>Record interactions for verification</td>
+</tr>
+<tr>
+<td><strong>Focus</strong></td>
+<td>State verification</td>
+<td>Behavior verification</td>
+<td>Interaction recording</td>
+</tr>
+<tr>
+<td><strong>Expectations</strong></td>
+<td>None; just returns data</td>
+<td>Predefined expectations</td>
+<td>Tracks calls, often without strict expectations</td>
+</tr>
+<tr>
+<td><strong>Implementation</strong></td>
+<td>Simple, often manual or framework-based</td>
+<td>Framework-based (e.g., Moq)</td>
+<td>Framework-based or manual</td>
+</tr>
+<tr>
+<td><strong>Use Case</strong></td>
+<td>Simulate dependencies with fixed data</td>
+<td>Ensure correct method calls</td>
+<td>Observe how dependencies are used</td>
+</tr>
+</tbody>
+</table>
+<h3 id="when-to-use-what">When to Use What?</h3>
+<ol>
+<li><p><strong>Use a Stub When</strong>:</p>
+<ul>
+<li>You need to isolate the system under test from external dependencies (e.g., database, API) and provide predictable data.</li>
+<li>You’re testing the <strong>state</strong> or output of the system, not how it interacts with dependencies.</li>
+<li>Example: Testing a .NET service that depends on a repository, where you stub the repository to return specific data for testing business logic.</li>
+<li><strong>Scenario</strong>: Testing an ASP.NET Core controller’s logic without hitting a real database.</li>
+<li><strong>Tools</strong>: Manual stubs or lightweight use of Moq/NSubstitute.</li>
+</ul>
+</li>
+<li><p><strong>Use a Mock When</strong>:</p>
+<ul>
+<li>You need to verify <strong>how</strong> the system under test interacts with dependencies (e.g., which methods were called, with what arguments, how many times).</li>
+<li>You’re focused on <strong>behavior verification</strong>, ensuring the system correctly uses its dependencies.</li>
+<li>Example: Testing that a .NET service calls a logging service exactly once with the correct message.</li>
+<li><strong>Scenario</strong>: Testing an ASP.NET Core middleware that must call an authentication service with specific parameters.</li>
+<li><strong>Tools</strong>: Moq, NSubstitute (Moq is particularly popular in .NET).</li>
+</ul>
+</li>
+<li><p><strong>Use a Spy When</strong>:</p>
+<ul>
+<li>You want to observe or record how a dependency is used without necessarily controlling its behavior upfront.</li>
+<li>You’re testing a real or partially real implementation and want to verify interactions afterward.</li>
+<li>Example: Wrapping a real .NET service to check how many times a method was called without mocking its behavior entirely.</li>
+<li><strong>Scenario</strong>: Testing a .NET component that interacts with a third-party API, where you want to verify the calls made without fully mocking the API.</li>
+<li><strong>Tools</strong>: Moq (with partial mocks), NSubstitute, or manual spy implementations.</li>
+</ul>
+</li>
+</ol>
+<h3 id="practical-considerations-in.net">Practical Considerations in .NET</h3>
+<ul>
+<li><strong>Moq and NSubstitute</strong>: These are the most popular .NET libraries for creating mocks and spies. Moq is widely used for setting up mocks with expectations (e.g., <code>Setup</code> and <code>Verify</code>) and can also act as a spy for interaction tracking.</li>
+<li><strong>Stubs vs. Mocks in Moq</strong>: In Moq, a stub is essentially a mock with simple setups (e.g., <code>Setup(...).Returns(...)</code>) without verification, while a mock uses <code>Verify</code> for behavior checks.</li>
+<li><strong>Spies in .NET</strong>: Spies are less common but can be implemented using Moq’s <code>CallBase</code> for partial mocks or by manually tracking calls in a test double.</li>
+<li><strong>Testing Best Practices</strong>:
+<ul>
+<li>Use stubs for simple, state-based tests to keep tests fast and focused.</li>
+<li>Use mocks when behavior verification is critical, such as ensuring a critical dependency (e.g., payment service) is called correctly.</li>
+<li>Use spies sparingly, typically for legacy code or when you need to observe real implementations without fully mocking them.</li>
+<li>Avoid over-mocking: Too many mocks can make tests brittle and tightly coupled to implementation details.</li>
+</ul>
+</li>
+</ul>
+<h3 id="example-scenario">Example Scenario</h3>
+<p>Suppose you’re testing a .NET service that processes orders and interacts with a payment gateway and a logger:</p>
+<ul>
+<li><strong>Stub</strong>: Use a stub for the payment gateway to return a fixed “payment successful” response to test the order processing logic.</li>
+<li><strong>Mock</strong>: Use a mock for the logger to verify that the service logs a success message exactly once.</li>
+<li><strong>Spy</strong>: Use a spy on the payment gateway to record how many times it was called and with what parameters, while still allowing the real gateway logic to execute (if testing a partial implementation).</li>
+</ul>
+<p>If you have a specific .NET testing scenario or want code examples for a particular case (e.g., using Moq for ASP.NET Core), let me know! What's your next question?</p>
+
+    </div>
+</body>
+</html>"

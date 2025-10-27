@@ -1,0 +1,77 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="horizontal-scaling-in-apache-cassandra">Horizontal Scaling in Apache Cassandra</h3>
+<p>I'll choose <strong>Apache Cassandra</strong> as the non-relational database for this explanation. Cassandra is a distributed, wide-column store (a type of NoSQL database) designed from the ground up for massive scalability, fault tolerance, and high availability. It's widely used for handling large-scale data like time-series, logs, and IoT data (e.g., by Netflix or Apple).</p>
+<h4 id="how-to-horizontally-scale-cassandra">How to Horizontally Scale Cassandra</h4>
+<p>Horizontal scaling in Cassandra involves adding more nodes (servers) to a cluster, which automatically distributes data and workload across them. Unlike vertical scaling (upgrading a single server's resources), this allows linear scalability without downtime. Here's a step-by-step overview:</p>
+<ol>
+<li><p><strong>Cluster Setup and Sharding</strong>:</p>
+<ul>
+<li>Cassandra uses a <strong>peer-to-peer architecture</strong> where all nodes are equal—no single master. Data is partitioned (sharded) across nodes using a <strong>consistent hashing</strong> mechanism on a virtual ring (token ring).</li>
+<li>Each row key is hashed to a token, which determines its primary node (coordinator). The cluster divides the token space (e.g., from -2<sup>63 to 2</sup>63-1) evenly among nodes.</li>
+<li>To scale: Add a new node via configuration (e.g., update <code>cassandra.yaml</code> with seed nodes). The new node bootstraps by contacting seeds, picks a token range, and streams data from existing nodes for that range. This rebalances the ring automatically, migrating data with minimal disruption.</li>
+</ul>
+</li>
+<li><p><strong>Replication for Redundancy</strong>:</p>
+<ul>
+<li>Data is replicated across multiple nodes using a <strong>replication factor (RF)</strong> (e.g., RF=3 means 3 copies). When writing, the coordinator replicates to RF nodes in the token range.</li>
+<li>Scaling increases capacity: More nodes mean more shards and replicas, distributing load. Tools like <code>nodetool</code> (Cassandra's CLI) monitor and manage this (e.g., <code>nodetool add-node</code> or <code>nodetool cleanup</code> post-scaling).</li>
+</ul>
+</li>
+<li><p><strong>Scaling Process in Practice</strong>:</p>
+<ul>
+<li><strong>Preparation</strong>: Ensure even token distribution (use vnodes for finer granularity—default 256 per node).</li>
+<li><strong>Addition</strong>: New node joins; it handles ~1/n of the load where n is total nodes.</li>
+<li><strong>Load Balancing</strong>: Clients (via drivers like DataStax) connect to any node, which routes requests efficiently.</li>
+<li><strong>Monitoring</strong>: Use OpsCenter or Prometheus for metrics; scale proactively based on CPU/disk I/O thresholds.</li>
+<li><strong>Limits</strong>: Scales to thousands of nodes; bottlenecks shift to network latency or client-side coordination.</li>
+</ul>
+</li>
+</ol>
+<p>This approach achieves near-linear throughput gains (e.g., doubling nodes roughly doubles writes/reads) while maintaining 99.9%+ uptime.</p>
+<h4 id="handling-concurrent-reads-and-writes">Handling Concurrent Reads and Writes</h4>
+<p>Cassandra is optimized for high concurrency in distributed environments, using a <strong>tunable consistency model</strong> (not full ACID, but tunable BASE: Basically Available, Soft state, Eventual consistency). It handles thousands of operations per second per node via log-structured storage (SSTables) and memtables for fast writes.</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>How It Handles Concurrency</th>
+<th>Key Mechanisms</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Writes</strong></td>
+<td>All writes are asynchronous and append-only (no in-place updates). Coordinator accepts write quickly, then replicates to replicas in parallel. Supports high write throughput (e.g., 10k+ writes/sec/node).</td>
+<td>- <strong>Log-Structured Merge-Tree (LSM)</strong>: Writes to in-memory commit log and memtable; flushes to disk periodically.<br>- <strong>Hints and Read Repair</strong>: If a replica is down, hints queue mutations for later delivery.<br>- <strong>Tunable Consistency</strong>: Write at QUORUM (majority of replicas) to balance speed vs. durability; hinted handoff for eventual consistency. Conflicts resolved via timestamps (last-write-wins).</td>
+</tr>
+<tr>
+<td><strong>Reads</strong></td>
+<td>Reads go to coordinator, which fetches from fastest available replicas or local cache. Supports linearizable reads with strong consistency if needed.</td>
+<td>- <strong>Consistency Levels</strong>: e.g., LOCAL_QUORUM (majority in local DC) for low-latency reads; ANY for max availability.<br>- <strong>Read Repair</strong>: Background checks reconcile inconsistencies across replicas during reads.<br>- <strong>Bloom Filters &amp; Caches</strong>: Skip unnecessary SSTable scans; key/row caches reduce disk I/O for hot data.<br>- Concurrency via lightweight transactions (Paxos) for compare-and-set ops.</td>
+</tr>
+</tbody>
+</table>
+<p>In summary, Cassandra excels in write-heavy, concurrent workloads by prioritizing availability and partition tolerance (per CAP theorem), with tunable trade-offs for consistency. For example, in a 10-node cluster with RF=3, a QUORUM write needs 2/3 replicas to ack, enabling 99%+ availability even if nodes fail. This makes it ideal for global-scale apps where downtime is unacceptable.</p>
+
+    </div>
+</body>
+</html>"

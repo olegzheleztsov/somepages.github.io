@@ -1,0 +1,139 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="handling-duplicates-in-messaging-systems">Handling Duplicates in Messaging Systems</h3>
+<p>Duplicates occur in message queues and streaming systems due to the trade-off between reliability and efficiency—e.g., at-least-once delivery ensures no loss but risks extras. As a tech lead, you'd emphasize: &quot;Deduplication isn't free; balance it with your SLA and throughput needs.&quot; Below, I'll cover causes and processing strategies, with examples from Kafka/SQS/RabbitMQ.</p>
+<h4 id="how-duplicates-can-happen">How Duplicates Can Happen</h4>
+<p>Duplicates arise from retries, failures, or design choices in distributed environments. Common scenarios:</p>
+<ol>
+<li><strong>At-Least-Once Delivery Semantics</strong>: Producers retry on failures (e.g., network blip), but the original message already succeeded—broker re-delivers.</li>
+<li><strong>Consumer Failures Post-Processing</strong>: Consumer processes a message but crashes before acknowledging (ACK). On restart, it re-processes the un-ACKed message.</li>
+<li><strong>Network Partitions or Retries</strong>: Idempotent producers (e.g., Kafka's) can still duplicate if retries overlap; non-idempotent ones always risk it.</li>
+<li><strong>Fan-Out in Pub/Sub</strong>: A message broadcasts to multiple subscribers, but a subscriber's retry creates &quot;duplicates&quot; from its perspective.</li>
+<li><strong>Stream Replays</strong>: In event streams, consumers reset offsets (e.g., for backfills) and re-process historical events.</li>
+<li><strong>Clock Skew or Out-of-Order</strong>: Late-arriving events mimic duplicates if not keyed properly.</li>
+</ol>
+<p>In high-scale systems (e.g., 1M+ msgs/sec), duplicates can hit 1-5% without mitigations—monitor with metrics like &quot;duplicate rate.&quot;</p>
+<h4 id="how-to-process-duplicates">How to Process Duplicates</h4>
+<p>The core principle is <strong>idempotency</strong>: Make operations safe to repeat (e.g., &quot;create user&quot; only creates if absent). Strategies vary by system type and cost.</p>
+<ol>
+<li><p><strong>Idempotent Operations (App-Level)</strong>:</p>
+<ul>
+<li>Design services to ignore duplicates: Use unique keys (e.g., <code>transaction_id</code>) to check existence (e.g., in DB: <code>INSERT ... ON DUPLICATE KEY UPDATE</code>).</li>
+<li><strong>Example</strong>: In an order service, hash <code>order_id + timestamp</code> and skip if already processed.</li>
+</ul>
+</li>
+<li><p><strong>Producer-Side Deduplication</strong>:</p>
+<ul>
+<li>Assign unique IDs (UUIDs) per message; brokers track and drop retries (e.g., Kafka's <code>enable.idempotence=true</code> uses producer ID + sequence numbers).</li>
+<li><strong>When</strong>: For exactly-once producers; low overhead.</li>
+</ul>
+</li>
+<li><p><strong>Consumer-Side Deduplication</strong>:</p>
+<ul>
+<li>Maintain a local cache (e.g., Redis set) of seen IDs with TTL; discard matches.</li>
+<li>For streams: Use Kafka Streams' state stores to track processed keys.</li>
+<li><strong>Example (Pseudocode in Python for SQS)</strong>:
+<pre><code class="language-python:disable-run">import redis
+import json
+from boto3 import client
+
+sqs = client('sqs')
+r = redis.Redis()
+
+def process_message(msg_body):
+    msg_id = json.loads(msg_body)['id']
+    if r.sismember('processed_ids', msg_id):  # Check if seen
+        return  # Skip duplicate
+    r.sadd('processed_ids', msg_id)  # Mark as processed
+    # Do work: e.g., update DB
+    process_order(msg_body)
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Broker-Level Deduplication</strong>:</p>
+<ul>
+<li>Use FIFO queues (e.g., SQS FIFO with dedup IDs) or stream configs (e.g., Kafka transactions for exactly-once).</li>
+<li><strong>Trade-Off</strong>: Adds latency; not always global (e.g., per-partition).</li>
+</ul>
+</li>
+<li><p><strong>Advanced: Bloom Filters or Windowed Dedup</strong>:</p>
+<ul>
+<li>For high-volume: Probabilistic filters (low false positives) to check existence without full storage.</li>
+<li>In streams: Sliding windows to dedup recent events.</li>
+</ul>
+</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>Pros</th>
+<th>Cons</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Idempotent Ops</strong></td>
+<td>No extra infra; works everywhere</td>
+<td>Requires app changes; DB locks possible</td>
+<td>All systems; start here</td>
+</tr>
+<tr>
+<td><strong>Producer Dedup</strong></td>
+<td>Handles root cause; efficient</td>
+<td>Limited to supported brokers</td>
+<td>Kafka, Pulsar; high-throughput producers</td>
+</tr>
+<tr>
+<td><strong>Consumer Dedup</strong></td>
+<td>Flexible; per-service control</td>
+<td>State overhead (e.g., cache size); eventual consistency</td>
+<td>Queues like SQS; variable workloads</td>
+</tr>
+<tr>
+<td><strong>Broker Dedup</strong></td>
+<td>Transparent; strong guarantees</td>
+<td>Vendor lock-in; perf hit</td>
+<td>Managed services (SQS FIFO, Kafka EOS)</td>
+</tr>
+<tr>
+<td><strong>Bloom Filters</strong></td>
+<td>Memory-efficient for scale</td>
+<td>False positives; no deletes</td>
+<td>Massive streams (e.g., logs)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="best-practices-trade-offs">Best Practices &amp; Trade-Offs</h4>
+<ul>
+<li><strong>Prevention First</strong>: Use exactly-once where possible (e.g., Kafka 0.11+); embed idempotency keys in payloads.</li>
+<li><strong>Monitoring</strong>: Track duplicate ratios; alert on spikes (e.g., via Datadog).</li>
+<li><strong>Testing</strong>: Chaos-test with injected duplicates; use property-based testing.</li>
+<li><strong>Trade-Offs</strong>: Dedup adds 10-50ms latency and storage—skip for at-most-once needs (e.g., non-critical analytics). In microservices, enforce via contracts (e.g., OpenAPI for keys).</li>
+</ul>
+<p>This keeps your system robust without over-engineering. Got a scenario in mind, or next on the list?</p>
+<pre><code></code></pre>
+
+    </div>
+</body>
+</html>"

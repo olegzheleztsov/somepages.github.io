@@ -1,0 +1,76 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-a-bounded-context-in-domain-driven-design-ddd">What is a Bounded Context in Domain-Driven Design (DDD)?</h3>
+<p>In Domain-Driven Design (DDD), a <strong>Bounded Context</strong> is a central strategic pattern that defines a clear boundary within which a particular domain model (i.e., the concepts, rules, and language) is consistent and cohesive. It explicitly delineates the scope of a subdomain or model, ensuring that terms and behaviors have unambiguous meanings <em>only within that context</em>. Outside it, the same term might mean something different, preventing confusion in large, complex systems.</p>
+<p>Think of it as a &quot;container&quot; for a subset of the overall domain: it encapsulates entities, value objects, aggregates, and the ubiquitous language specific to that area. This is crucial because real-world domains are rarely monolithic—e.g., &quot;Account&quot; in a banking system might mean a checking account in one context but a user profile in another. Bounded Contexts resolve this by isolating models, allowing teams to evolve them independently.</p>
+<h4 id="key-characteristics">Key Characteristics</h4>
+<ul>
+<li><strong>Explicit Boundaries</strong>: Defined by team boundaries, deployment units, or integration points (e.g., a microservice).</li>
+<li><strong>Ubiquitous Language</strong>: Enforced strictly inside—e.g., &quot;Ship&quot; means dispatch in the Logistics Context but doesn't apply in Billing.</li>
+<li><strong>Integration Across Contexts</strong>: Use patterns like Context Mapping (e.g., Anti-Corruption Layer) to handle communication, ensuring eventual consistency without tight coupling.</li>
+</ul>
+<h4 id="why-its-useful">Why It's Useful</h4>
+<p>Bounded Contexts tackle the &quot;big ball of mud&quot; problem in software by promoting modularity and scalability. They:</p>
+<ul>
+<li><strong>Reduce Complexity</strong>: Limit the blast radius of changes—update one context without rippling everywhere.</li>
+<li><strong>Enable Parallel Development</strong>: Different teams own contexts, aligning with agile/DevOps (e.g., separate CI/CD pipelines).</li>
+<li><strong>Support NFRs</strong>: Easier to optimize for performance (e.g., scale a high-traffic context independently) or security (e.g., isolate sensitive data).</li>
+<li><strong>Facilitate Evolution</strong>: As business needs change, refine a context without overhauling the whole system—vital for long-lived apps.</li>
+</ul>
+<p>In practice, identifying them starts with domain discovery workshops: Map the core domain, subdomains, and contexts via event storming or CRC cards.</p>
+<h4 id="example-in-an-e-commerce-system">Example in an E-Commerce System</h4>
+<p>Imagine building an online store:</p>
+<table>
+<thead>
+<tr>
+<th>Bounded Context</th>
+<th>Key Concepts/Entities</th>
+<th>Ubiquitous Language Example</th>
+<th>Integration Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Order Management</strong></td>
+<td>Order, OrderLine, Customer</td>
+<td>&quot;Place Order&quot; = Create + Validate Payment</td>
+<td>Publishes OrderPlaced event to Inventory.</td>
+</tr>
+<tr>
+<td><strong>Inventory</strong></td>
+<td>Product, StockLevel, Warehouse</td>
+<td>&quot;Reserve Stock&quot; = Hold Items Temporarily</td>
+<td>Subscribes to OrderPlaced; uses REST API for queries.</td>
+</tr>
+<tr>
+<td><strong>Shipping</strong></td>
+<td>Shipment, TrackingNumber, Address</td>
+<td>&quot;Fulfill Order&quot; = Pick + Ship</td>
+<td>Anti-Corruption Layer translates Order data to Shipment.</td>
+</tr>
+</tbody>
+</table>
+<p>Here, &quot;Customer&quot; in Order Management is just an ID + billing info, while in a separate CRM Context, it's a full profile with history. If you merged them, changes to CRM would break ordering—bounded contexts prevent that.</p>
+<p>As a tech lead, I'd use them to guide microservices decomposition: &quot;Define contexts first to avoid distributed monoliths.&quot; Perfect follow-up to our DDD chat—how would you apply this in a real project, or what's next?</p>
+
+    </div>
+</body>
+</html>"

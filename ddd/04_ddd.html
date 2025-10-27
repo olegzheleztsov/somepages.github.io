@@ -1,0 +1,80 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-cqrs">What is CQRS?</h3>
+<p>CQRS, or <strong>Command Query Responsibility Segregation</strong>, is an architectural pattern that separates the responsibilities for handling <strong>commands</strong> (operations that modify data, like creating or updating) from <strong>queries</strong> (operations that retrieve data, like reading or searching). This segregation allows each side to be optimized independently, often leading to more scalable, maintainable systems—especially in complex domains like those modeled with Domain-Driven Design (DDD).</p>
+<p>The pattern draws from the Command-Query Separation (CQS) principle by Bertrand Meyer, but CQRS extends it by allowing different models, data stores, or even processes for reads vs. writes. For example, writes might use a normalized relational DB for consistency, while reads use a denormalized NoSQL store for speed.</p>
+<h4 id="key-components">Key Components</h4>
+<ul>
+<li><strong>Command Side</strong>: Handles mutations (e.g., CreateOrder, UpdateUser). Focuses on business logic, validation, and consistency; often synchronous.</li>
+<li><strong>Query Side</strong>: Handles reads (e.g., GetOrderHistory, SearchProducts). Prioritizes performance and flexibility; can be asynchronous or cached.</li>
+<li><strong>Synchronization</strong>: Commands publish events (e.g., via Domain Events in DDD) that update the query side, ensuring eventual consistency.</li>
+</ul>
+<h4 id="why-use-cqrs">Why Use CQRS?</h4>
+<p>It's particularly useful in high-traffic or complex systems where read/write loads differ (e.g., social media with heavy reads). Benefits include:</p>
+<ul>
+<li><strong>Scalability</strong>: Scale reads (e.g., via replicas) separately from writes, addressing NFRs like performance under load.</li>
+<li><strong>Simplicity</strong>: Each model can be tailored—e.g., rich domain logic on commands, simple views on queries—reducing complexity in DDD aggregates.</li>
+<li><strong>Flexibility</strong>: Supports polyglot persistence (different DBs) and easier testing (mock commands independently).</li>
+<li><strong>Trade-Offs</strong>: Introduces eventual consistency challenges and sync overhead; not ideal for simple CRUD apps.</li>
+</ul>
+<h4 id="example-in-an-e-commerce-system">Example in an E-Commerce System</h4>
+<p>Imagine an order system:</p>
+<ul>
+<li><strong>Command</strong>: <code>PlaceOrderCommand</code> validates stock and saves to a transactional DB (e.g., PostgreSQL).</li>
+<li><strong>Query</strong>: <code>GetOrderView</code> pulls from a materialized view or Elasticsearch for fast searches.</li>
+<li>Sync: <code>OrderPlaced</code> event updates the query store.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Command Side</th>
+<th>Query Side</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Focus</strong></td>
+<td>Consistency, Invariants (DDD rules)</td>
+<td>Speed, Denormalized Data</td>
+</tr>
+<tr>
+<td><strong>Tech Stack</strong></td>
+<td>Normalized DB, Saga Orchestration</td>
+<td>Read Replicas, Caches (Redis)</td>
+</tr>
+<tr>
+<td><strong>Operations</strong></td>
+<td>POST/PUT (mutations)</td>
+<td>GET (retrievals)</td>
+</tr>
+<tr>
+<td><strong>Scaling</strong></td>
+<td>Vertical/Transactional</td>
+<td>Horizontal/Replication</td>
+</tr>
+</tbody>
+</table>
+<p>In interviews, link it to DDD: &quot;CQRS complements bounded contexts by allowing command models in one service and query views in another, improving performance testing outcomes.&quot; Ties nicely to our DDD thread—how does this fit your system design prep, or next question?</p>
+
+    </div>
+</body>
+</html>"

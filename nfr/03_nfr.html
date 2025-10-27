@@ -1,0 +1,95 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-performance-testing">What is Performance Testing?</h3>
+<p>Performance testing is a type of software testing that evaluates the speed, responsiveness, scalability, reliability, and stability of an application or system under expected or peak workloads. Unlike functional testing (which checks if the system <em>does</em> what it's supposed to), performance testing focuses on <em>how well</em> it does it—ensuring it meets Non-Functional Requirements (NFRs) like low latency or high throughput. It's typically conducted during the later stages of development (e.g., integration or staging) but can be integrated earlier via shift-left practices.</p>
+<p>The goal is to identify bottlenecks (e.g., slow database queries) and validate that the system can handle real-world usage without degrading user experience. In a tech lead interview, expect follow-ups like &quot;How would you design a performance test for a microservices architecture?&quot; or &quot;What trade-offs exist between performance and cost?&quot;</p>
+<h4 id="key-objectives">Key Objectives</h4>
+<ul>
+<li>Measure response times and resource usage.</li>
+<li>Simulate user loads to predict behavior.</li>
+<li>Uncover issues like memory leaks or concurrency problems.</li>
+<li>Ensure compliance with SLAs (Service Level Agreements), e.g., 99% of requests &lt; 2 seconds.</li>
+</ul>
+<h4 id="types-of-performance-testing">Types of Performance Testing</h4>
+<p>Performance testing isn't one-size-fits-all; it includes several subtypes based on the scenario. Here's a breakdown:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+<th>When to Use / Example Scenario</th>
+<th>Key Metrics Measured</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Load Testing</strong></td>
+<td>Tests the system's behavior under normal or anticipated user loads.</td>
+<td>Simulating 1,000 concurrent users on an e-commerce site during regular traffic.</td>
+<td>Throughput (requests/sec), average response time.</td>
+</tr>
+<tr>
+<td><strong>Stress Testing</strong></td>
+<td>Pushes the system beyond normal limits to find breaking points.</td>
+<td>Overloading a server to see when it fails (e.g., 10x peak load).</td>
+<td>Breaking point, error rates, recovery time.</td>
+</tr>
+<tr>
+<td><strong>Endurance/Soak Testing</strong></td>
+<td>Runs the system under sustained load for extended periods to detect leaks.</td>
+<td>24-48 hours of moderate load to check for memory creep.</td>
+<td>Stability over time, resource degradation.</td>
+</tr>
+<tr>
+<td><strong>Spike Testing</strong></td>
+<td>Evaluates response to sudden traffic bursts.</td>
+<td>Handling a flash sale causing 5x traffic in minutes.</td>
+<td>Response to rapid load changes, bounce-back time.</td>
+</tr>
+<tr>
+<td><strong>Scalability Testing</strong></td>
+<td>Assesses how the system scales with increased load (e.g., adding users).</td>
+<td>Gradually ramping from 100 to 10,000 users.</td>
+<td>Scaling efficiency, horizontal/vertical limits.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="how-its-conducted">How It's Conducted</h4>
+<ol>
+<li><strong>Planning</strong>: Define NFRs (e.g., target throughput), select tools, and create test scripts mimicking real user actions (e.g., via recorded HTTP requests).</li>
+<li><strong>Execution</strong>: Use tools to generate load from distributed machines; monitor with APM (Application Performance Monitoring) tools.</li>
+<li><strong>Analysis</strong>: Review metrics, graphs, and logs to pinpoint issues (e.g., CPU spikes from inefficient code).</li>
+<li><strong>Optimization</strong>: Iterate—tune configs, refactor code, or add infrastructure.</li>
+</ol>
+<h4 id="common-tools-and-frameworks">Common Tools and Frameworks</h4>
+<ul>
+<li><strong>Open-Source</strong>: JMeter (Apache), Gatling (Scala-based, great for devs), Locust (Python-scriptable).</li>
+<li><strong>Commercial</strong>: LoadRunner (Micro Focus), BlazeMeter (cloud-based JMeter extension).</li>
+<li><strong>Monitoring</strong>: New Relic, Datadog, or Prometheus for real-time insights.</li>
+</ul>
+<p>In cloud environments (e.g., AWS), integrate with services like CloudWatch or auto-scaling groups for realistic testing.</p>
+<h4 id="impact-on-system-design-and-leadership">Impact on System Design and Leadership</h4>
+<p>As a tech lead, performance testing directly ties to NFRs: poor results might force architectural changes, like sharding databases or adopting CDNs. It highlights trade-offs—e.g., caching improves speed but adds complexity. Lead by advocating for performance budgets in sprints, collaborating with QA/DevOps, and using results to justify resource asks. Always baseline against competitors or industry standards (e.g., Google benchmarks for web apps).</p>
+<p>Spot on for NFR discussions—performance testing is how you <em>validate</em> those requirements. What's your answer to this, or ready for the next question (maybe on a specific type)?</p>
+
+    </div>
+</body>
+</html>"

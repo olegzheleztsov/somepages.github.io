@@ -1,0 +1,96 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="structured-and-unstructured-streams">Structured and Unstructured Streams</h3>
+<p>In streaming data processing (e.g., real-time event flows in systems like Kafka or Spark), <strong>structured streams</strong> and <strong>unstructured streams</strong> refer to the organization and format of incoming data. Structured streams have a predefined schema (e.g., fields like &quot;user_id&quot;, &quot;timestamp&quot;, &quot;amount&quot;), making them tabular and queryable like a database. Unstructured streams lack this rigidity, consisting of raw, variable formats (e.g., free-text logs, images, or JSON without enforced fields). This distinction impacts processing efficiency, scalability, and tools used. A classic example is Apache Spark: Structured Streaming handles structured data via DataFrames, while the older DStreams approach suits unstructured data via RDDs.</p>
+<h4 id="key-differences">Key Differences</h4>
+<ul>
+<li><strong>Data Format</strong>: Structured = schema-enforced (e.g., Avro/Parquet streams); Unstructured = free-form (e.g., plain text or binary).</li>
+<li><strong>Processing Paradigm</strong>: Structured enables relational ops (joins, aggregations); Unstructured requires custom parsing or ML.</li>
+<li><strong>Use Cases</strong>: Structured for ETL pipelines (e.g., transaction streams); Unstructured for logs or multimedia (e.g., video feeds).</li>
+</ul>
+<h4 id="how-to-deal-with-each">How to Deal with Each</h4>
+<p>Handling depends on ingestion, processing, storage, and analysis. Aim for scalability (e.g., partitioning) and fault tolerance (e.g., exactly-once semantics).</p>
+<ol>
+<li><p><strong>Structured Streams</strong>:</p>
+<ul>
+<li><strong>Ingestion</strong>: Use schema-aware brokers like Kafka with Avro/Protobuf serializers to enforce formats early.</li>
+<li><strong>Processing</strong>: Leverage SQL-like APIs for transformations (e.g., Spark Structured Streaming's DataFrames for windowed aggregations). Apply schema evolution for changes.</li>
+<li><strong>Storage</strong>: Sink to data warehouses (e.g., Snowflake) or lakes (Delta Lake) for querying.</li>
+<li><strong>Challenges &amp; Tips</strong>: Schema drift—use registries (e.g., Confluent Schema Registry). Optimize with event-time processing for late data.</li>
+<li><strong>Tools</strong>: Spark Structured Streaming, Flink SQL, Kafka Streams.</li>
+</ul>
+</li>
+<li><p><strong>Unstructured Streams</strong>:</p>
+<ul>
+<li><strong>Ingestion</strong>: Buffer in flexible stores like Kafka (as strings/blobs) or S3 for raw dumps.</li>
+<li><strong>Processing</strong>: Parse/extract via custom logic (e.g., regex for logs) or ML (e.g., NLP for text). Batch micro-process for efficiency.</li>
+<li><strong>Storage</strong>: Use object stores (S3) or NoSQL (Elasticsearch) for indexing; convert to structured post-processing.</li>
+<li><strong>Challenges &amp; Tips</strong>: High volume/variability—use sampling or sampling for initial analysis; handle noise with anomaly detection.</li>
+<li><strong>Tools</strong>: Spark DStreams (legacy), Flink DataStream API, or ELK Stack for logs.</li>
+</ul>
+</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Structured Streams</th>
+<th>Unstructured Streams</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Format</strong></td>
+<td>Schema-defined (e.g., JSON with fields)</td>
+<td>Schema-less (e.g., raw text, media)</td>
+</tr>
+<tr>
+<td><strong>Processing Ease</strong></td>
+<td>High (SQL/joins)</td>
+<td>Low (custom parsing/ML needed)</td>
+</tr>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>Partition by key for order</td>
+<td>Parallelize broadly; risk of hotspots</td>
+</tr>
+<tr>
+<td><strong>Storage</strong></td>
+<td>Relational/ columnar (e.g., Parquet)</td>
+<td>Object/NoSQL (e.g., S3, MongoDB)</td>
+</tr>
+<tr>
+<td><strong>Examples</strong></td>
+<td>Transaction events, sensor metrics</td>
+<td>User logs, video streams</td>
+</tr>
+<tr>
+<td><strong>Pros/Cons</strong></td>
+<td>Pros: Queryable; Cons: Rigid schema</td>
+<td>Pros: Flexible; Cons: Hard to analyze</td>
+</tr>
+</tbody>
+</table>
+<p>In a tech lead interview, highlight hybrids: Start unstructured for flexibility, evolve to structured for analytics. Discuss costs—unstructured needs more compute for extraction. Next question?</p>
+
+    </div>
+</body>
+</html>"
