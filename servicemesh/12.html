@@ -1,0 +1,60 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="supported-tracing-frameworks-in-istio">Supported Tracing Frameworks in Istio</h3>
+<p>Istio provides robust support for distributed tracing to gain visibility into service interactions, leveraging Envoy proxies to collect and export trace data. As of the latest documentation (October 2025), Istio supports several popular tracing frameworks and backends through configurable integrations. These allow you to send traces from the mesh to external collectors without modifying application code. Configuration is typically done via Istio's Telemetry API, MeshConfig, or pod annotations, with options for sampling rates and formats.</p>
+<p>Here's a summary of the supported frameworks:</p>
+<table>
+<thead>
+<tr>
+<th>Tracing Framework</th>
+<th>Description &amp; Key Features</th>
+<th>Configuration Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OpenTelemetry</strong></td>
+<td>Istio's preferred modern standard for traces, metrics, and logs. Supports exporting to any OTEL-compatible backend (e.g., Jaeger, Zipkin via OTEL collectors).</td>
+<td>Use the Telemetry API to enable OTEL export; proxies send traces in OTEL format. Ideal for new setups; see dedicated OTEL guide for proxy config.</td>
+</tr>
+<tr>
+<td><strong>Jaeger</strong></td>
+<td>Open-source end-to-end distributed tracing system with UI for visualization. Handles sampling and storage.</td>
+<td>Configure proxies to send to Jaeger's collector endpoint (e.g., via UDP/TCP). Supports all-sampling or probabilistic modes; integrates with Elasticsearch/Cassandra backends.</td>
+</tr>
+<tr>
+<td><strong>Zipkin</strong></td>
+<td>Lightweight, open-source tracing system focused on HTTP/JSON protocols. Simple setup with web UI.</td>
+<td>Proxies export spans to Zipkin's collector (HTTP POST). Best for smaller-scale meshes; configure via <code>meshConfig.defaultConfig.tracing.zipkin.address</code>.</td>
+</tr>
+<tr>
+<td><strong>Apache SkyWalking</strong></td>
+<td>APM system with strong support for non-Java languages and plugins. Includes topology analysis.</td>
+<td>Send traces to SkyWalking's OAP server; supports gRPC/HTTP protocols. Useful for polyglot environments like .NET + Java services.</td>
+</tr>
+</tbody>
+</table>
+<p>These integrations cover most use cases, with OpenTelemetry emerging as the go-to for future-proofing (e.g., vendor-agnostic exports). For custom backends, you can use Envoy's generic tracing or WASM extensions. Always test sampling to avoid overwhelming collectors—default is often 1% head-based sampling.</p>
+<p>If you're integrating with .NET (e.g., ASP.NET Core), these work seamlessly with OpenTelemetry .NET SDK for app-level tracing that meshes with Istio's proxy spans. For setup, refer to the official guides linked in the Istio docs.</p>
+
+    </div>
+</body>
+</html>"

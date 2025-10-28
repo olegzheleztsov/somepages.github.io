@@ -1,0 +1,124 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-service-reliability">What is Service Reliability?</h3>
+<p>Service reliability refers to the probability and capability of a software service (e.g., a web API, microservice, or cloud-based application) to perform its specified functions correctly, consistently, and without interruption over a given period. It's a core principle in Site Reliability Engineering (SRE), emphasizing that services should be dependable, resilient, and recoverable from disruptions. Reliability isn't just about avoiding downtime—it's about delivering value to users even under stress, with measurable outcomes.</p>
+<p>In practical terms:</p>
+<ul>
+<li><strong>Availability</strong>: The proportion of time the service is operational and accessible (e.g., 99.9% uptime means &lt;9 hours of downtime per year).</li>
+<li><strong>Durability</strong>: Ensuring data integrity and persistence, especially in storage systems.</li>
+<li><strong>Consistency</strong>: Providing predictable behavior, such as read-after-write guarantees in databases.</li>
+<li><strong>Performance</strong>: Meeting latency and throughput targets without degradation.</li>
+</ul>
+<p>Reliability is often quantified using <strong>Service Level Objectives (SLOs)</strong>—internal targets like &quot;95% of requests complete in &lt;200ms&quot;—and enforced via <strong>Service Level Agreements (SLAs)</strong> with customers. Tools like monitoring (Prometheus, Datadog), alerting, and chaos engineering (e.g., Netflix's Chaos Monkey) help maintain it.</p>
+<h3 id="why-it-matters">Why It Matters</h3>
+<p>High reliability builds user trust, reduces costs from outages (e.g., Amazon's 2018 S3 outage cost millions), and enables scalability. Poor reliability leads to lost revenue, reputational damage, and frustrated teams.</p>
+<h3 id="what-can-go-wrong-common-failure-modes">What Can Go Wrong? Common Failure Modes</h3>
+<p>Services can fail in predictable (and unpredictable) ways. Here's a breakdown of key risks, categorized for clarity:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Failure Mode</th>
+<th>Description &amp; Examples</th>
+<th>Mitigation Strategies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Hardware/Infrastructure</strong></td>
+<td>Node/server failure</td>
+<td>Physical hardware crashes (e.g., disk failure) or VM/host downtime in cloud environments.</td>
+<td>Redundancy (multi-AZ deployments), auto-scaling, backups.</td>
+</tr>
+<tr>
+<td></td>
+<td>Power/network outages</td>
+<td>Data center blackouts or ISP disruptions, causing cascading unavailability.</td>
+<td>Geo-replication, edge caching (CDNs like Cloudflare).</td>
+</tr>
+<tr>
+<td><strong>Software/Logic</strong></td>
+<td>Bugs or unhandled exceptions</td>
+<td>Code errors like null references, race conditions, or infinite loops under load.</td>
+<td>Unit/integration tests, code reviews, static analysis (e.g., SonarQube).</td>
+</tr>
+<tr>
+<td></td>
+<td>Configuration drift</td>
+<td>Mismatched settings across environments (dev vs. prod), leading to inconsistent behavior.</td>
+<td>Infrastructure as Code (IaC) with tools like Terraform, config management (Ansible).</td>
+</tr>
+<tr>
+<td><strong>Load/Performance</strong></td>
+<td>Overload/throttling</td>
+<td>Traffic spikes (e.g., Black Friday sales) overwhelming resources, causing slowdowns.</td>
+<td>Rate limiting, circuit breakers (Hystrix/Resilience4j), horizontal scaling.</td>
+</tr>
+<tr>
+<td></td>
+<td>Resource exhaustion</td>
+<td>Memory leaks or high CPU usage starving other processes.</td>
+<td>Profiling tools (e.g., New Relic), resource quotas in Kubernetes.</td>
+</tr>
+<tr>
+<td><strong>Dependencies</strong></td>
+<td>External service failures</td>
+<td>Downstream APIs (e.g., payment gateway) or databases become unresponsive.</td>
+<td>Retry logic with exponential backoff, fallbacks, service meshes (Istio).</td>
+</tr>
+<tr>
+<td></td>
+<td>Version incompatibilities</td>
+<td>API contract changes between services causing integration breaks.</td>
+<td>API versioning, contract testing (Pact).</td>
+</tr>
+<tr>
+<td><strong>Human/Operational</strong></td>
+<td>Deployment errors</td>
+<td>Faulty rollouts (e.g., blue-green failures) or misconfigured CI/CD pipelines.</td>
+<td>Canary releases, rollback mechanisms, post-deploy smoke tests.</td>
+</tr>
+<tr>
+<td></td>
+<td>Security incidents</td>
+<td>DDoS attacks, breaches, or insider errors exposing or corrupting data.</td>
+<td>Firewalls, encryption, incident response plans (e.g., via PagerDuty).</td>
+</tr>
+<tr>
+<td><strong>Distributed Systems</strong></td>
+<td>Network partitioning</td>
+<td>Temporary splits in the network causing partial outages (CAP theorem trade-offs).</td>
+<td>Quorum-based consensus (e.g., Raft in etcd), eventual consistency models.</td>
+</tr>
+<tr>
+<td></td>
+<td>Cascading failures</td>
+<td>One service's issue propagates (e.g., Twitter's 2023 outage from a single API change).</td>
+<td>Isolation (bulkheads), monitoring for error budgets.</td>
+</tr>
+</tbody>
+</table>
+<p>These failures often compound—e.g., a bug under load can trigger a cascade. To prepare, focus on <strong>error budgets</strong> (SRE concept: allocate &quot;acceptable&quot; downtime to balance innovation and stability) and run failure drills.</p>
+<p>If this ties into your .NET Tech Lead prep (e.g., implementing resilience in ASP.NET Core), let me know for deeper dives like Polly for retries or HealthChecks middleware! What's next?</p>
+
+    </div>
+</body>
+</html>"

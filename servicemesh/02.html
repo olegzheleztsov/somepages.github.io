@@ -1,0 +1,71 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-should-be-handled-by-a-service-mesh">What Should Be Handled by a Service Mesh?</h3>
+<p>In a microservices architecture, a service mesh is designed to offload non-business concerns from your application code, focusing on the &quot;plumbing&quot; of inter-service communication. It should handle everything related to <em>how</em> services discover, connect, secure, route, and monitor interactions—transparently via proxies (e.g., Envoy). This keeps your .NET services (or any language) lean, while the mesh enforces platform-level policies.</p>
+<p>The key is <strong>decoupling infrastructure from apps</strong>: What <em>shouldn't</em> be handled? Business logic—that stays in your code. But for resilience and ops, the mesh owns the rest. Based on established patterns (e.g., from Istio, Linkerd), here's what it <em>should</em> cover:</p>
+<table>
+<thead>
+<tr>
+<th>Responsibility</th>
+<th>Description &amp; Why It's Handled Here</th>
+<th>Examples in Practice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Traffic Management</strong></td>
+<td>Routing, load balancing, retries, timeouts, and advanced flows like canary deployments or A/B testing. <em>Why?</em> Ensures reliable, intelligent request distribution without app changes.</td>
+<td>Blue-green rollouts; fault injection for chaos testing.</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>Mutual TLS (mTLS) encryption, authentication, authorization (e.g., JWT validation), and zero-trust policies. <em>Why?</em> Secures east-west traffic (service-to-service) end-to-end, reducing breach risks.</td>
+<td>Automatic cert rotation; deny-by-default access control.</td>
+</tr>
+<tr>
+<td><strong>Observability</strong></td>
+<td>Metrics collection, distributed tracing, and logging for all traffic. <em>Why?</em> Provides visibility into &quot;dark&quot; interactions, aiding debugging in distributed systems.</td>
+<td>Integration with Prometheus/Jaeger; request-level latency histograms.</td>
+</tr>
+<tr>
+<td><strong>Service Discovery</strong></td>
+<td>Dynamic registration and lookup of services (e.g., via DNS or registries). <em>Why?</em> Handles ephemeral pods in Kubernetes, abstracting IP churn from apps.</td>
+<td>Envoy's registry syncing with Consul or Kubernetes API.</td>
+</tr>
+<tr>
+<td><strong>Reliability &amp; Resilience</strong></td>
+<td>Circuit breaking, rate limiting, and failover. <em>Why?</em> Prevents cascading failures, building on patterns like those we discussed (retries, fallbacks).</td>
+<td>Auto-throttling during spikes; multi-cluster failover.</td>
+</tr>
+<tr>
+<td><strong>Policy Enforcement</strong></td>
+<td>Centralized configs for quotas, versioning, or compliance (e.g., GDPR data masking). <em>Why?</em> Uniform rules across services, with runtime updates.</td>
+<td>API gateway-like controls at the mesh level.</td>
+</tr>
+</tbody>
+</table>
+<p>These responsibilities make the mesh a &quot;force multiplier&quot; for ops teams—e.g., in a .NET setup with ASP.NET Core services on Kubernetes, you'd inject sidecars to handle this without touching your controllers. Over time (as of 2025 trends), meshes are evolving to include AI-driven anomaly detection, but core stays focused on communication.</p>
+<p>In interviews, emphasize: &quot;A service mesh handles the 'how' of service interactions, freeing devs for the 'what'—but pick one (e.g., Istio for enterprise) based on your stack's complexity.&quot;</p>
+<p>Next question? (E.g., &quot;Pros/cons of service meshes?&quot; or back to resilience patterns?)</p>
+
+    </div>
+</body>
+</html>"

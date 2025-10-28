@@ -1,0 +1,148 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-are-fallbacks">What are Fallbacks?</h3>
+<p><strong>Fallbacks</strong> (also known as the <strong>Fallback Pattern</strong> or <strong>Graceful Degradation</strong>) are a resilience strategy in software design where, upon detecting a failure in a primary operation (e.g., a service call, database query, or external API), the system automatically switches to an alternative, simplified, or cached response/action. This ensures the application remains functional and provides <em>some</em> value to the user, even if not the full experience.</p>
+<p>In resilience terms, fallbacks are the &quot;Plan B&quot; invoked by patterns like circuit breakers or retries. They're not about fixing the failure but about <em>containing</em> its impact—prioritizing availability over perfection. This aligns with the Chaos Engineering mantra: &quot;Embrace failure, but never let it surprise you.&quot;</p>
+<h4 id="purpose-of-fallbacks">Purpose of Fallbacks</h4>
+<p>The core goal is to <strong>maintain user trust and system stability</strong> during disruptions. Here's why they're crucial, especially in distributed .NET systems:</p>
+<ol>
+<li><strong>Enhances Availability</strong>: Keeps the service responsive. Instead of a full outage (e.g., 500 error), users get a usable (if limited) result, preserving SLAs.</li>
+<li><strong>Reduces Cascading Failures</strong>: By avoiding error propagation, it prevents one weak link from breaking the chain (e.g., a slow inventory API doesn't crash the entire e-commerce checkout).</li>
+<li><strong>Improves User Experience</strong>: Delivers progressive enhancement—full features when possible, degraded gracefully otherwise. Users prefer &quot;partial success&quot; over nothing.</li>
+<li><strong>Supports Observability and Recovery</strong>: Logs fallback invocations as signals for post-mortems, while buying time for auto-recovery (e.g., via circuit breaker reset).</li>
+<li><strong>Business Alignment</strong>: Enables &quot;good enough&quot; during peaks (e.g., Black Friday), minimizing revenue loss.</li>
+</ol>
+<p>Without fallbacks, failures lead to brittle apps; with them, you achieve <strong>hysteresis</strong>—the system &quot;remembers&quot; past states to avoid thrashing.</p>
+<h4 id="how-fallbacks-work">How Fallbacks Work</h4>
+<p>Fallbacks are triggered by failure detectors (e.g., exceptions, timeouts, or circuit breaker trips). The logic is:</p>
+<ul>
+<li><strong>Primary Path</strong>: Attempt the ideal operation.</li>
+<li><strong>Failure Detection</strong>: Catch errors or check conditions.</li>
+<li><strong>Fallback Invocation</strong>: Execute an alternative (synchronous or async).</li>
+<li><strong>Response</strong>: Return the fallback result, often with metadata (e.g., a warning flag).</li>
+</ul>
+<p>They can be <strong>synchronous</strong> (immediate substitute) or <strong>asynchronous</strong> (queue for later retry). Common types:</p>
+<table>
+<thead>
+<tr>
+<th>Fallback Type</th>
+<th>Description &amp; Example</th>
+<th>When to Use</th>
+<th>Pros/Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Cached Response</strong></td>
+<td>Serve stale data from cache (e.g., last-known product prices).</td>
+<td>Read-heavy ops like recommendations.</td>
+<td>Fast; but risks staleness (mitigate with TTL).</td>
+</tr>
+<tr>
+<td><strong>Default Value</strong></td>
+<td>Hardcoded safe defaults (e.g., &quot;0 items in cart&quot; if inventory fails).</td>
+<td>Non-critical data; quick recovery.</td>
+<td>Simple; but can mislead users if overused.</td>
+</tr>
+<tr>
+<td><strong>Offline Mode</strong></td>
+<td>Switch to local processing (e.g., save order locally if payment gateway is down).</td>
+<td>User-facing apps with sync later.</td>
+<td>Empowers users; requires eventual consistency.</td>
+</tr>
+<tr>
+<td><strong>Simplified Logic</strong></td>
+<td>Degrade features (e.g., skip personalization, show generic UI).</td>
+<td>UI/UX layers; during high load.</td>
+<td>Maintains core flow; may feel incomplete.</td>
+</tr>
+<tr>
+<td><strong>External Fallback</strong></td>
+<td>Route to a secondary service (e.g., backup API endpoint).</td>
+<td>Multi-provider setups (e.g., failover to Azure vs. AWS).</td>
+<td>High fidelity; adds latency/complexity.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="implementation-in.net">Implementation in .NET</h4>
+<p>In ASP.NET Core, use <strong>Polly</strong> for declarative fallbacks, often wrapped around circuit breakers or retries. It's composable and testable.</p>
+<pre><code class="language-csharp">// Program.cs: Register with fallback policy
+services.AddHttpClient&lt;IInventoryService, InventoryService&gt;()
+    .AddPolicyHandler(Policy.HandleResult&lt;HttpResponseMessage&gt;(r =&gt; !r.IsSuccessStatusCode)
+        .Or&lt;HttpRequestException&gt;()
+        .FallbackAsync(  // Fallback policy
+            fallbackAction: async (result, ct) =&gt;
+            {
+                // Log the failure
+                logger.LogWarning(&quot;Inventory call failed; using fallback cache.&quot;);
+                
+                // Example: Return cached/default data
+                var fallbackInventory = await GetCachedInventoryAsync(); // From Redis or in-memory
+                var fallbackResponse = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(fallbackInventory)
+                };
+                return fallbackResponse;
+            },
+            onFallback: (outcome, context) =&gt;
+            {
+                // Track for metrics
+                metrics.Increment(&quot;fallback.inventory&quot;);
+            }))
+    .AddPolicyHandler(GetCircuitBreakerPolicy())  // Compose with CB
+    .AddPolicyHandler(GetRetryPolicyWithTimeout());  // And retries/timeouts
+
+// In InventoryService.cs
+public class InventoryService : IInventoryService
+{
+    public async Task&lt;InventoryDto&gt; GetInventoryAsync(string productId)
+    {
+        // Polly wraps this call automatically via HttpClient
+        var response = await _httpClient.GetAsync($&quot;/inventory/{productId}&quot;);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync&lt;InventoryDto&gt;();
+        
+        // If fails, fallback kicks in transparently
+    }
+}
+
+// Custom fallback helper
+private async Task&lt;InventoryDto&gt; GetCachedInventoryAsync()
+{
+    // Pseudo: Fetch from distributed cache
+    var cache = await _distributedCache.GetStringAsync(&quot;inventory.fallback&quot;);
+    return string.IsNullOrEmpty(cache) ? new InventoryDto { Items = 0 } : JsonSerializer.Deserialize&lt;InventoryDto&gt;(cache);
+}
+</code></pre>
+<p>Test by simulating failures (e.g., WireMock stubs) and monitor via <code>Polly</code>'s <code>onFallback</code> events in Application Insights.</p>
+<h4 id="potential-issues-and-mitigations">Potential Issues and Mitigations</h4>
+<ul>
+<li><strong>Stale or Incorrect Data</strong>: Fallbacks might serve outdated info. <em>Mitigate</em>: Use time-bound caches and user notifications (e.g., &quot;Showing cached results&quot;).</li>
+<li><strong>Over-Fallbacking</strong>: Masking bugs by always degrading. <em>Mitigate</em>: Alert on high fallback rates as an SLO violation.</li>
+<li><strong>Performance Overhead</strong>: Fallback logic adds cycles. <em>Mitigate</em>: Keep it lightweight; async where possible.</li>
+<li><strong>Consistency Challenges</strong>: In distributed txns, fallbacks can lead to eventual consistency. <em>Mitigate</em>: Pair with sagas or outbox patterns.</li>
+</ul>
+<p>In interviews, frame it as: &quot;Fallbacks embody the resilience principle of 'accept failure, deliver value anyway'—crucial for .NET leads architecting fault-tolerant systems.&quot;</p>
+<p>This rounds out the resilience toolkit! Next up—bulkheads, or pivot to DI, EF performance? What's your pick?</p>
+
+    </div>
+</body>
+</html>"

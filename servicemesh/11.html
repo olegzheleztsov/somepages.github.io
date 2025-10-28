@@ -1,0 +1,98 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="architecture-of-istio-service-mesh">Architecture of Istio Service Mesh</h3>
+<p>Istio is one of the most widely adopted open-source service meshes (CNCF-graduated), designed for Kubernetes environments to manage microservices communication with features like traffic routing, security, and observability. Its architecture follows a classic <strong>data plane/control plane split</strong>, where the data plane handles runtime traffic, and the control plane configures and orchestrates it. This design ensures scalability, as proxies operate independently while the control plane pushes configs dynamically.</p>
+<p>As of October 2025 (Istio 1.22+), the architecture emphasizes <strong>Ambient mode</strong>—a sidecar-optional evolution that reduces overhead via eBPF (extended Berkeley Packet Filter) for node-level enforcement, making it lighter for large-scale deployments. Below, I'll break it down, with a comparison to Linkerd at the end.</p>
+<h4 id="data-plane">1. <strong>Data Plane</strong></h4>
+<p>The data plane intercepts and manages all service-to-service (east-west) and external (north-south) traffic. It's decentralized, with each service instance getting a lightweight proxy.</p>
+<ul>
+<li><p><strong>Core Component: Envoy Proxy</strong></p>
+<ul>
+<li>A high-performance C++-based proxy (sidecar) injected into each pod via Kubernetes mutating admission webhooks.</li>
+<li><strong>Functions</strong>:
+<ul>
+<li><strong>Traffic Routing</strong>: Load balancing (e.g., round-robin, least connections), retries, timeouts, and circuit breaking.</li>
+<li><strong>Security</strong>: Enforces mTLS, authorization policies (e.g., RBAC via JWT), and encryption.</li>
+<li><strong>Observability</strong>: Collects metrics, logs, and traces (e.g., via OpenTelemetry or Prometheus integration).</li>
+<li><strong>gRPC/HTTP Support</strong>: Native handling of HTTP/2, gRPC streams, and WebSockets.</li>
+</ul>
+</li>
+<li><strong>Deployment</strong>: One Envoy per pod (sidecar mode) or shared via eBPF in Ambient mode (no per-pod overhead, ~50% resource savings).</li>
+<li><strong>Scalability</strong>: Proxies are stateless and auto-scale with pods; no central bottleneck.</li>
+</ul>
+</li>
+<li><p><strong>Ambient Mode (2025 Enhancement)</strong>: Replaces sidecars with a node proxy (ztunnel) and eBPF programs for L4/L7 filtering, allowing &quot;opt-in&quot; services without full injection. Ideal for .NET apps where you want minimal footprint.</p>
+</li>
+</ul>
+<h4 id="control-plane">2. <strong>Control Plane</strong></h4>
+<p>A centralized set of services (deployed as pods) that configure the data plane without handling traffic directly. In modern Istio, these are consolidated into a single binary for simplicity.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description &amp; Role</th>
+<th>Key Interactions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>istiod</strong></td>
+<td>The &quot;brain&quot;—a single gRPC server combining Pilot, Citadel, and Galley. Manages service discovery, config validation, and certificate issuance.</td>
+<td>Pushes xDS configs (discovery APIs) to Envoy proxies; integrates with Kubernetes API for dynamic updates.</td>
+</tr>
+<tr>
+<td><strong>Ingress/Egress Gateways</strong></td>
+<td>Envoy-based gateways for external traffic entry/exit (north-south). Optional but common for API management.</td>
+<td>Routes public traffic to internal services; supports WAF-like features via Envoy filters.</td>
+</tr>
+<tr>
+<td><strong>CNI Plugin (Optional)</strong></td>
+<td>Integrates with Kubernetes networking (e.g., via istio-cni) for pod IP redirection to proxies.</td>
+<td>Ensures all traffic flows through Envoy without iptables hacks.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Configuration Flow</strong>: Users define resources (CRDs like VirtualService, DestinationRule) via YAML. istiod validates and translates them into Envoy configs, pushed via xDS protocol (gRPC streams).</li>
+<li><strong>Multi-Cluster Support</strong>: Federates control planes across clusters for global meshes.</li>
+</ul>
+<h4 id="how-components-interact">How Components Interact</h4>
+<ol>
+<li><strong>Discovery</strong>: Kubernetes watches for pods/services; istiod aggregates and shares via xDS to proxies.</li>
+<li><strong>Traffic Flow</strong>: App → Envoy (outbound) → Network → Envoy (inbound) → App. Proxies apply policies inline.</li>
+<li><strong>Telemetry</strong>: Proxies export data to backends (e.g., Jaeger for traces), with istiod coordinating sampling.</li>
+<li><strong>Resilience</strong>: Built-in patterns (e.g., circuit breakers) are configured centrally but enforced locally.</li>
+</ol>
+<p>This architecture is highly extensible—e.g., via WebAssembly (WASM) filters in Envoy for custom logic. Resource footprint: ~100-200MB RAM per sidecar in sidecar mode; Ambient drops it to ~20MB per node.</p>
+<h4 id="quick-comparison-to-linkerd-architecture">Quick Comparison to Linkerd Architecture</h4>
+<p>Linkerd (CNCF-graduated, Rust-based for speed) shares the data/control plane split but prioritizes simplicity over Istio's breadth:</p>
+<ul>
+<li><strong>Data Plane</strong>: Tiny Rust proxies (~10MB, vs. Envoy's 100MB+), focused on core reliability (mTLS, LB). No full L7 routing by default.</li>
+<li><strong>Control Plane</strong>: Modular services (identity, destination, proxy-injector) in a single namespace; lighter than istiod.</li>
+<li><strong>2025 Updates</strong>: Enhanced eBPF for proxyless LB, making it even leaner for edge cases.</li>
+<li><strong>When to Choose</strong>: Linkerd for quick setups (e.g., local .NET dev); Istio for enterprise features like advanced authz.</li>
+</ul>
+<p>In a Tech Lead interview, highlight: &quot;Istio's Envoy-centric design scales to 10k+ pods with Ambient's efficiency, but start with Linkerd if velocity trumps features.&quot; For .NET, both integrate via pod annotations in AKS/EKS.</p>
+<p>Next question? (E.g., &quot;Istio deployment steps?&quot;)</p>
+
+    </div>
+</body>
+</html>"

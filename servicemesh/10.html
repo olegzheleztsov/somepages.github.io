@@ -1,0 +1,54 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="service-mesh-frameworks-i-know">Service Mesh Frameworks I Know</h3>
+<p>Absolutely—service meshes are a cornerstone of modern cloud-native architectures, and I know several well-established ones. You mentioned <strong>Istio</strong> (the de facto standard for complex setups) and <strong>LikerD</strong>, which I believe is a typo for <strong>Linkerd</strong> (a lightweight CNCF-graduated mesh). Both are excellent choices, especially for .NET microservices on Kubernetes, where they handle gRPC/HTTP traffic from ASP.NET Core without code changes.</p>
+<p>Beyond these, I also know <strong>Consul Service Mesh</strong> (HashiCorp's for hybrid/multi-cloud), <strong>AWS App Mesh</strong> (managed for EKS), <strong>Azure Service Mesh</strong> (GKE-integrated via Anthos), and emerging ones like <strong>Cilium</strong> (eBPF-powered for high-perf). As of October 2025, Istio's Ambient mode and Linkerd 2.15+ continue dominating, with ~60% adoption in surveys.</p>
+<p>Focusing on your examples, here's a quick comparison to help with interview prep—emphasize trade-offs like complexity vs. ease in discussions:</p>
+<table>
+<thead>
+<tr>
+<th>Framework</th>
+<th>Overview &amp; Key Strengths</th>
+<th>Best For &amp; .NET Ties</th>
+<th>Drawbacks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Istio</strong></td>
+<td>Open-source, feature-packed mesh with Envoy proxies; excels in traffic management, security (mTLS), and observability. Supports multi-cluster federation and WASM extensions. Latest (1.22, 2025): Enhanced Ambient for sidecar-less ops.</td>
+<td>Enterprise-scale .NET apps on K8s/AKS; integrates with Dapr for .NET service invocation. Use for advanced gRPC LB in e-commerce backends.</td>
+<td>Steep learning curve; higher resource use (10-15% CPU overhead).</td>
+</tr>
+<tr>
+<td><strong>Linkerd</strong></td>
+<td>Lightweight, Rust-based CNCF project; emphasizes simplicity with minimal proxies. Strong in mTLS, golden metrics, and edge-to-edge reliability. 2025 updates: Better multi-cluster and eBPF support for sub-ms latency.</td>
+<td>Dev/test .NET environments or startups; pairs seamlessly with ASP.NET Core's Kestrel for quick setups. Ideal for local Kind clusters.</td>
+<td>Fewer advanced features (e.g., no native WASM); less suited for massive custom policies.</td>
+</tr>
+</tbody>
+</table>
+<p>In .NET contexts, both inject via Kubernetes annotations (e.g., <code>sidecar.istio.io/inject: true</code>), letting you focus on business logic. For interviews, I'd say: &quot;Choose Istio for batteries-included resilience; Linkerd for 'just works' velocity.&quot; Know others? Consul for non-K8s, or Cilium for perf-critical.</p>
+<p>Next question? (E.g., &quot;Istio vs. Linkerd deep-dive?&quot;)</p>
+
+    </div>
+</body>
+</html>"

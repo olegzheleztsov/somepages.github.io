@@ -1,0 +1,148 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-mtls">What is mTLS?</h3>
+<p><strong>Mutual Transport Layer Security (mTLS)</strong> is an advanced security protocol that extends standard TLS by requiring <em>mutual authentication</em> between both parties in a connection—typically the client and server. In traditional TLS, only the server authenticates to the client (e.g., via a certificate). mTLS adds client authentication, where both endpoints present and verify digital certificates before establishing the secure channel. This ensures that only trusted, authorized parties can communicate, preventing man-in-the-middle attacks, unauthorized access, and spoofing in distributed systems like microservices.</p>
+<p>Key benefits include:</p>
+<ul>
+<li><strong>Zero-Trust Security</strong>: Enforces identity verification for every connection, ideal for east-west traffic (service-to-service) in cloud-native apps.</li>
+<li><strong>Encryption + Auth</strong>: Combines confidentiality (data in transit protection) with strong identity checks.</li>
+<li><strong>Common Use Cases</strong>: API gateways, service meshes (e.g., Istio), and IoT networks.</li>
+</ul>
+<p>mTLS operates at the transport layer (TCP/UDP) and is widely used in tools like Kubernetes for secure pod communication.</p>
+<h3 id="how-to-configure-mtls-in-istio">How to Configure mTLS in Istio?</h3>
+<p>Istio simplifies mTLS configuration by automating certificate management (via its Citadel component) and enforcing policies through Kubernetes Custom Resource Definitions (CRDs). By default, Istio enables mTLS in <strong>PERMISSIVE</strong> mode for sidecar-injected workloads, allowing both plaintext and mTLS traffic. To enforce secure communication, migrate to <strong>STRICT</strong> mode, which rejects plaintext entirely.</p>
+<p>Configuration uses two main resources:</p>
+<ul>
+<li><strong>PeerAuthentication</strong>: Controls server-side mTLS mode (incoming traffic) at mesh, namespace, or workload levels.</li>
+<li><strong>DestinationRule</strong>: Manages client-side TLS settings (outgoing traffic), such as TLS mode and certificate validation.</li>
+</ul>
+<p>As of Istio 1.27 (October 2025), follow these steps. Assume a Kubernetes cluster with Istio installed (e.g., via <code>istioctl install --set profile=demo</code>).</p>
+<h4 id="prerequisites">Prerequisites</h4>
+<ul>
+<li><strong>Istio Installation</strong>: Ensure Istio is deployed with the default profile (includes Citadel for certs). Verify: <code>kubectl get crd peerauthentications.security.istio.io</code>.</li>
+<li><strong>Sidecar Injection</strong>: Workloads must have Envoy sidecars. Enable via namespace label (<code>kubectl label namespace foo istio-injection=enabled</code>) or manual injection (<code>istioctl kube-inject</code>).</li>
+<li><strong>Sample Workloads</strong> (for testing): Deploy test services like httpbin and curl in namespaces (e.g., <code>foo</code>, <code>bar</code>). Example:
+<pre><code>kubectl create ns foo
+kubectl apply -f &lt;(istioctl kube-inject -f samples/httpbin/httpbin.yaml) -n foo
+kubectl apply -f &lt;(istioctl kube-inject -f samples/curl/curl.yaml) -n foo
+</code></pre>
+Repeat for <code>bar</code>. Test initial connectivity with curl commands to confirm PERMISSIVE mode works (all return HTTP 200).</li>
+<li><strong>Monitoring</strong>: Use Kiali or Grafana to track plaintext traffic before STRICT enforcement. Avoid STRICT until all clients are sidecar-injected.</li>
+</ul>
+<h4 id="step-1-enable-permissive-mode-default">Step 1: Enable Permissive Mode (Default)</h4>
+<p>No explicit config needed—Istio auto-enables PERMISSIVE for injected workloads. Clients (with sidecars) initiate mTLS, but servers accept plaintext too. Verify traffic with <code>tcpdump</code> in the proxy container:</p>
+<pre><code>kubectl exec -n foo $(kubectl get pod -n foo -l app=httpbin -o jsonpath='{.items[0].metadata.name}') -c istio-proxy -- sudo tcpdump dst port 80 -A
+</code></pre>
+<p>Look for encrypted (gibberish) vs. plaintext (readable) packets.</p>
+<h4 id="step-2-configure-strict-mode-with-peerauthentication">Step 2: Configure STRICT Mode with PeerAuthentication</h4>
+<p>Apply STRICT to force mTLS-only incoming traffic. Start namespace-scoped, then go mesh-wide.</p>
+<ul>
+<li><p><strong>Namespace-Level (e.g., Lock Down <code>foo</code>)</strong>:</p>
+<pre><code class="language-yaml">apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: foo  # Target namespace
+spec:
+  mtls:
+    mode: STRICT  # Rejects plaintext
+</code></pre>
+<p>Apply: <code>kubectl apply -f peerauth.yaml</code>. Non-mTLS clients (e.g., legacy curl without sidecar) now fail (e.g., curl exit code 56).</p>
+</li>
+<li><p><strong>Mesh-Wide</strong> (Enforce Everywhere):</p>
+<pre><code class="language-yaml">apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: istio-system  # Root namespace
+spec:
+  mtls:
+    mode: STRICT
+</code></pre>
+<p>Apply: <code>kubectl apply -f mesh-peerauth.yaml</code>. This affects all namespaces.</p>
+</li>
+<li><p><strong>Workload-Specific</strong> (via Selector):
+Add <code>selector</code> to the spec:</p>
+<pre><code class="language-yaml">spec:
+  selector:
+    matchLabels:
+      app: httpbin  # Targets specific pods
+  mtls:
+    mode: STRICT
+</code></pre>
+</li>
+</ul>
+<h4 id="step-3-configure-client-side-mtls-with-destinationrule">Step 3: Configure Client-Side mTLS with DestinationRule</h4>
+<p>For outbound traffic, set TLS modes like <code>ISTIO_MUTUAL</code> (Istio-managed certs) or <code>MUTUAL</code> (custom certs).</p>
+<ul>
+<li><strong>Example: Enforce mTLS to a Specific Host</strong>:
+<pre><code class="language-yaml">apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: httpbin-mtls
+  namespace: foo  # Client namespace
+spec:
+  host: httpbin.foo.svc.cluster.local  # Target service
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL  # Auto-uses Istio certs
+</code></pre>
+Apply: <code>kubectl apply -f dr.yaml</code>. This ensures clients use mTLS when calling the host.</li>
+</ul>
+<h4 id="step-4-verification-and-rollback">Step 4: Verification and Rollback</h4>
+<ul>
+<li><strong>Test Connectivity</strong>: Re-run curl tests post-config. mTLS clients succeed (200); others fail.</li>
+<li><strong>Monitor</strong>: Check Istio metrics for mTLS acceptance rates (<code>istioctl dashboard kiali</code>).</li>
+<li><strong>Rollback</strong>: Delete resources: <code>kubectl delete peerauthentication default -n foo</code>.</li>
+<li><strong>Cleanup</strong>: Remove test namespaces: <code>kubectl delete ns foo bar</code>.</li>
+</ul>
+<h4 id="mtls-modes-comparison">mTLS Modes Comparison</h4>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Description</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DISABLE</strong></td>
+<td>No TLS; plaintext only.</td>
+<td>Legacy testing.</td>
+</tr>
+<tr>
+<td><strong>PERMISSIVE</strong></td>
+<td>Accepts plaintext or mTLS.</td>
+<td>Migration phase.</td>
+</tr>
+<tr>
+<td><strong>STRICT</strong></td>
+<td>mTLS required; rejects plaintext.</td>
+<td>Production security.</td>
+</tr>
+</tbody>
+</table>
+<p>For .NET apps (e.g., ASP.NET Core), no code changes needed—Istio handles certs via Envoy. If using custom CAs, configure via Citadel. For advanced setups (e.g., multi-cluster), see Istio's federation docs. Always test in a staging cluster to avoid outages.</p>
+
+    </div>
+</body>
+</html>"

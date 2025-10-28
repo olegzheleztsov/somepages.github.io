@@ -1,0 +1,40 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="common-throttling-strategies">Common Throttling Strategies</h3>
+<p>Excellent question—this dives deeper into practical throttling implementations, which are essential for .NET Tech Leads designing scalable, reliable APIs. Throttling strategies vary by context (e.g., API gateways vs. client-side), but the ones you listed are foundational: <strong>Drop requests above value</strong>, <strong>Prioritize critical traffic</strong>, <strong>Drop uncommon clients</strong>, and <strong>Limit concurrent requests</strong>. They balance load protection with fairness, often using algorithms like token buckets or sliding windows.</p>
+<p>These can be enforced at the edge (e.g., Azure API Management), middleware (ASP.NET Core), or client (Polly). Below, I'll outline each with descriptions, use cases, benefits/drawbacks, and .NET snippets for quick reference.</p>
+<p quotaMultiplier="2;" request.Ip="">| Strategy                  | Description &amp; Purpose                                                                 | When to Use &amp; Example Scenario                                                                 | Pros/Cons | .NET Implementation Example |
+|---------------------------|---------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|-----------|-----------------------------|
+| <strong>Drop Requests Above Value</strong> | Hard-rejects requests exceeding a fixed threshold (e.g., rate per minute), typically with a 429 response. Purpose: Simple overload prevention by discarding excess traffic outright. | High-volume public APIs to stop DDoS-like bursts. E.g., A news site limits unauth users to 100 req/min. | <strong>Pros</strong>: Easy to implement, low overhead. <br> <strong>Cons</strong>: Can reject legit spikes; no queuing. | Use AspNetCoreRateLimit: <br><code>csharp:disable-run | **Prioritize Critical Traffic** | Classifies requests by priority (e.g., via headers or user roles) and allocates quotas preferentially (e.g., VIPs get 2x limit). Purpose: Ensures key operations succeed during contention, aligning with business SLAs. | E-commerce during sales: Authenticated checkouts &gt; anonymous browsing. | **Pros**: Business-aligned, maximizes revenue impact. &lt;br&gt; **Cons**: Requires request metadata; potential for abuse if misclassified. | Custom middleware with queues: &lt;br&gt;</code>csharp<br>if (request.Headers[&quot;Priority&quot;] == &quot;High&quot;) <br>var allowed = tokenBucket.TryConsume(1 * multiplier);<br><code> &lt;br&gt; Integrate with Polly for client hints. | | **Drop Uncommon Clients** | Identifies and limits &quot;rare&quot; or suspicious clients (e.g., by IP, user-agent, or behavior) while allowing frequent ones higher rates. Purpose: Mitigates abuse from bots/scrapers without penalizing loyal users. | Social media APIs: Cap new IPs at 10 req/min, trusted at 1000. | **Pros**: Adaptive to patterns, enhances security. &lt;br&gt; **Cons**: Needs state (e.g., Redis) for tracking; edge cases like VPNs. | Redis-backed: &lt;br&gt;</code>csharp<br>var clientKey = $&quot;throttle:&quot;;<br>var reqCount = await _redis.IncrementAsync(clientKey);<br>if (reqCount &gt; (IsCommonClient(ip) ? 1000 : 10)) { return 429; }<br><code> &lt;br&gt; Expire keys after 1m. | | **Limit Concurrent Requests** | Caps *in-flight* operations (e.g., max 50 simultaneous DB queries per endpoint) rather than total rate. Purpose: Prevents resource starvation (e.g., connection pool exhaustion) by controlling parallelism. | Long-running tasks like image processing in cloud functions. | **Pros**: Directly ties to resource limits, smooths bursts. &lt;br&gt; **Cons**: Can cause head-of-line blocking; not ideal for short reqs. | SemaphoreSlim in ASP.NET: &lt;br&gt;</code>csharp<br>private static readonly SemaphoreSlim _semaphore = new(50, 50);<br>await _semaphore.WaitAsync();<br>try { /* Process */ } finally { _semaphore.Release(); }<br>``` <br> Or Polly's <code>Semaphore</code> policy. |</p>
+<h4 id="key-implementation-notes">Key Implementation Notes</h4>
+<ul>
+<li><strong>Composition</strong>: Layer them—e.g., concurrent limits first, then rate drops—for defense-in-depth.</li>
+<li><strong>Algorithms Underpinning</strong>: Most use <strong>Token Bucket</strong> for these (e.g., via System.Threading.Channels for queuing in prioritized strategies).</li>
+<li><strong>Monitoring &amp; Tuning</strong>: Track rejection ratios (e.g., &lt;1% as SLO) with tools like Serilog + Grafana. Test with Locust for load simulation.</li>
+<li><strong>Client-Side Twist</strong>: In .NET clients, use Polly's <code>RateLimitAsync</code> to self-throttle: <code>Policy.RateLimitAsync(100, TimeSpan.FromMinutes(1))</code>.</li>
+</ul>
+<p>In interviews, highlight trade-offs: &quot;Drop above value is baseline, but prioritize for ROI-focused reliability.&quot; These build on our throttling chat—resilience mastery!</p>
+<p>What's next—bulkheads, or .NET perf tuning? Fire away!</p>
+<pre><code></code></pre>
+
+    </div>
+</body>
+</html>"

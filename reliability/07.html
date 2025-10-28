@@ -1,0 +1,135 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-the-throttling-pattern">What is the Throttling Pattern?</h3>
+<p>The <strong>Throttling Pattern</strong> (also known as <strong>Rate Limiting</strong> or <strong>Admission Control</strong>) is a resilience and performance strategy that limits the rate or volume of incoming requests, operations, or resource usage to prevent a service from becoming overwhelmed. It acts like a &quot;traffic cop&quot; for your system, enforcing boundaries to ensure sustainable load handling.</p>
+<p>In distributed systems (e.g., microservices in .NET), throttling can be applied at multiple layers:</p>
+<ul>
+<li><strong>Server-Side</strong>: The service itself rejects excess requests (e.g., via middleware).</li>
+<li><strong>Client-Side</strong>: The caller self-regulates to avoid hammering a potentially failing dependency.</li>
+<li><strong>API Gateway Level</strong>: Centralized control (e.g., Azure API Management).</li>
+</ul>
+<p>Common algorithms include:</p>
+<ul>
+<li><strong>Token Bucket</strong>: Requests consume &quot;tokens&quot; from a bucket that refills at a fixed rate (e.g., 100 tokens/minute).</li>
+<li><strong>Leaky Bucket</strong>: Smooths bursts by queuing and draining at a constant rate.</li>
+<li><strong>Fixed Window</strong>: Counts requests in time windows (e.g., 1000/hour), simple but bursty.</li>
+<li><strong>Sliding Window</strong>: Averages over rolling windows for fairness.</li>
+</ul>
+<p>Throttling isn't just about denial—it's proactive: It can respond with HTTP 429 (Too Many Requests) and headers like <code>Retry-After</code> to guide clients.</p>
+<h4 id="how-does-throttling-help-increase-service-reliability">How Does Throttling Help Increase Service Reliability?</h4>
+<p>Throttling directly bolsters reliability by protecting against overload, which is a top cause of outages (per SRE playbooks like Google's). It shifts the system from reactive (e.g., crashing under load) to proactive (e.g., shedding load early), aligning with principles like the <strong>Stability Pattern</strong> from Chris Richardson's Microservices.io.</p>
+<p>Key ways it enhances reliability:</p>
+<ol>
+<li><strong>Prevents Overload and Resource Exhaustion</strong>: Caps concurrency to avoid CPU/memory spikes, ensuring the service stays responsive for critical traffic. E.g., during a DDoS or traffic spike, it prioritizes VIP users.</li>
+<li><strong>Mitigates Cascading Failures</strong>: By slowing or queuing non-essential requests, it stops one overloaded service from propagating stress upstream/downstream (complements circuit breakers).</li>
+<li><strong>Enforces SLOs and Error Budgets</strong>: Maintains tail latencies (e.g., p99 &lt; 500ms) by rejecting before queues balloon, allowing innovation within reliability bounds.</li>
+<li><strong>Improves Predictability</strong>: Smooths load variability, reducing variance in response times and enabling better capacity planning.</li>
+<li><strong>Facilitates Fairness and Security</strong>: Protects against abusive clients (e.g., bots) while allowing graceful degradation.</li>
+</ol>
+<p>In practice, throttled systems see 20-50% fewer incidents from load-related failures (anecdotal from Netflix/LinkedIn case studies). Without it, a 2x traffic surge can drop availability from 99.9% to 90%.</p>
+<h4 id="potential-issues-and-mitigations">Potential Issues and Mitigations</h4>
+<p>Throttling is powerful but requires tuning—overdo it, and you starve legitimate users.</p>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Description</th>
+<th>Mitigation Strategies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>False Positives</strong></td>
+<td>Legit bursts (e.g., flash sales) get throttled, frustrating users.</td>
+<td>Adaptive thresholds (e.g., ML-based on historical load); allow bursts via token buckets.</td>
+</tr>
+<tr>
+<td><strong>Uneven Distribution</strong></td>
+<td>Global limits ignore hot spots (e.g., one endpoint floods).</td>
+<td>Per-route or per-client limits; use distributed counters (Redis).</td>
+</tr>
+<tr>
+<td><strong>Increased Latency</strong></td>
+<td>Queuing adds delays; clients retry, worsening the herd.</td>
+<td>Pair with backoff hints (Retry-After); client-side throttling.</td>
+</tr>
+<tr>
+<td><strong>Complexity Overhead</strong></td>
+<td>State management for windows/tokens adds latency/scalability challenges.</td>
+<td>In-memory for low-scale; Redis for distributed; test with load tools like k6.</td>
+</tr>
+<tr>
+<td><strong>Bypass Risks</strong></td>
+<td>Clients ignore 429s or use proxies.</td>
+<td>Enforce via auth (JWT claims); monitor rejection rates as SLOs.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="implementation-in.net">Implementation in .NET</h4>
+<p>In ASP.NET Core, use <strong>AspNetCoreRateLimit</strong> (NuGet) for server-side or Polly for client-side. Here's a quick server-side example:</p>
+<pre><code class="language-csharp">// Program.cs: Add rate limiting
+builder.Services.AddMemoryCache(); // Or Redis for distributed
+builder.Services.Configure&lt;IpRateLimitOptions&gt;(options =&gt;
+{
+    options.GeneralRules = new List&lt;RateLimitRule&gt;
+    {
+        new RateLimitRule
+        {
+            Endpoint = &quot;*&quot;, // Or specific like &quot;POST:/api/orders&quot;
+            Limit = 100,    // Max requests
+            Period = &quot;1m&quot;   // Per minute
+        }
+    };
+});
+builder.Services.AddSingleton&lt;IIpPolicyStore, MemoryCacheIpPolicyStore&gt;();
+builder.Services.AddSingleton&lt;IRateLimitCounterStore, MemoryCacheRateLimitCounterStore&gt;();
+builder.Services.AddSingleton&lt;IRateLimitConfiguration, RateLimitConfiguration&gt;();
+
+var app = builder.Build();
+app.UseIpRateLimiting(); // Middleware order: After auth, before routing
+
+// In controller (optional: custom response)
+[ApiController]
+[Route(&quot;api/[controller]&quot;)]
+public class OrdersController : ControllerBase
+{
+    [HttpPost]
+    public IActionResult CreateOrder(OrderDto order)
+    {
+        // Business logic...
+        return Ok(new { Id = 123 });
+    }
+}
+// On throttle: Auto-returns 429 with Retry-After header
+</code></pre>
+<p>For client-side (e.g., throttling calls to a flaky API):</p>
+<pre><code class="language-csharp">// Using Polly for semantic throttling (custom policy)
+var throttlePolicy = Policy.RateLimitAsync(10, TimeSpan.FromMinutes(1)); // 10 calls/min
+
+await throttlePolicy.ExecuteAsync(async () =&gt; await _httpClient.GetAsync(&quot;/api/external&quot;));
+</code></pre>
+<p>Monitor with metrics (e.g., <code>throttle.rejections</code> in Prometheus) and A/B test limits.</p>
+<p>In interviews, stress: &quot;Throttling is the first line of defense in the resilience onion—outer layer for load control, inner for retries/fallbacks.&quot; Pairs perfectly with our prior patterns!</p>
+<p>Next resilience deep-dive, or switch to architecture (e.g., CQRS)? Your call!</p>
+
+    </div>
+</body>
+</html>"

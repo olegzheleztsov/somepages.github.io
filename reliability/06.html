@@ -1,0 +1,71 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="fallback-options-in-resilience-patterns">Fallback Options in Resilience Patterns</h3>
+<p>Great follow-up! Fallbacks are versatile, and the ones you listed—<strong>Graceful Degradation</strong>, <strong>Cache</strong>, <strong>Functional Redundancy</strong>, and <strong>Stubbed Data</strong>—are among the most common and effective strategies for handling failures in distributed systems like .NET microservices. They allow your app to &quot;fail soft&quot; by providing alternative paths that maintain usability without the full primary functionality.</p>
+<p>These options can be mixed (e.g., cache + graceful degradation) and are often implemented via libraries like Polly in ASP.NET Core. Below, I'll break them down with definitions, purposes, examples, and trade-offs. This is key for Tech Lead interviews: Discuss how they align with business priorities (e.g., availability vs. accuracy) and SLOs.</p>
+<table>
+<thead>
+<tr>
+<th>Fallback Option</th>
+<th>Description &amp; Purpose</th>
+<th>When to Use &amp; .NET Example</th>
+<th>Pros/Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Graceful Degradation</strong></td>
+<td>Simplifies or disables non-essential features while keeping core functionality alive (e.g., show basic UI without dynamic personalization). Purpose: Prioritizes user flow over perfection, reducing outage impact.</td>
+<td>High-traffic UIs during load spikes. <br> <strong>.NET Ex</strong>: In Razor Pages, use feature flags (e.g., via Flurl) to toggle advanced JS; fallback to static HTML. Polly: <code>FallbackAsync(async (ctx, ct) =&gt; { return View(&quot;BasicView&quot;); });</code></td>
+<td><strong>Pros</strong>: Seamless UX, easy to implement. <br> <strong>Cons</strong>: May confuse users if not communicated (e.g., add a banner: &quot;Limited mode active&quot;).</td>
+</tr>
+<tr>
+<td><strong>Cache</strong></td>
+<td>Serves pre-fetched or stale data from a cache store (e.g., Redis) instead of querying a failing backend. Purpose: Provides fast, recent-enough responses for read-heavy ops, buying recovery time.</td>
+<td>Data that's &quot;eventually consistent&quot; like user profiles or prices. <br> <strong>.NET Ex</strong>: <code>IDistributedCache</code> in ASP.NET Core: <code>var cached = await _cache.GetStringAsync(key); return string.IsNullOrEmpty(cached) ? await FetchFresh() : JsonSerializer.Deserialize(cached);</code> Integrate with Polly for auto-cache on failure.</td>
+<td><strong>Pros</strong>: Low latency, high hit rates. <br> <strong>Cons</strong>: Risk of outdated info (mitigate with TTL/eviction policies, e.g., 5min expiry).</td>
+</tr>
+<tr>
+<td><strong>Functional Redundancy</strong></td>
+<td>Switches to an alternative implementation or secondary system (e.g., local computation if cloud API fails). Purpose: Ensures redundancy at the logic level, maintaining feature parity where possible.</td>
+<td>Critical paths with backups, like failover to on-prem DB if Azure SQL is down. <br> <strong>.NET Ex</strong>: Dependency injection with multiple registrations: <code>services.AddScoped&lt;IEmailService, SmtpEmailService&gt;().AddScoped&lt;EmailService, SendGridEmailService&gt;(ServiceLifetime.Singleton);</code> Use a strategy pattern to swap on failure.</td>
+<td><strong>Pros</strong>: High fidelity, resilient to single points. <br> <strong>Cons</strong>: Higher complexity/cost (dual maintenance); test failover regularly.</td>
+</tr>
+<tr>
+<td><strong>Stubbed Data</strong></td>
+<td>Returns hardcoded, mock, or minimal default data (e.g., empty list or &quot;N/A&quot; values). Purpose: Quick &quot;safe&quot; response to unblock the user, often as a last resort.</td>
+<td>Non-user-facing internals or prototyping; avoids crashes. <br> <strong>.NET Ex</strong>: In APIs, <code>FallbackAsync((ctx) =&gt; Task.FromResult(new { Items = new List&lt;Item&gt;(), Message = &quot;Service temporarily unavailable&quot; }));</code> Use in unit tests too (e.g., Moq stubs).</td>
+<td><strong>Pros</strong>: Zero overhead, fail-fast. <br> <strong>Cons</strong>: Low value (can erode trust); pair with async retries or notifications.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="additional-tips-for-interviews">Additional Tips for Interviews</h4>
+<ul>
+<li><strong>Composition</strong>: Chain them hierarchically—e.g., try cache first, then graceful degradation, stub as final net.</li>
+<li><strong>Monitoring</strong>: Track invocation rates (e.g., via Serilog + App Insights) to detect over-reliance, treating &gt;5% as an alert.</li>
+<li><strong>Edge Cases</strong>: Ensure idempotency and consistency (e.g., stubbed data shouldn't create side effects).</li>
+<li><strong>Alternatives I Know</strong>: Beyond these, there's <strong>Queueing</strong> (defer work to a message bus like Azure Service Bus) and <strong>Human-in-the-Loop</strong> (escalate to manual review for high-stakes failures).</li>
+</ul>
+<p>These keep systems antifragile—failures make them stronger via learning. Spot on for resilience discussions! What's next—bulkhead patterns, or shift to .NET specifics like EF Core optimization?</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,80 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="should-load-balancing-be-part-of-the-service-mesh">Should Load Balancing Be Part of the Service Mesh?</h3>
+<p><strong>Yes</strong>, load balancing <em>should</em> be—and typically <em>is</em>—a core responsibility of a service mesh. It's one of the foundational capabilities that makes meshes valuable for microservices, handling traffic distribution across service instances transparently at the network layer (via sidecar proxies like Envoy). This decouples load balancing from your application code, enabling dynamic, intelligent distribution without custom client-side logic. Without it, meshes would fall short on basic traffic management, leading to uneven loads, hotspots, or failures in scaling.</p>
+<h4 id="why-include-load-balancing-in-the-service-mesh">Why Include Load Balancing in the Service Mesh?</h4>
+<ul>
+<li><strong>Decentralized and Automatic</strong>: Traditional load balancers (e.g., NGINX or AWS ALB) are centralized choke points, but meshes distribute balancing to per-instance proxies. This scales better in Kubernetes environments, where pods spin up/down rapidly.</li>
+<li><strong>Integration with Other Features</strong>: It pairs seamlessly with retries, circuit breakers, and routing—e.g., balancing only healthy instances during partial outages.</li>
+<li><strong>Consistency Across Environments</strong>: Enforces uniform strategies (e.g., round-robin, least connections) from dev to prod, reducing &quot;works on my machine&quot; issues.</li>
+<li><strong>Performance Gains</strong>: Optimizes for L7 (application-level) awareness, like balancing based on HTTP headers or gRPC metadata, improving resource utilization and availability.</li>
+</ul>
+<p>Excluding it would force devs to reinvent wheels in code (e.g., via .NET's <code>HttpClient</code> with custom handlers), increasing complexity and bugs.</p>
+<h4 id="how-load-balancing-works-in-a-service-mesh">How Load Balancing Works in a Service Mesh</h4>
+<p>Proxies intercept outbound traffic, query service discovery (e.g., from Kubernetes API), and apply algorithms:</p>
+<ol>
+<li><strong>Discovery</strong>: Fetch healthy endpoints.</li>
+<li><strong>Selection</strong>: Choose based on policy (e.g., weighted round-robin).</li>
+<li><strong>Forwarding</strong>: Route the request, with fallbacks if needed.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Traditional Load Balancer (e.g., HAProxy)</th>
+<th>Service Mesh Load Balancing (e.g., Istio/Linkerd)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Scope</strong></td>
+<td>North-south (external traffic).</td>
+<td>East-west (service-to-service) + north-south.</td>
+</tr>
+<tr>
+<td><strong>Deployment</strong></td>
+<td>Centralized appliance/gateway.</td>
+<td>Decentralized per-pod sidecars.</td>
+</tr>
+<tr>
+<td><strong>Intelligence</strong></td>
+<td>Basic (L4 TCP) or simple L7.</td>
+<td>Advanced L7 (e.g., path-based, session affinity).</td>
+</tr>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>Bottleneck at scale.</td>
+<td>Auto-scales with instances; no single point.</td>
+</tr>
+<tr>
+<td><strong>Overhead</strong></td>
+<td>Low, but config-heavy.</td>
+<td>~1-5% latency from proxies; worth the features.</td>
+</tr>
+</tbody>
+</table>
+<p>In .NET contexts (e.g., ASP.NET Core on K8s), this means no need for manual <code>IHttpClientFactory</code> balancing— the mesh handles it, freeing you for business logic.</p>
+<p>For 2025 trends, meshes like Istio's Ambient mode are making LB even more efficient by reducing sidecar footprints. If your setup is simple (e.g., monolith), a standalone LB might suffice; but for meshes, it's non-negotiable.</p>
+<p>Next up—mesh vs. API gateway, or another topic?</p>
+
+    </div>
+</body>
+</html>"

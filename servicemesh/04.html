@@ -1,0 +1,74 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="can-a-service-mesh-handle-authorization">Can a Service Mesh Handle Authorization?</h3>
+<p><strong>Yes</strong>, service meshes are well-equipped to handle <strong>authorization</strong> (often abbreviated as &quot;authz&quot;), particularly for <strong>service-to-service (east-west) traffic</strong> in microservices architectures. They enforce access control policies at the network layer, decoupling it from your application code (e.g., .NET services). This is done transparently via sidecar proxies (like Envoy), which inspect requests and apply rules before forwarding. Authorization in meshes typically builds on <strong>authentication</strong> (e.g., mTLS for identity) to decide <em>what</em> a service can access.</p>
+<p>Meshes focus on <strong>fine-grained, declarative policies</strong> rather than coarse app-level checks, making them ideal for zero-trust environments. Popular implementations like Istio and Linkerd provide native support, while others (e.g., Consul) extend via plugins.</p>
+<h4 id="how-it-works">How It Works</h4>
+<ol>
+<li><strong>Policy Definition</strong>: Write YAML configs for rules based on attributes like source/destination identities, HTTP methods, paths, or JWT claims.</li>
+<li><strong>Enforcement</strong>: The proxy evaluates policies (ALLOW/DENY/CUSTOM) on every request. CUSTOM can delegate to external systems (e.g., OPA for complex logic).</li>
+<li><strong>Integration</strong>: Pairs with authn (e.g., Istio's mTLS) for full identity-based authz.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Mesh Example</th>
+<th>Authorization Features</th>
+<th>.NET Integration Tip</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Istio</strong></td>
+<td>- RBAC-like policies with ALLOW/DENY actions.<br>- Supports namespaces, workloads, and external authorizers.<br>- L7 (HTTP/gRPC) and L3/4 (TCP) controls.</td>
+<td>Use in ASP.NET Core Kubernetes deployments: Annotate pods for policy injection; no code changes needed.</td>
+</tr>
+<tr>
+<td><strong>Linkerd</strong></td>
+<td>- Simpler policy via <code>ServerAuthorization</code> resources.<br>- Focuses on mTLS-based authz; integrates with SPIFFE for identities.</td>
+<td>Lightweight for local dev (e.g., via <code>linkerd inject</code> on Docker Compose).</td>
+</tr>
+<tr>
+<td><strong>Cloud Service Mesh (Anthos)</strong></td>
+<td>- User/project-level policies; OIDC for end-user authz.<br>- Ambient mode (2024+) for node-level enforcement without sidecars.</td>
+<td>Azure-native .NET apps can leverage via GKE for hybrid authz.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="benefits-for-reliability-security">Benefits for Reliability &amp; Security</h4>
+<ul>
+<li><strong>Zero-Trust Enforcement</strong>: Automatically secures all traffic, reducing breach surfaces (e.g., deny-by-default).</li>
+<li><strong>Centralized Management</strong>: Update policies cluster-wide without redeploys, aiding compliance.</li>
+<li><strong>Observability</strong>: Logs denied requests for auditing, integrating with tools like Prometheus.</li>
+<li><strong>Decoupling</strong>: Offloads authz from services, simplifying .NET code (no more custom middleware for inter-service checks).</li>
+</ul>
+<h4 id="limitations">Limitations</h4>
+<ul>
+<li><strong>Not for End-User Authz</strong>: Better for ingress gateways (e.g., pair with Envoy or Azure API Mgmt for north-south traffic).</li>
+<li><strong>Complexity</strong>: Steep learning curve for advanced policies; overkill for monoliths.</li>
+<li><strong>Performance</strong>: Adds ~1-2ms latency per hop, but tunable.</li>
+</ul>
+<p>In a Tech Lead interview, highlight: &quot;Service meshes excel at infra-level authz, but for app-specific logic, combine with libraries like IdentityServer in .NET.&quot; Recent evolutions (e.g., Ambient Mesh in 2024) make it even more efficient.</p>
+<p>Next question? (E.g., &quot;How to implement Istio authz?&quot;)</p>
+
+    </div>
+</body>
+</html>"
