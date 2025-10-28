@@ -1,0 +1,139 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-contract-testing">What is Contract Testing?</h3>
+<p><strong>Contract testing</strong> is a testing approach in distributed systems (e.g., microservices or SOA) that verifies the compatibility of interactions between a <strong>consumer</strong> (e.g., a frontend service calling an API) and a <strong>provider</strong> (e.g., a backend service) against a predefined &quot;contract.&quot; The contract defines expectations for requests/responses, such as HTTP schemas, message formats (JSON/XML), headers, or status codes—without requiring the full end-to-end system to run.</p>
+<p>It's typically <strong>consumer-driven</strong>: The consumer defines the contract based on its needs, and the provider implements/tests against it. This catches integration issues early, before deployment. Popular tools include <strong>Pact</strong> (consumer-driven, supports .NET via PactNet), <strong>Spring Cloud Contract</strong> (Java-focused), or <strong>Postman/Newman</strong> for API schemas.</p>
+<h4 id="how-it-works-high-level">How It Works (High-Level)</h4>
+<ol>
+<li><strong>Define Contract</strong>: Consumer generates a pact file (e.g., JSON) describing expected interactions (e.g., &quot;POST /orders with body {id: 123} returns 201 with {status: 'created'}&quot;).</li>
+<li><strong>Consumer Tests</strong>: Run local tests using the pact as a mock provider.</li>
+<li><strong>Provider Verification</strong>: Provider runs tests against the pact file (shared via repo or broker like Pact Broker) to ensure it fulfills the contract.</li>
+<li><strong>CI/CD Integration</strong>: Automate in pipelines—fail builds if contracts break.</li>
+</ol>
+<p>Example in .NET with PactNet (NuGet: <code>PactNet</code>):</p>
+<pre><code class="language-csharp">// Consumer test (e.g., OrdersClientTests.cs)
+[Test]
+public void GetOrder_WithValidId_ReturnsOrder()
+{
+    var pactBuilder = new PactBuilder();
+    pactBuilder.ServiceConsumer(&quot;OrdersClient&quot;, &quot;http://localhost:1234&quot;)
+               .ServiceProvider(&quot;OrdersApi&quot;, &quot;http://localhost:5678&quot;)
+               .Given(&quot;order with id 123 exists&quot;)
+               .UponReceiving(&quot;a request for order 123&quot;)
+               .With(new ProviderServiceRequest
+               {
+                   Method = HttpVerb.Get,
+                   Path = &quot;/orders/123&quot;
+               })
+               .WillRespondWith(new ProviderServiceResponse
+               {
+                   Status = 200,
+                   Headers = new Dictionary&lt;string, string&gt; { { &quot;Content-Type&quot;, &quot;application/json&quot; } },
+                   Body = new { id = 123, status = &quot;shipped&quot; }
+               });
+
+    var pact = pactBuilder.Build();
+    var client = new OrdersClient(pact.MockProviderService);
+    var result = client.GetOrder(123);
+
+    Assert.AreEqual(&quot;shipped&quot;, result.Status);
+}
+
+// Provider verification runs against pact file in CI
+</code></pre>
+<h3 id="when-and-why-to-introduce-it">When and Why to Introduce It?</h3>
+<p>Introduce contract testing <strong>early in distributed architectures</strong>, especially when scaling beyond monoliths. It's not needed for tightly coupled systems but shines in microservices where services evolve independently.</p>
+<h4 id="when-to-introduce">When to Introduce</h4>
+<ul>
+<li><strong>Team Independence</strong>: When multiple teams own services (e.g., frontend vs. backend), and integration bugs spike during deploys.</li>
+<li><strong>API-First Design</strong>: Post-prototyping, before prod—e.g., after defining OpenAPI/Swagger schemas.</li>
+<li><strong>CI/CD Maturity</strong>: Once pipelines are stable; integrate as a gated step (e.g., in Azure DevOps/GitHub Actions).</li>
+<li><strong>Scale Threshold</strong>: &gt;5 services or frequent breaking changes (e.g., schema drifts causing 503s in prod).</li>
+<li><strong>Avoid If</strong>: Small apps or fully integrated tests suffice (e.g., monolith with unit tests).</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Trigger to Introduce</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Microservices Migration</strong></td>
+<td>Legacy monolith split; APIs are boundaries.</td>
+</tr>
+<tr>
+<td><strong>Third-Party Integrations</strong></td>
+<td>External APIs change unpredictably.</td>
+</tr>
+<tr>
+<td><strong>High-Frequency Deploys</strong></td>
+<td>Daily releases; need confidence in interfaces.</td>
+</tr>
+<tr>
+<td><strong>Async Messaging</strong></td>
+<td>Event-driven (e.g., Kafka); verify payloads.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="why-introduce-it">Why Introduce It?</h4>
+<p>Contract testing shifts left on integration risks, reducing downtime and coordination overhead. Key reasons:</p>
+<table>
+<thead>
+<tr>
+<th>Benefit</th>
+<th>Why It Matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Early Detection</strong></td>
+<td>Catches provider changes (e.g., response format tweaks) before consumer deploys; 80% fewer integration bugs per studies.</td>
+</tr>
+<tr>
+<td><strong>Parallel Development</strong></td>
+<td>Consumers mock providers; teams work independently without &quot;integration hell.&quot;</td>
+</tr>
+<tr>
+<td><strong>Documentation as Code</strong></td>
+<td>Contracts double as living specs (e.g., auto-generate OpenAPI from pacts).</td>
+</tr>
+<tr>
+<td><strong>Regression Prevention</strong></td>
+<td>CI verifies contracts on every commit/PR; enforces backward compatibility.</td>
+</tr>
+<tr>
+<td><strong>Cost Efficiency</strong></td>
+<td>Cheaper than E2E tests (no full env spin-up); faster feedback loops.</td>
+</tr>
+<tr>
+<td><strong>Consumer-Centric</strong></td>
+<td>Aligns providers to real consumer needs, not assumptions.</td>
+</tr>
+</tbody>
+</table>
+<p>Drawbacks: Initial setup overhead (defining contracts); maintain contracts as needs evolve. In .NET ecosystems, pair with xUnit/NUnit for tests and Pact Broker for sharing.</p>
+<p>This is gold for microservices interviews—shows you think about team velocity and reliability! Next question? (E.g., &quot;Pact vs. schema validation?&quot;)</p>
+
+    </div>
+</body>
+</html>"

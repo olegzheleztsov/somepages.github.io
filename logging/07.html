@@ -1,0 +1,181 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="jaeger-configuration-and-best-practices">Jaeger: Configuration and Best Practices</h3>
+<p>Jaeger is an open-source, end-to-end distributed tracing system under the CNCF, designed for monitoring and troubleshooting microservices by collecting, aggregating, and visualizing traces. It supports high-throughput environments and integrates seamlessly with OpenTelemetry (OTel) for instrumentation, making it ideal for .NET-based distributed systems (e.g., ASP.NET Core with gRPC). As of October 2025, Jaeger v2 (released in 2024) emphasizes versatility with features like experimental Service Performance Monitoring (SPM) for proactive trace discovery and enhanced OTel compatibility. Below, I'll cover key configuration aspects and production best practices, focusing on Kubernetes/microservices setups.</p>
+<h4 id="key-configuration-areas">Key Configuration Areas</h4>
+<h5 id="deployment-modes">1. Deployment Modes</h5>
+<p>Jaeger can run in monolithic or modular modes, configured via YAML files, environment variables, or CLI flags (e.g., <code>--config /path/to/jaeger.yaml</code>). Use Docker/Kubernetes for containerized deploys.</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Description &amp; Use Case</th>
+<th>Configuration Example (Docker)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>All-in-One</strong></td>
+<td>Single binary/process combining agent, collector, query, and UI. Ideal for dev/testing/small-scale (handles &lt;1k traces/sec).</td>
+<td><code>docker run -d --name jaeger -p 16686:16686 -p 4317:4317/udp -p 4318:4318 -e BADGER_EPHEMERAL=true jaegertracing/all-in-one:latest</code><br>Exposes UI on 16686, OTLP on 4317/4318.</td>
+</tr>
+<tr>
+<td><strong>Separate Components</strong></td>
+<td>Decouples for scaling: Agent (UDP/HTTP ingestion), Collector (processing), Query (search/UI), Ingester (Kafka queuing). Stateless except storage; run multiple replicas. Prod default for &gt;1k traces/sec.</td>
+<td>Collector: <code>docker run -d --name collector -p 14250:14250 jaegertracing/jaeger-collector:latest --span-storage.type=elasticsearch</code><br>Query: <code>docker run -d --name query -p 16686:16686 jaegertracing/jaeger-query:latest --span-storage.type=elasticsearch</code></td>
+</tr>
+<tr>
+<td><strong>Kubernetes (Helm)</strong></td>
+<td>Official Helm chart for full-stack deploy (includes all components + storage). Supports autoscaling via HPA.</td>
+<td><code>helm repo add jaegertracing https://jaegertracing.github.io/helm-charts</code><br><code>helm install jaeger jaegertracing/jaeger --set provisionDataStore.cassandra=false --set storage.type=elasticsearch</code><br>Custom values.yaml for replicas/storage.</td>
+</tr>
+<tr>
+<td><strong>Docker Compose</strong></td>
+<td>Multi-container YAML for local/prod simulation (e.g., with Elasticsearch).</td>
+<td>See official repo: Includes services for all-in-one or components + volumes for persistence.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tip</strong>: Start with all-in-one for PoCs; scale to components for prod. Expose management ports (e.g., 8888 for metrics) for Prometheus scraping.</p>
+<h5 id="storage-backends">2. Storage Backends</h5>
+<p>Jaeger persists traces in scalable backends; configure via <code>span-storage.type</code> in YAML. Defaults to in-memory (ephemeral).</p>
+<table>
+<thead>
+<tr>
+<th>Backend</th>
+<th>Description &amp; Scalability</th>
+<th>Configuration Example (YAML Snippet)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>In-Memory/Badger</strong></td>
+<td>Ephemeral; fast but non-durable. Use for dev (&lt;100GB).</td>
+<td><code>span-storage: { type: badger, badger: { directory-value: /badger/data } }</code></td>
+</tr>
+<tr>
+<td><strong>Elasticsearch/OpenSearch</strong></td>
+<td>Recommended for prod; indexes spans for search. Scales horizontally (shards/replicas). Handles 10k+ traces/sec.</td>
+<td><code>span-storage: { type: elasticsearch, elasticsearch: { host: elasticsearch:9200, user: elastic, password: changeme } }</code><br>Use ILM policies for retention (e.g., 30 days).</td>
+</tr>
+<tr>
+<td><strong>Cassandra</strong></td>
+<td>High-write throughput; good for write-heavy workloads. Scales via clusters.</td>
+<td><code>span-storage: { type: cassandra, cassandra: { servers: cassandra:9042, keyspace: jaeger_v1 } }</code><br>Configure compaction for efficiency.</td>
+</tr>
+<tr>
+<td><strong>Kafka + Cassandra/ES</strong></td>
+<td>Queuing for high ingestion; decouples collector from storage.</td>
+<td><code>ingester: { kafka: { servers: kafka:9092, topic: jaeger-spans } }</code><br>Pair with above for durability.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Prod Note</strong>: For resilience, use Elasticsearch with 3+ nodes; monitor index sizes to avoid OOM. 2021 CNCF guidance still holds: Prioritize ES for query perf over Cassandra's write speed.</p>
+<h5 id="sampling-strategies">3. Sampling Strategies</h5>
+<p>Sampling reduces overhead by selectively tracing requests. Configure client-side (in OTel SDK) or server-side (remote). Defaults to 0.1% probabilistic.</p>
+<table>
+<thead>
+<tr>
+<th>Strategy Type</th>
+<th>Description &amp; Use Case</th>
+<th>Configuration Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Probabilistic</strong></td>
+<td>Randomly samples traces (e.g., 10% rate). Simple, uniform.</td>
+<td>YAML: <code>sampling: { strategies-file: /etc/jaeger/sampling.json }</code><br>JSON: <code>{ &quot;type&quot;: &quot;probabilistic&quot;, &quot;param&quot;: 0.1 }</code></td>
+</tr>
+<tr>
+<td><strong>Rate Limiting</strong></td>
+<td>Fixed rate (e.g., 2 traces/sec per service) via leaky bucket. Prevents bursts.</td>
+<td>JSON: <code>{ &quot;type&quot;: &quot;ratelimiting&quot;, &quot;param&quot;: 2.0 }</code></td>
+</tr>
+<tr>
+<td><strong>Adaptive (Remote)</strong></td>
+<td>Dynamic; backend adjusts rates based on targets (e.g., 5 traces/sec). Needs storage backend.</td>
+<td>Enable: <code>sampling: { type: remote }</code><br>Set targets in UI or API: <code>curl -X POST http://jaeger:16686/sampling-points</code></td>
+</tr>
+<tr>
+<td><strong>Tail-Based</strong></td>
+<td>Post-trace decision (via OTel Collector); samples after completion for error-prone traces.</td>
+<td>OTel Collector config: Use <code>tail_sampling</code> processor.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Best Practice</strong>: Use remote probabilistic (0.001-0.1 default) for prod; adaptive for variable traffic. Exclude health/metrics endpoints (set 0%). Reload configs dynamically.</p>
+<h5 id="api-and-ingestion">4. API and Ingestion</h5>
+<p>Jaeger exposes APIs for querying/exporting. Ingest via:</p>
+<ul>
+<li><strong>OTLP (gRPC/HTTP)</strong>: Port 4317/4318; OTel standard.</li>
+<li><strong>Zipkin/Thrift</strong>: Legacy (ports 9411, 5775-5778).</li>
+<li>Config: <code>collector: { otlp: { grpc-port: 4317, http-port: 4318 } }</code></li>
+</ul>
+<p>Query API: <code>GET /api/traces?service=orders-api&amp;limit=20</code> (via query service).</p>
+<h4 id="production-best-practices">Production Best Practices</h4>
+<p>Jaeger's monitoring best practices emphasize scalability, security, and integration for reliable tracing in distributed systems.</p>
+<ul>
+<li><p><strong>Scaling</strong>:</p>
+<ul>
+<li>Horizontal: Replicate collectors/queries (stateless); use HPA in K8s based on CPU (&gt;70%).</li>
+<li>Ingestion: Kafka for buffering spikes (&gt;10k traces/sec); limit spans/trace (e.g., 1000 via <code>collector.max-span-age</code>).</li>
+<li>Storage: ES with 3-5 nodes; shard by service/date. Retention: 7-30 days via ILM.</li>
+<li>2025 Tip: Leverage v2's SPM for auto-discovering high-QPS/slow traces without predefined queries.</li>
+</ul>
+</li>
+<li><p><strong>Security</strong>:</p>
+<ul>
+<li>TLS: Enable for all ports (<code>--tls.enabled=true</code>); use mTLS in Istio meshes.</li>
+<li>Auth: Basic/ JWT for query API; RBAC in K8s.</li>
+<li>PII: Anonymize spans client-side (OTel processors).</li>
+</ul>
+</li>
+<li><p><strong>Monitoring &amp; Observability</strong>:</p>
+<ul>
+<li>Expose metrics on 8888; scrape with Prometheus (e.g., spans ingested/sec, query latency).</li>
+<li>Alerts: High drop rates (&gt;5%) or storage fullness (&gt;80%).</li>
+<li>UI: Use Jaeger UI (16686) for searches; integrate Grafana for dashboards.</li>
+<li>OTel Integration: Export from .NET via <code>AddJaegerExporter</code>; Collector as gateway for processing.</li>
+</ul>
+</li>
+<li><p><strong>Kubernetes-Specific</strong>:</p>
+<ul>
+<li>Helm for deploy; sidecar agents optional (use DaemonSet for UDP).</li>
+<li>Resource Limits: 1-2 CPU/2GB per collector; monitor via kube-state-metrics.</li>
+<li>Upgrades: Rolling (query first); test with traffic mirroring.</li>
+</ul>
+</li>
+<li><p><strong>General Tips</strong>:</p>
+<ul>
+<li>Start Small: All-in-one + ES for PoC.</li>
+<li>Cost: Sample aggressively; use columnar storage like ClickHouse (experimental).</li>
+<li>Common Pitfalls: High-cardinality tags exploding indices—use semantic conventions.</li>
+<li>2025 Context: With CNCF's observability push, pair Jaeger with Prometheus/Grafana for full-stack (e.g., RED metrics from traces).</li>
+</ul>
+</li>
+</ul>
+<p>For .NET integration: In ASP.NET Core, <code>services.AddOpenTelemetryTracing().AddJaegerExporter(options =&gt; { options.Endpoint = new Uri(&quot;http://jaeger-collector:14250&quot;); options.GlobalDefaultStopwatch = true; });</code>. This setup ensures traces propagate across services, aiding resilience debugging.</p>
+<p>If tying to Istio (from our chats), enable Jaeger exporter in Telemetry CRDs for proxy spans. Questions on specific configs?</p>
+
+    </div>
+</body>
+</html>"

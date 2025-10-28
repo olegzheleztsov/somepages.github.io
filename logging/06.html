@@ -1,0 +1,113 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-opentelemetry">What is OpenTelemetry?</h3>
+<p><strong>OpenTelemetry</strong> (often abbreviated as <strong>OTel</strong>) is an open-source, vendor-agnostic observability framework designed to instrument, generate, collect, and export telemetry data (traces, metrics, and logs) from cloud-native applications and distributed systems. It's a CNCF (Cloud Native Computing Foundation) graduated project (as of 2023), born from the 2019 merger of OpenTracing and OpenCensus, aiming to standardize telemetry collection to avoid lock-in to proprietary tools like Datadog or New Relic.</p>
+<p>OTel enables developers and operators to understand system behavior—e.g., why a microservice is slow or failing—by providing a unified API and SDKs across languages (e.g., .NET, Java, Python, Go). It's not a backend or visualization tool; instead, it focuses on the &quot;instrumentation layer,&quot; exporting data to backends like Jaeger (traces), Prometheus (metrics), or Loki (logs). As of October 2025, OTel adoption exceeds 70% in Fortune 500 companies, driven by its role in unifying observability in Kubernetes and serverless environments.</p>
+<h4 id="core-principles">Core Principles</h4>
+<ul>
+<li><strong>Vendor-Agnostic</strong>: One instrumentation code works with multiple backends (e.g., switch from AWS X-Ray to Honeycomb without re-instrumenting).</li>
+<li><strong>Low Overhead</strong>: Semantic conventions ensure efficient sampling and propagation (e.g., trace context via W3C standards).</li>
+<li><strong>Comprehensive</strong>: Covers the three pillars of observability: traces (end-to-end request flows), metrics (quantitative aggregates), and logs (qualitative events).</li>
+</ul>
+<h4 id="key-components">Key Components</h4>
+<p>OTel is modular, with language-specific SDKs and shared specs. Here's a breakdown:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description</th>
+<th>Role in Observability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>API</strong></td>
+<td>Abstract interfaces for generating telemetry (e.g., <code>Tracer.StartSpan()</code>). No runtime deps; used for custom instrumentation.</td>
+<td>Defines &quot;how to emit&quot; data uniformly.</td>
+</tr>
+<tr>
+<td><strong>SDK</strong></td>
+<td>Implementation of the API with exporters, processors, and propagators (e.g., .NET's <code>OpenTelemetry</code> NuGet).</td>
+<td>Handles collection, sampling, and export; auto-instruments frameworks like ASP.NET Core.</td>
+</tr>
+<tr>
+<td><strong>Collector</strong></td>
+<td>Optional agent (e.g., OTel Collector binary) for receiving, processing (e.g., batching, filtering), and exporting telemetry from services. Deploy as sidecar/DaemonSet in Kubernetes.</td>
+<td>Centralizes ingestion; supports receivers (e.g., OTLP/gRPC) and exporters (e.g., to Prometheus).</td>
+</tr>
+<tr>
+<td><strong>Semantic Conventions</strong></td>
+<td>Standardized attributes/names (e.g., <code>http.method=POST</code>, <code>db.system=postgresql</code>) for consistent data across tools.</td>
+<td>Ensures interoperability; e.g., a trace span for a DB query looks the same in Jaeger or Grafana.</td>
+</tr>
+<tr>
+<td><strong>Exporters/Receivers</strong></td>
+<td>Plugins for input/output (e.g., Jaeger exporter for traces).</td>
+<td>Bridges OTel to backends; 50+ supported as of 2025.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="how-it-works">How It Works</h4>
+<ol>
+<li><strong>Instrumentation</strong>: Embed OTel in code (manual or auto) to create spans/metrics/logs.
+<ul>
+<li>Example in .NET (ASP.NET Core 8+):
+<pre><code class="language-csharp">using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracerProviderBuilder =&gt;
+    {
+        tracerProviderBuilder
+            .AddAspNetCoreInstrumentation()  // Auto-traces HTTP requests
+            .AddSource(&quot;MyApp&quot;)  // Custom spans
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(&quot;orders-api&quot;))
+            .AddConsoleExporter();  // Or Jaeger/Prometheus
+    });
+
+var app = builder.Build();
+app.MapGet(&quot;/&quot;, () =&gt;
+{
+    using var span = TracerProvider.Default.GetTracer(&quot;MyApp&quot;).StartActiveSpan(&quot;HandleRequest&quot;);
+    span.SetAttribute(&quot;user.id&quot;, 123);  // Add context
+    return &quot;Hello, Observability!&quot;;
+});
+app.Run();
+</code></pre>
+</li>
+</ul>
+</li>
+<li><strong>Propagation</strong>: Headers (e.g., <code>traceparent</code>) carry context across services.</li>
+<li><strong>Collection/Export</strong>: SDK or Collector batches and sends via OTLP (OpenTelemetry Protocol) to backends.</li>
+<li><strong>Analysis</strong>: Query/visualize in tools like Grafana Tempo (traces) or Prometheus (metrics).</li>
+</ol>
+<h4 id="benefits-use-cases">Benefits &amp; Use Cases</h4>
+<ul>
+<li><strong>Benefits</strong>: Reduces vendor costs (one SDK for all), simplifies migrations, and improves debugging (e.g., correlate a .NET API trace to a downstream DB span).</li>
+<li><strong>Use Cases</strong>: Microservices tracing in Kubernetes (with Istio), APM in serverless (AWS Lambda), or full-stack observability in monoliths.</li>
+<li><strong>Limitations</strong>: Steep learning curve for custom spans; Collector can add ~1-5% overhead (mitigate with sampling).</li>
+</ul>
+<p>For getting started, check the official docs at opentelemetry.io—it's language-agnostic but has excellent .NET support via Microsoft.Extensions.Telemetry. If you're prepping for interviews, emphasize OTel's role in &quot;future-proofing&quot; observability stacks!</p>
+
+    </div>
+</body>
+</html>"

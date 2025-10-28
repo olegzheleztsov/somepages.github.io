@@ -1,0 +1,186 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-to-log-in.net-microservices-and-service-meshes">What to Log in .NET Microservices and Service Meshes?</h3>
+<p>Logging is a cornerstone of observability—the &quot;logs&quot; pillar alongside metrics and traces (which we've touched on with Istio). In a Tech Lead role, you'll emphasize <strong>structured logging</strong> (JSON over text) for machine-readable analysis, balancing verbosity with cost. Log at appropriate levels (Debug, Info, Warn, Error, Fatal) and correlate with traces (e.g., via trace IDs).</p>
+<p>Focus on <strong>actionable insights</strong>: Logs should answer &quot;What happened? Why? What to fix?&quot; without overwhelming storage (aim for &lt;1% of traffic). In service meshes like Istio, logs capture proxy-level events (e.g., Envoy access logs) alongside app logs.</p>
+<h4 id="what-to-log">What to Log?</h4>
+<p>Categorize logs by type for reliability and debugging. Prioritize based on context: errors for resilience, audits for security, and events for business monitoring.</p>
+<table>
+<thead>
+<tr>
+<th>Log Category</th>
+<th>What to Log</th>
+<th>Examples in .NET/Mesh Context</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Errors &amp; Exceptions</strong></td>
+<td>Stack traces, error codes, context (e.g., request ID, user ID). Always include root cause if available.</td>
+<td>Unhandled exceptions in ASP.NET Core controllers; Istio proxy errors (e.g., mTLS handshake failures).</td>
+</tr>
+<tr>
+<td><strong>Requests/Responses</strong></td>
+<td>HTTP/gRPC method, path, status code, latency, payload size (redacted for PII).</td>
+<td>Incoming API calls via Kestrel; Envoy access logs (e.g., <code>istio-proxy</code> container: &quot;POST /orders 200 150ms&quot;).</td>
+</tr>
+<tr>
+<td><strong>Business Events</strong></td>
+<td>Key milestones (e.g., order created, payment processed) with outcomes.</td>
+<td>EF Core save success/failure; saga step completion in distributed txns.</td>
+</tr>
+<tr>
+<td><strong>Security &amp; Audits</strong></td>
+<td>Auth attempts, access denials, mTLS cert rotations.</td>
+<td>JWT validation failures; Istio authorization denials (via <code>istio-proxy</code> logs).</td>
+</tr>
+<tr>
+<td><strong>Performance/Metrics</strong></td>
+<td>Threshold breaches (e.g., high latency, retry counts) as structured events.</td>
+<td>Circuit breaker trips (Polly events); throttling rejections.</td>
+</tr>
+<tr>
+<td><strong>Configuration Changes</strong></td>
+<td>Deployments, config updates, health checks.</td>
+<td>Blue-green rollout starts; Istio DestinationRule applications.</td>
+</tr>
+<tr>
+<td><strong>Debug/Info (Low Volume)</strong></td>
+<td>Startup/shutdown, dependency health (e.g., DB connections).</td>
+<td>Service init with version/env; Linkerd proxy health probes.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Best Practice</strong>: Log <em>structurally</em>—e.g., <code>{ &quot;level&quot;: &quot;Error&quot;, &quot;timestamp&quot;: &quot;2025-10-28T12:00:00Z&quot;, &quot;service&quot;: &quot;orders-api&quot;, &quot;traceId&quot;: &quot;abc123&quot;, &quot;message&quot;: &quot;Payment failed&quot;, &quot;details&quot;: { &quot;orderId&quot;: 456, &quot;errorCode&quot;: &quot;INSUFFICIENT_FUNDS&quot; } }</code>. Avoid strings; use key-value pairs for querying.</p>
+<h4 id="why-log">Why Log?</h4>
+<p>Logging drives <strong>reliability, debugging, and compliance</strong> in distributed systems:</p>
+<ul>
+<li><strong>Debugging &amp; Incident Response</strong>: Correlate logs with traces (e.g., Jaeger spans) to reconstruct failures—e.g., trace a retry storm from Polly logs to an Istio timeout. Reduces MTTR from hours to minutes.</li>
+<li><strong>Monitoring SLOs</strong>: Aggregate for alerts (e.g., error rate &gt;5% triggers PagerDuty). In meshes, proxy logs reveal network issues before app-level ones.</li>
+<li><strong>Auditing &amp; Compliance</strong>: Immutable records for GDPR/SOX (e.g., who accessed what data). mTLS logs prove zero-trust enforcement.</li>
+<li><strong>Capacity Planning</strong>: Spot patterns like memory leaks from GC logs or traffic spikes from request volumes.</li>
+<li><strong>Team Collaboration</strong>: Centralized logs (e.g., ELK Stack) enable on-call rotations; structured formats power ML anomaly detection.</li>
+<li><strong>Business Value</strong>: Track events for analytics (e.g., conversion funnels from order logs).</li>
+</ul>
+<p>Without logs, you're flying blind—outages like the 2024 Fastly CDN failure (unlogged config drift) cost millions. Log &quot;why&quot; (context) to prevent recurrence.</p>
+<h4 id="how-to-log">How to Log?</h4>
+<p>In .NET, use built-in <code>ILogger</code> with extensions like Serilog for structure. Integrate with meshes via sidecar log forwarding (e.g., to Fluentd). Follow 12-factor app principles: Treat logs as event streams.</p>
+<h5 id="net-implementation">1. <strong>.NET Implementation</strong></h5>
+<ul>
+<li><strong>Setup Serilog</strong> (NuGet: <code>Serilog.AspNetCore</code>, <code>Serilog.Sinks.Console</code>, <code>Serilog.Sinks.File</code>):
+<pre><code class="language-csharp">// Program.cs (ASP.NET Core 8+)
+using Serilog;
+using Serilog.Events;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog((context, config) =&gt;
+{
+    config
+        .MinimumLevel.Information()  // Or Debug in dev
+        .Enrich.WithMachineName()
+        .Enrich.WithThreadId()
+        .Enrich.FromLogContext()  // For trace IDs
+        .WriteTo.Console(outputTemplate: &quot;[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}&quot;)
+        .WriteTo.File(&quot;logs/app-.txt&quot;, rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
+        .WriteTo.Seq(&quot;http://localhost:5341&quot;)  // Or ELK via sink
+        .Filter.ByIncludingOnly(e =&gt; e.Level &gt;= LogEventLevel.Information);  // Production filter
+});
+
+var app = builder.Build();
+app.UseSerilogRequestLogging(options =&gt;  // Auto-logs requests
+{
+    options.IncludeQueryInMessage = true;
+    options.IncludeServices = true;  // Add service name
+});
+
+app.MapGet(&quot;/&quot;, () =&gt; &quot;Hello World&quot;);
+app.Run();
+</code></pre>
+</li>
+<li><strong>Logging in Code</strong>:
+<pre><code class="language-csharp">// Controller or Service
+public class OrdersController : ControllerBase
+{
+    private readonly ILogger&lt;OrdersController&gt; _logger;
+
+    public OrdersController(ILogger&lt;OrdersController&gt; logger) =&gt; _logger = logger;
+
+    [HttpPost]
+    public async Task&lt;IActionResult&gt; CreateOrder(OrderDto order)
+    {
+        using var activity = System.Diagnostics.Activity.Current?.Source.StartActivity(&quot;CreateOrder&quot;);
+        _logger.LogInformation(&quot;Processing order {OrderId} for user {UserId}&quot;, order.Id, order.UserId);  // Structured
+
+        try
+        {
+            // Business logic...
+            _logger.LogInformation(&quot;Order {OrderId} created successfully&quot;, order.Id);
+            return Ok();
+        }
+        catch (PaymentException ex)
+        {
+            _logger.LogError(ex, &quot;Payment failed for order {OrderId}: {ErrorCode}&quot;, order.Id, ex.ErrorCode);  // With exception
+            return BadRequest();
+        }
+    }
+}
+</code></pre>
+</li>
+<li><strong>Advanced</strong>: Enrich with correlation (e.g., <code>LogContext.PushProperty(&quot;TraceId&quot;, Activity.Current?.TraceId)</code>). Use <code>Serilog.Enrichers.Span</code> for trace integration.</li>
+</ul>
+<h5 id="integration-with-service-mesh-istiolinkerd">2. <strong>Integration with Service Mesh (Istio/Linkerd)</strong></h5>
+<ul>
+<li><strong>Istio</strong>: Proxies log to stdout/stderr by default. Configure via Envoy filters or Telemetry API.
+<ul>
+<li>Enable access logging: In <code>meshConfig.accessLogFile: /dev/stdout</code>.</li>
+<li>Forward to central sink: Deploy Fluentd/Fluent Bit as DaemonSet to scrape <code>istio-proxy</code> logs, ship to Elasticsearch.</li>
+<li>Example Telemetry CRD for structured proxy logs:
+<pre><code class="language-yaml">apiVersion: telemetry.istio.io/v1alpha3
+kind: Telemetry
+metadata:
+  name: mesh-access-logs
+  namespace: istio-system
+spec:
+  accessLogging:
+  - providers:
+    - name: envoy
+</code></pre>
+</li>
+</ul>
+</li>
+<li><strong>Linkerd</strong>: Native structured JSON logs. View via <code>linkerd viz dashboard</code>; export via Prometheus for aggregation.</li>
+<li><strong>Centralization</strong>: Use ELK (Elasticsearch + Logstash + Kibana) or Loki + Grafana. In Kubernetes, EFK stack with DaemonSets for pod log collection.</li>
+</ul>
+<h5 id="best-practices-tools">3. <strong>Best Practices &amp; Tools</strong></h5>
+<ul>
+<li><strong>Levels</strong>: Debug (dev only), Info (events), Warn (recoverable), Error (failures).</li>
+<li><strong>Retention</strong>: 7-30 days; sample high-volume logs (e.g., 1% of requests).</li>
+<li><strong>PII Handling</strong>: Redact sensitive data (Serilog <code>DestructuringPolicy</code>).</li>
+<li><strong>Tools</strong>: Serilog/ NLog (.NET), Fluentd (forwarding), ELK/Loki (storage/query), Splunk (enterprise).</li>
+<li><strong>Testing</strong>: Use xUnit with <code>TestLogger</code>; simulate loads with Serilog sinks.</li>
+<li><strong>Cost Optimization</strong>: Log asynchronously; use sampling in prod.</li>
+</ul>
+<p>In interviews, tie it back: &quot;Logs + traces (Istio) + metrics = full observability for resilience.&quot; Solid for SRE discussions!</p>
+<p>Next? (E.g., metrics in Istio, or CQRS logging?)</p>
+
+    </div>
+</body>
+</html>"
