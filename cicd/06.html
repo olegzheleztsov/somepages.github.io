@@ -1,0 +1,175 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="sample.net-build-pipeline-azure-devops-yaml-example">Sample .NET Build Pipeline: Azure DevOps YAML Example</h3>
+<p>As a tech lead, I'd design build pipelines to be modular, idempotent, and optimized for speed—especially in .NET projects where NuGet restores and multi-project solutions can slow things down. Below, I'll describe a <strong>classic CI build pipeline</strong> for an ASP.NET Core web app using Azure DevOps (adaptable to GitHub Actions). This pipeline triggers on PRs/pushes to <code>main</code>, automates build/test, and produces deployable artifacts.</p>
+<p>The pipeline follows a linear flow: <strong>Trigger → Restore → Build → Test → Publish → Store Artifacts</strong>. It ensures every change is validated, with artifacts ready for CD stages (e.g., deployment to Azure App Service).</p>
+<h4 id="pipeline-overview">Pipeline Overview</h4>
+<ul>
+<li><strong>Tool</strong>: Azure DevOps YAML pipeline (stored in <code>azure-pipelines.yml</code> in your repo).</li>
+<li><strong>Triggers</strong>: On push/PR to <code>main</code> or <code>develop</code>; can add scheduled scans.</li>
+<li><strong>Agents</strong>: Self-hosted or Microsoft-hosted (ubuntu-latest for cross-platform .NET).</li>
+<li><strong>Duration Goal</strong>: &lt;5 minutes with caching.</li>
+<li><strong>Outputs</strong>: Compiled binaries, test reports, and a deployable package (e.g., ZIP or Docker image).</li>
+</ul>
+<p>Here's the YAML definition for quick reference:</p>
+<pre><code class="language-yaml">trigger:
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    include:
+    - src/*
+
+pr:
+  branches:
+    include:
+    - main
+    - develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  solution: '**/MyWebApp.sln'
+  buildConfiguration: 'Release'
+  dotnetVersion: '8.0.x'  # Or latest LTS
+
+stages:
+- stage: Build
+  displayName: 'Build and Test'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build .NET Solution'
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install .NET SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '$(dotnetVersion)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore NuGet Packages'
+      inputs:
+        command: 'restore'
+        projects: '$(solution)'
+        feedsToUse: 'select'
+        vstsFeed: 'MyOrg/MyFeed'  # Your Azure Artifacts feed
+        # Cache for speed: dotnet restore uses built-in caching
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build Solution'
+      inputs:
+        command: 'build'
+        projects: '$(solution)'
+        arguments: '--configuration $(buildConfiguration) --no-restore'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Run Unit Tests'
+      inputs:
+        command: 'test'
+        projects: '$(solution)'
+        arguments: '--configuration $(buildConfiguration) --collect:&quot;XPlat Code Coverage&quot; --no-build'
+        publishTestResults: true  # Uploads to Azure Test Plans
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish Web App'
+      inputs:
+        command: 'publish'
+        publishWebProjects: true
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/drop --no-build'
+        zipAfterPublish: true  # Creates a ZIP artifact
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifacts'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'  # Stores in Azure DevOps
+</code></pre>
+<h4 id="step-by-step-breakdown">Step-by-Step Breakdown</h4>
+<ol>
+<li><strong>Trigger</strong>: Git push/PR kicks off the pipeline via webhook. This enforces &quot;every commit builds.&quot;</li>
+<li><strong>Restore</strong>: <code>dotnet restore</code> fetches dependencies from NuGet.config or Azure Artifacts. Caching (via task args or pipeline cache) skips unchanged packages, cutting time by 50-70%.</li>
+<li><strong>Build</strong>: <code>dotnet build</code> compiles the solution. Uses <code>--no-restore</code> to avoid redundancy; outputs DLLs/EXEs.</li>
+<li><strong>Test</strong>: <code>dotnet test</code> runs xUnit/NUnit suites, collecting coverage reports (e.g., as Cobertura XML). Fails the build if coverage &lt; threshold (enforceable via conditions).</li>
+<li><strong>Publish</strong>: <code>dotnet publish</code> creates runtime-ready outputs (self-contained or framework-dependent). Zips for easy handling.</li>
+<li><strong>Post-Build</strong>: Linting (e.g., via <code>dotnet format</code>) or security scans (e.g., WhiteSource) can slot in here.</li>
+</ol>
+<p>If any step fails, the pipeline halts, notifies via email/Teams, and links to logs for debugging.</p>
+<h3 id="artifact-management-from-build-to-consumption">Artifact Management: From Build to Consumption</h3>
+<p>Artifacts are the tangible outputs of the pipeline—binaries, packages, reports—that enable downstream CD, sharing, or auditing. Poor management leads to &quot;dependency drift&quot; or bloated storage; good practices ensure reproducibility and security.</p>
+<h4 id="key-concepts">Key Concepts</h4>
+<ul>
+<li><strong>What Are Artifacts?</strong>: Immutable snapshots like .NET ZIP drops, NuGet packages (.nupkg), Docker images, or test XMLs. Versioned by build ID or semantic tags (e.g., <code>1.2.3-build2025</code>).</li>
+<li><strong>Storage</strong>: Centralized repos prevent local hoarding. In Azure DevOps: Built-in artifact feeds (universal for any format) or Azure Artifacts for NuGet-specific.</li>
+</ul>
+<h4 id="how-this-pipeline-manages-them">How This Pipeline Manages Them</h4>
+<p>Here's a table of lifecycle stages, tools, and best practices:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Description</th>
+<th>Tools/Practices</th>
+<th>Pros/Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Generation</strong></td>
+<td>Pipeline produces artifacts during publish (e.g., ZIP of <code>bin/Release/net8.0/publish/</code>).</td>
+<td><code>dotnet publish</code>; tag with <code>$(Build.BuildId)</code> for uniqueness.</td>
+<td>Pros: Atomic, traceable. Cons: Bloated if not selective (e.g., exclude PDBs).</td>
+</tr>
+<tr>
+<td><strong>Publishing</strong></td>
+<td>Upload to a secure store post-build; only on success.</td>
+<td><code>PublishBuildArtifacts@1</code> task; for NuGet: <code>dotnet pack</code> + <code>VstsNuspec@0</code>. Limit retention (e.g., 30 days).</td>
+<td>Pros: Easy sharing across pipelines. Cons: Storage costs—use compression.</td>
+</tr>
+<tr>
+<td><strong>Versioning &amp; Tagging</strong></td>
+<td>Assign semantic versions; promote from staging to prod feeds.</td>
+<td>Integrate GitVersion tool for auto-semver; separate feeds (e.g., <code>@Prerelease</code> vs. <code>@Release</code>).</td>
+<td>Pros: Prevents overwrites. Cons: Manual promotion needed for CD.</td>
+</tr>
+<tr>
+<td><strong>Consumption</strong></td>
+<td>Downstream jobs/CD pull artifacts (e.g., deploy ZIP to Azure).</td>
+<td><code>DownloadBuildArtifacts@0</code> task; NuGet sources in <code>nuget.config</code>.</td>
+<td>Pros: Decouples build from deploy. Cons: Network latency—use regional storage.</td>
+</tr>
+<tr>
+<td><strong>Security &amp; Cleanup</strong></td>
+<td>Scan for vulns; auto-purge old artifacts.</td>
+<td>Integrate Trivy/WhiteSource; set TTL policies in Azure Artifacts.</td>
+<td>Pros: Compliance-ready. Cons: Overhead if scans are slow.</td>
+</tr>
+</tbody>
+</table>
+<p>In this setup, artifacts live in Azure DevOps' blob storage (scalable, RBAC-secured) and can feed into CD releases. For monorepos, use multi-job parallelism to build only changed projects (via <code>path</code> filters). Metrics to monitor: Artifact size (&lt;100MB ideal), download frequency.</p>
+<p>This pipeline scales for .NET microservices too—add matrix jobs for per-service builds. As a lead, I'd review it quarterly for optimizations.</p>
+<p>Next question: Artifact promotion in CD, or something on testing in pipelines?</p>
+
+    </div>
+</body>
+</html>"

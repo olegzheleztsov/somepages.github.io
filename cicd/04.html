@@ -1,0 +1,83 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="main-principles-of-continuous-delivery-cd">Main Principles of Continuous Delivery (CD)</h3>
+<p>Continuous Delivery (CD) builds directly on Continuous Integration (CI) by automating the path from validated code to deployable artifacts, ensuring releases are predictable and low-risk. Its principles, inspired by Jez Humble and Dave Farley's work, emphasize reliability and automation to make deployments a non-event. Here are the core ones:</p>
+<ol>
+<li><p><strong>Automate All Deployment Steps</strong>: Every stage—from building artifacts to deploying to staging/prod—must be scripted and repeatable. No manual interventions except approvals.</p>
+</li>
+<li><p><strong>Keep the Codebase Always Deployable</strong>: Treat the main branch as production-ready. Use CI as the gatekeeper, with CD handling promotion only if tests pass.</p>
+</li>
+<li><p><strong>Use Production-Like Environments</strong>: Mirror prod in staging (e.g., same Azure resources, configs) for accurate validation, reducing &quot;works in dev, not prod&quot; issues.</p>
+</li>
+<li><p><strong>Implement Progressive Exposure</strong>: Roll out changes gradually via blue-green deployments, canaries, or feature flags to limit blast radius.</p>
+</li>
+<li><p><strong>Require Manual Approval for Production</strong>: Automate up to staging, but gate prod deploys for human oversight (distinguishing CD from Continuous Deployment).</p>
+</li>
+<li><p><strong>Enable Fast Rollbacks and Monitoring</strong>: Every release must support quick reversions (e.g., via artifact versioning) and integrate observability for post-deploy checks.</p>
+</li>
+<li><p><strong>Measure and Optimize</strong>: Track deployment metrics (e.g., success rate, lead time) to iteratively improve the pipeline.</p>
+</li>
+</ol>
+<p>These principles enable &quot;release on demand,&quot; ideal for .NET teams aiming for agile delivery without sacrificing stability.</p>
+<h3 id="pros-and-cons-of-cd">Pros and Cons of CD</h3>
+<p>CD supercharges CI by focusing on the &quot;delivery&quot; half, but it introduces deployment complexities. Below is a table of key trade-offs, with .NET-specific angles like Azure integrations:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Pros</th>
+<th>Cons/Considerations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Deployment Reliability</strong></td>
+<td>Automates error-prone steps (e.g., <code>dotnet publish</code> to Azure), minimizing human errors and enabling safe rollouts like canaries in ASP.NET apps.</td>
+<td>High initial complexity—env drift or config issues can cause cascading failures.</td>
+</tr>
+<tr>
+<td><strong>Release Speed &amp; Frequency</strong></td>
+<td>Supports daily/weekly deploys; decouples feature release from development via toggles.</td>
+<td>Requires mature CI first; immature pipelines lead to &quot;alert fatigue&quot; from false alarms.</td>
+</tr>
+<tr>
+<td><strong>Team &amp; Ops Efficiency</strong></td>
+<td>Shifts ops burden to automation; devs deploy independently, fostering ownership.</td>
+<td>Cultural hurdles—teams must collaborate on shared pipelines; training needed for tools like Helm/K8s.</td>
+</tr>
+<tr>
+<td><strong>Business Agility</strong></td>
+<td>Faster MTTR and customer value delivery; easier compliance with auditable releases.</td>
+<td>Costly infra (e.g., multiple Azure envs); over-automation can mask deeper code issues.</td>
+</tr>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>Handles microservices via orchestrated pipelines (e.g., ArgoCD for .NET containers); versioned artifacts prevent regressions.</td>
+<td>Pipeline maintenance scales with services—large .NET monorepos need selective deploys to avoid bloat.</td>
+</tr>
+</tbody>
+</table>
+<p>In .NET projects, CD thrives with Azure DevOps or GitHub Environments, where you can enforce approvals and swap slots for zero-downtime deploys. Cons like setup time pay off quickly—aim for &lt;1 hour deploys end-to-end.</p>
+<p>This rounds out the CI/CD duo nicely. Next question: Observability, or something on testing strategies?</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,83 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="main-principles-of-continuous-integration-ci">Main Principles of Continuous Integration (CI)</h3>
+<p>Continuous Integration (CI) is guided by a set of core principles, originally outlined by Martin Fowler and the Extreme Programming community, to ensure code is reliably integrated and validated. These principles form the foundation for modern DevOps practices. Here's a breakdown of the key ones:</p>
+<ol>
+<li><p><strong>Maintain a Single Source of Truth</strong>: All code changes converge into one main branch (e.g., <code>main</code> or <code>trunk</code>). No long-lived branches—everything integrates frequently to avoid divergence.</p>
+</li>
+<li><p><strong>Automate the Build Process</strong>: Builds (compile, test, package) must be fully automated and repeatable. Use tools like MSBuild for .NET to eliminate manual steps.</p>
+</li>
+<li><p><strong>Make Builds Self-Testing</strong>: Every build runs a comprehensive test suite (unit, integration) automatically. Aim for high coverage and fast execution to catch regressions early.</p>
+</li>
+<li><p><strong>Commit Code Frequently (Daily)</strong>: Developers integrate changes at least once a day, using short-lived feature branches and PRs to minimize integration pain.</p>
+</li>
+<li><p><strong>Every Commit Triggers a Build</strong>: Use webhooks to run CI on every push/PR—no exceptions. This provides immediate feedback.</p>
+</li>
+<li><p><strong>Fast, Actionable Feedback</strong>: Builds should complete in minutes (&lt;10 min ideal). Notify the team (e.g., via Slack/Teams) with clear logs to enable quick fixes.</p>
+</li>
+<li><p><strong>Avoid &quot;It Works on My Machine&quot; Syndrome</strong>: Standardize environments (e.g., Docker for .NET apps) and use dependency pinning to ensure consistency across dev, CI, and prod.</p>
+</li>
+</ol>
+<p>These principles promote a &quot;fail fast&quot; culture, reducing risks in collaborative environments like .NET teams building enterprise apps.</p>
+<h3 id="pros-and-cons-of-ci">Pros and Cons of CI</h3>
+<p>CI isn't without trade-offs, but its benefits generally outweigh the costs for teams beyond solo projects. Below is a table summarizing them, with .NET-specific nuances:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Pros</th>
+<th>Cons/Considerations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Quality Assurance</strong></td>
+<td>Detects bugs early via automated tests (e.g., <code>dotnet test</code>); enforces code standards like style checks.</td>
+<td>Flaky tests or incomplete coverage can lead to false positives, eroding trust.</td>
+</tr>
+<tr>
+<td><strong>Developer Productivity</strong></td>
+<td>Short feedback loops speed up iteration; reduces merge conflicts in Git workflows.</td>
+<td>Overhead for simple projects; requires discipline to commit often.</td>
+</tr>
+<tr>
+<td><strong>Team Collaboration</strong></td>
+<td>Shared, visible builds foster accountability; easy artifact sharing (e.g., NuGet packages).</td>
+<td>Initial setup time (pipelines, tools); can bottleneck if infra is underpowered.</td>
+</tr>
+<tr>
+<td><strong>Reliability &amp; Scalability</strong></td>
+<td>Keeps the codebase deployable; scales with parallel jobs in Azure DevOps.</td>
+<td>Resource costs for frequent runs; complex monorepos need build optimization (e.g., incremental .NET restores).</td>
+</tr>
+<tr>
+<td><strong>Business Value</strong></td>
+<td>Accelerates releases, lowers MTTR; supports compliance with audit trails.</td>
+<td>Cultural resistance in legacy teams; dependency on tooling maturity.</td>
+</tr>
+</tbody>
+</table>
+<p>In .NET ecosystems, CI excels with tools like GitHub Actions or Azure Pipelines, where you can cache NuGet restores for sub-2-min builds. The cons are mitigable with good practices—e.g., invest in test pyramids to avoid slow end-to-end tests.</p>
+<p>This pairs nicely with CD for full pipelines. What's next on your interview prep list?</p>
+
+    </div>
+</body>
+</html>"

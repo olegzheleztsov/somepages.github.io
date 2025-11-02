@@ -1,0 +1,152 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-are-git-hooks">What Are Git Hooks?</h3>
+<p>Git hooks are scripts that Git executes automatically before or after key events in the Git lifecycle (e.g., commit, push, merge). They're a way to extend Git's functionality without modifying its core code. Hooks live in the <code>.git/hooks/</code> directory of a repository (or globally in <code>~/.gitconfig</code> for user-level hooks) and are typically shell scripts (e.g., Bash), but can be any executable (Python, Node.js, etc.).</p>
+<p>There are two types:</p>
+<ul>
+<li><strong>Client-side hooks</strong>: Run on the developer's machine (e.g., during local commits).</li>
+<li><strong>Server-side hooks</strong>: Run on the remote repository (e.g., during pushes to a shared repo).</li>
+</ul>
+<p>Hooks are <strong>disabled by default</strong> in new repos (sample files end in <code>.sample</code>), so you must rename and customize them to activate.</p>
+<h4 id="common-git-hooks">Common Git Hooks</h4>
+<p>Here's a table of the most frequently used hooks, categorized by trigger:</p>
+<table>
+<thead>
+<tr>
+<th>Hook Name</th>
+<th>Type</th>
+<th>Trigger Event</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>pre-commit</strong></td>
+<td>Client</td>
+<td>Before a commit is created</td>
+<td>Runs code linting, tests, or formatting checks.</td>
+</tr>
+<tr>
+<td><strong>prepare-commit-msg</strong></td>
+<td>Client</td>
+<td>When preparing the commit message</td>
+<td>Auto-populates commit templates or adds issue IDs.</td>
+</tr>
+<tr>
+<td><strong>commit-msg</strong></td>
+<td>Client</td>
+<td>After writing the commit message, before finalizing</td>
+<td>Validates message format (e.g., Conventional Commits).</td>
+</tr>
+<tr>
+<td><strong>post-commit</strong></td>
+<td>Client</td>
+<td>After a successful commit</td>
+<td>Triggers notifications or builds.</td>
+</tr>
+<tr>
+<td><strong>pre-push</strong></td>
+<td>Client</td>
+<td>Before pushing to remote</td>
+<td>Runs integration tests or checks for sensitive data.</td>
+</tr>
+<tr>
+<td><strong>pre-receive</strong></td>
+<td>Server</td>
+<td>Before receiving pushed refs</td>
+<td>Enforces branch policies on the server.</td>
+</tr>
+<tr>
+<td><strong>update</strong></td>
+<td>Server</td>
+<td>For each branch being updated</td>
+<td>Blocks pushes that violate rules (e.g., force pushes).</td>
+</tr>
+<tr>
+<td><strong>post-receive</strong></td>
+<td>Server</td>
+<td>After all pushes are received</td>
+<td>Deploys code or updates CI/CD pipelines.</td>
+</tr>
+<tr>
+<td><strong>pre-merge-commit</strong></td>
+<td>Client</td>
+<td>Before merging a commit</td>
+<td>Custom merge validations.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="use-cases">Use Cases</h3>
+<p>Git hooks shine in enforcing standards, automating workflows, and integrating with tools—especially in .NET teams using Azure DevOps or GitHub Actions. Here are practical examples:</p>
+<ol>
+<li><p><strong>Code Quality Enforcement (pre-commit)</strong>:</p>
+<ul>
+<li><strong>Scenario</strong>: Run <code>dotnet format</code> to auto-format C# code, or <code>dotnet test</code> for unit tests before committing.</li>
+<li><strong>Why?</strong> Prevents bad code from entering the repo, reducing review time.</li>
+<li><strong>Pros</strong>: Catches issues early; consistent codebase.</li>
+<li><strong>Cons</strong>: Can slow down commits if tests are heavy—mitigate with caching.</li>
+</ul>
+</li>
+<li><p><strong>Commit Message Validation (commit-msg)</strong>:</p>
+<ul>
+<li><strong>Scenario</strong>: Enforce Angular-style commits (e.g., &quot;feat: add user auth&quot;) using a regex check.</li>
+<li><strong>Why?</strong> Improves changelogs and semantic versioning in .NET projects.</li>
+<li><strong>Pros</strong>: Automates discipline; integrates with tools like Semantic Release.</li>
+<li><strong>Cons</strong>: Learning curve for devs; false positives on edge cases.</li>
+</ul>
+</li>
+<li><p><strong>Security Scans (pre-push)</strong>:</p>
+<ul>
+<li><strong>Scenario</strong>: Scan for secrets (e.g., API keys) with <code>gitleaks</code> or run <code>dotnet publish</code> to check build integrity before pushing.</li>
+<li><strong>Why?</strong> Protects against accidental leaks in shared repos.</li>
+<li><strong>Pros</strong>: Layers defense with CI; server-side complements it.</li>
+<li><strong>Cons</strong>: Potential for false alarms; requires tool setup.</li>
+</ul>
+</li>
+<li><p><strong>Automated Deployments (post-receive)</strong>:</p>
+<ul>
+<li><strong>Scenario</strong>: On push to <code>main</code>, trigger a .NET deployment to Azure via a script calling <code>az webapp deploy</code>.</li>
+<li><strong>Why?</strong> Enables CI/CD without external services (though often paired with them).</li>
+<li><strong>Pros</strong>: Instant feedback; simple for monorepos.</li>
+<li><strong>Cons</strong>: Server must have deployment tools installed; error-prone if not scripted well.</li>
+</ul>
+</li>
+<li><p><strong>Branch Protection (update/pre-receive)</strong>:</p>
+<ul>
+<li><strong>Scenario</strong>: Block pushes to <code>main</code> unless from a PR, or require signed commits.</li>
+<li><strong>Why?</strong> Maintains history integrity in collaborative .NET teams.</li>
+<li><strong>Pros</strong>: Enforces GitFlow/GitHub Flow rules server-side.</li>
+<li><strong>Cons</strong>: Can frustrate workflows if too rigid.</li>
+</ul>
+</li>
+</ol>
+<h3 id="tips-for-implementation">Tips for Implementation</h3>
+<ul>
+<li><strong>Make them cross-platform</strong>: Use Node.js or Python for hooks to avoid Bash issues on Windows.</li>
+<li><strong>Share via templates</strong>: Store hooks in a repo and install with <code>husky</code> (for npm) or <code>pre-commit</code> framework.</li>
+<li><strong>Debugging</strong>: Run manually (e.g., <code>./.git/hooks/pre-commit</code>) and use <code>git config core.hooksPath</code> for custom paths.</li>
+<li><strong>Alternatives</strong>: For scaled teams, prefer CI/CD tools (e.g., GitHub Actions) over hooks, as hooks don't scale across machines.</li>
+</ul>
+<p>Hooks add power but can be brittle—start simple! Got a follow-up, like implementing a pre-commit hook example, or ready for the next question?</p>
+
+    </div>
+</body>
+</html>"

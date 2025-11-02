@@ -1,0 +1,105 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-continuous-delivery-cd">What is Continuous Delivery (CD)?</h3>
+<p>Continuous Delivery (CD) is a DevOps practice that extends Continuous Integration (CI) by automating the release process, ensuring that code changes are always in a deployable state to production-like environments. It's the &quot;D&quot; in CI/CD pipelines, bridging development and operations to enable reliable, frequent releases without manual toil.</p>
+<h4 id="core-purpose-of-cd">Core Purpose of CD</h4>
+<p>The <strong>primary purpose</strong> of CD is to <strong>minimize deployment risks, automate releases, and enable on-demand delivery</strong> of features or fixes. While CI focuses on building and testing code integration, CD automates the packaging, validation, and promotion of artifacts (e.g., Docker images or .NET executables) through environments (dev → staging → prod). This reduces &quot;release drama&quot;—no more all-nighters for manual deploys—and empowers teams to ship confidently, often multiple times a day. The goal: Treat releases as routine, not events, fostering a culture of continuous improvement and faster time-to-market.</p>
+<p>In short: CD turns &quot;it works on my machine&quot; into &quot;it's live and stable,&quot; with human approval gates for prod pushes (unlike Continuous Deployment, which automates that too).</p>
+<h4 id="how-cd-works-high-level-flow">How CD Works (High-Level Flow)</h4>
+<ol>
+<li><strong>Post-CI Trigger</strong>: Successful CI builds produce artifacts (e.g., <code>dotnet publish</code> output).</li>
+<li><strong>Automated Pipeline</strong>: Run smoke/integration tests in staging, security scans, and config transformations.</li>
+<li><strong>Approval Gates</strong>: Manual review for prod (in CD); auto-deploy if green.</li>
+<li><strong>Rollback Ready</strong>: Blue-green or canary deployments for safe rollouts.</li>
+<li><strong>Monitor &amp; Feedback</strong>: Post-deploy health checks loop back to CI for fixes.</li>
+</ol>
+<p>Tools like Azure DevOps Release Pipelines, GitHub Actions, or Jenkins orchestrate this.</p>
+<h4 id="benefits-and-trade-offs">Benefits and Trade-Offs</h4>
+<p>CD amplifies CI's velocity but adds deployment complexity. Here's a table tailored for .NET teams (e.g., deploying ASP.NET Core apps to Azure):</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Pros</th>
+<th>Cons/Considerations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Reliability &amp; Speed</strong></td>
+<td>Automated deploys reduce errors (e.g., config mismatches); enables feature flags for safe rollouts.</td>
+<td>Upfront investment in env parity (dev/staging/prod); flaky deploys erode trust.</td>
+</tr>
+<tr>
+<td><strong>Team Efficiency</strong></td>
+<td>Frees ops from manual tasks; devs focus on code, not ceremonies.</td>
+<td>Requires robust monitoring (e.g., Application Insights) to catch prod issues fast.</td>
+</tr>
+<tr>
+<td><strong>Business Impact</strong></td>
+<td>Faster MTTR (Mean Time to Recovery); supports A/B testing in .NET Blazor apps.</td>
+<td>Cultural shift—teams must embrace &quot;deploy early, often&quot;; audit trails for compliance.</td>
+</tr>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>Handles microservices via Kubernetes/ArgoCD; versioned artifacts prevent drift.</td>
+<td>Pipeline sprawl in large .NET solutions—use matrix strategies for parallelism.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="cd-in-a.net-context">CD in a .NET Context</h4>
+<p>For .NET workloads, CD shines in cloud-native setups:</p>
+<ul>
+<li><strong>Pipeline Example</strong> (Azure DevOps YAML for Releases):
+<pre><code class="language-yaml">stages:
+- stage: DeployStaging
+  jobs:
+  - deployment: Deploy
+    environment: 'staging'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'publish'
+              publishWebProjects: true
+              arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: 'MySubscription'
+              appType: 'webAppLinux'
+              appName: 'myapp-staging'
+              package: '$(Pipeline.Workspace)/**/*.zip'
+- stage: DeployProd
+  dependsOn: DeployStaging
+  condition: succeeded()
+  jobs: [...]  # Similar, with manual approval
+</code></pre>
+</li>
+</ul>
+<p>This automates pushing .NET apps to Azure App Service, with gates for prod.</p>
+<p>As a tech lead, I'd track CD metrics like deployment frequency (&gt;weekly) and change failure rate (&lt;15%) via DORA standards. Pair it with observability to iterate—CD isn't set-it-and-forget-it.</p>
+<p>How does this tie into your CI question? CD builds on it for end-to-end flow. Next up: Maybe feature flags or pipeline security? Fire away!</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,97 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-continuous-integration-ci">What is Continuous Integration (CI)?</h3>
+<p>Continuous Integration (CI) is a DevOps practice where developers frequently merge their code changes into a shared central repository (e.g., Git), followed by automated builds and tests to detect issues early. It's a cornerstone of modern software development pipelines, popularized by methodologies like Agile and CI/CD (Continuous Integration/Continuous Delivery/Deployment).</p>
+<h4 id="core-purpose-of-ci">Core Purpose of CI</h4>
+<p>The <strong>primary purpose</strong> of CI is to <strong>improve code quality, reduce integration risks, and accelerate feedback loops</strong> by automating the validation of changes as soon as they're committed. Instead of waiting for big-bang merges (which often lead to &quot;integration hell&quot;), CI ensures that the codebase remains in a deployable state at all times. This shifts left on defects—catching bugs, style violations, or build breaks immediately rather than during manual QA or production deploys.</p>
+<p>In essence: CI automates the &quot;integrate often, break fast&quot; mantra, enabling teams to ship reliable software faster.</p>
+<h4 id="how-ci-works-high-level-flow">How CI Works (High-Level Flow)</h4>
+<ol>
+<li><strong>Code Commit</strong>: Developer pushes changes to a repo branch (e.g., via PR in GitHub).</li>
+<li><strong>Trigger Build</strong>: CI server (e.g., Jenkins, Azure DevOps, GitHub Actions) detects the change and runs a pipeline.</li>
+<li><strong>Automated Tasks</strong>: Compile code, run unit/integration tests, lint, scan for security issues, and package artifacts.</li>
+<li><strong>Feedback</strong>: If successful, merge/deploy; if failed, notify devs with logs/artifacts for quick fixes.</li>
+<li><strong>Repeat</strong>: Aim for commits multiple times a day.</li>
+</ol>
+<h4 id="benefits-and-trade-offs">Benefits and Trade-Offs</h4>
+<p>Here's a table summarizing the key pros/cons, especially relevant for .NET teams building ASP.NET apps or microservices:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Pros</th>
+<th>Cons/Considerations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Quality &amp; Reliability</strong></td>
+<td>Early bug detection (e.g., via <code>dotnet test</code>); enforces standards like code coverage &gt;80%.</td>
+<td>Initial setup cost; flaky tests can cause false alarms.</td>
+</tr>
+<tr>
+<td><strong>Team Velocity</strong></td>
+<td>Faster merges/PRs; reduces context-switching (no &quot;it works on my machine&quot;).</td>
+<td>Dependency on fast builds—slow .NET restores need caching (e.g., NuGet).</td>
+</tr>
+<tr>
+<td><strong>Collaboration</strong></td>
+<td>Shared artifacts (e.g., Docker images); visibility into breaks.</td>
+<td>Tooling lock-in; requires cultural buy-in for frequent commits.</td>
+</tr>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>Parallel jobs for large monorepos; integrates with CD for deploys.</td>
+<td>Resource-intensive for massive codebases—optimize with selective builds.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ci-in-a.net-context">CI in a .NET Context</h4>
+<p>For .NET projects, CI typically leverages tools like:</p>
+<ul>
+<li><strong>Azure DevOps Pipelines</strong> or <strong>GitHub Actions</strong> with YAML: Trigger on push/PR, run <code>dotnet restore</code>, <code>dotnet build --no-restore</code>, <code>dotnet test --collect:&quot;XPlat Code Coverage&quot;</code>, and <code>dotnet publish</code>.</li>
+<li><strong>Example YAML Snippet</strong> (GitHub Actions):
+<pre><code class="language-yaml">name: CI Pipeline
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with: { dotnet-version: '8.0.x' }
+    - name: Restore
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+</code></pre>
+</li>
+</ul>
+<p>This ensures every change to your .NET solution is validated automatically, integrating seamlessly with branching strategies like Trunk-Based Development.</p>
+<p>As a tech lead, I'd emphasize measuring CI success via metrics like build success rate (&gt;95%) and mean time to recovery (&lt;1 hour). If CI fails consistently, debug pipelines first—it's often infra, not code.</p>
+<p>Got a follow-up, like CI vs. CD differences, or ready for the next interview Q?</p>
+
+    </div>
+</body>
+</html>"
