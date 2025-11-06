@@ -1,0 +1,71 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="iac-lifecycle-stages">IaC Lifecycle Stages</h3>
+<p>The <strong>Infrastructure as Code (IaC) lifecycle</strong> is a structured process that mirrors software development, ensuring infrastructure is treated as versioned, testable, and reliable code. It typically spans planning to ongoing maintenance, integrated into CI/CD pipelines. This promotes consistency, reduces errors, and scales with teams—crucial for .NET projects deploying to Azure or AWS.</p>
+<p>While tools like Terraform or ARM/Bicep influence specifics, the stages are tool-agnostic. Here's a breakdown:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Description</th>
+<th>Key Activities &amp; .NET Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Authoring/Planning</strong></td>
+<td>Define the desired infrastructure in code, collaborating on requirements. Focus on modularity and best practices.</td>
+<td>Write declarative files (e.g., Terraform HCL or Azure Bicep for a .NET App Service with SQL DB). Use Git branches for env-specific variants; involve architects for scalability (e.g., auto-scaling rules).</td>
+</tr>
+<tr>
+<td><strong>2. Versioning &amp; Collaboration</strong></td>
+<td>Store code in a VCS (e.g., Git) for tracking changes, reviews, and branching. Establish conventions like semantic versioning.</td>
+<td>Commit IaC to repo; use PRs with linting (e.g., tfsec for security scans). For .NET teams, tag releases like <code>v1.0-infra</code> to align with app versions.</td>
+</tr>
+<tr>
+<td><strong>3. Testing &amp; Validation</strong></td>
+<td>Verify code correctness, security, and compliance before deployment. Includes unit, integration, and policy checks.</td>
+<td>Run local tests (e.g., Terratest for Terraform to spin up/tear down temp resources); validate .NET pipeline infra with Pester scripts. Check for drift or vulnerabilities via OPA.</td>
+</tr>
+<tr>
+<td><strong>4. Provisioning/Deployment</strong></td>
+<td>Apply the code to create or update resources in target environments (dev → staging → prod). Automate via pipelines.</td>
+<td>Trigger Azure DevOps pipeline on merge: <code>bicep build</code> + <code>az deployment</code> creates AKS cluster for .NET microservices. Use gates for approvals in prod.</td>
+</tr>
+<tr>
+<td><strong>5. State Management &amp; Monitoring</strong></td>
+<td>Track real-world state against code; monitor for drift, performance, and costs. Enable self-healing where possible.</td>
+<td>Store state in backends (e.g., Terraform Cloud or Azure Storage); use Azure Monitor to alert on .NET app resource spikes. Periodic <code>plan</code> runs detect drifts.</td>
+</tr>
+<tr>
+<td><strong>6. Update &amp; Maintenance</strong></td>
+<td>Handle changes, deprecations, or destructions. Iterate based on feedback, with rollback capabilities.</td>
+<td>Refactor for new features (e.g., add Cosmos DB for .NET API); use immutable patterns to rebuild. Audit logs for compliance; destroy unused resources to cut costs.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why These Stages Matter</strong>: They form a feedback loop, catching issues early (e.g., 80% in testing) and enabling zero-downtime updates. In a .NET Tech Lead role, you'd enforce this via golden paths in pipelines, reducing MTTR during incidents.</p>
+<p><strong>Pro Tip for Your Interview</strong>: Map to a tool—&quot;With Bicep, authoring is JSON-like but cleaner; I'd test with what-if deploys to simulate .NET hosting changes without risk.&quot; Scenario: &quot;In a migration, we used these stages to provision 50+ Azure resources idempotently, avoiding manual drift.&quot;</p>
+<p>Next—dive into a specific stage or tool comparison?</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,82 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="key-features-of-terraform">Key Features of Terraform</h3>
+<p>Terraform, developed by HashiCorp, is an open-source Infrastructure as Code (IaC) tool that enables declarative provisioning and management of infrastructure across multiple cloud providers and on-premises environments. It uses HashiCorp Configuration Language (HCL) for human-readable configs, emphasizing idempotency, modularity, and collaboration. Below is a table summarizing its core and advanced features, drawn from official documentation.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Declarative Configuration</strong></td>
+<td>Define desired infrastructure state in code (HCL or JSON); Terraform computes and applies changes without manual intervention, ensuring reproducibility.</td>
+</tr>
+<tr>
+<td><strong>Multi-Provider Support</strong></td>
+<td>Works with 100+ providers (e.g., AWS, Azure, Google Cloud, Kubernetes) out-of-the-box, allowing hybrid/multi-cloud setups—ideal for .NET apps spanning Azure and AWS.</td>
+</tr>
+<tr>
+<td><strong>State Management</strong></td>
+<td>Tracks resource state in a backend file (local or remote like S3/Azure Blob) with versioning, locking, and encryption to prevent concurrent modifications and enable drift detection.</td>
+</tr>
+<tr>
+<td><strong>Modularity via Modules</strong></td>
+<td>Reusable code blocks for components (e.g., a VPC module); publish/share via private/public registries with testing workflows to enforce best practices.</td>
+</tr>
+<tr>
+<td><strong>Stacks (GA in 2025)</strong></td>
+<td>Coordinate and deploy interdependent configurations as a single unit, simplifying complex, multi-module setups like .NET microservices architectures.</td>
+</tr>
+<tr>
+<td><strong>Drift Detection</strong></td>
+<td>Continuously scans for unauthorized changes post-deploy, alerting and enabling resolution—crucial for compliance in regulated .NET environments.</td>
+</tr>
+<tr>
+<td><strong>Policy as Code</strong></td>
+<td>Enforce security/compliance rules using Sentinel or OPA during runs (e.g., no public buckets), integrated into CI/CD pipelines.</td>
+</tr>
+<tr>
+<td><strong>Collaboration &amp; VCS Integration</strong></td>
+<td>Git-based workflows for PR reviews, approvals, and remote execution; supports role-based access (RBAC) for teams.</td>
+</tr>
+<tr>
+<td><strong>Flexible Workflows</strong></td>
+<td>Run via CLI, UI (Terraform Cloud/Enterprise), API, or CI/CD (e.g., Azure DevOps); includes concurrent runs and ephemeral workspaces for cost optimization.</td>
+</tr>
+<tr>
+<td><strong>Audit &amp; Monitoring</strong></td>
+<td>Detailed logs, event notifications (Slack/Email), and integrations (Splunk) for visibility; continuous validation with custom assertions.</td>
+</tr>
+<tr>
+<td><strong>Migration Tools</strong></td>
+<td>Config-driven import for onboarding existing resources; automated upgrades from open-source to enterprise editions.</td>
+</tr>
+</tbody>
+</table>
+<p>These features make Terraform scalable for everything from small .NET prototypes to enterprise-grade deployments, reducing ops overhead by ~70% in mature setups.</p>
+<p><strong>Pro Tip for Your Interview</strong>: Highlight Stacks for 2025 relevance—&quot;I'd use Terraform Stacks to orchestrate a .NET API's Azure infra (App Service + Cosmos DB) in one apply, with OPA policies to gate deploys.&quot; Next question?</p>
+
+    </div>
+</body>
+</html>"

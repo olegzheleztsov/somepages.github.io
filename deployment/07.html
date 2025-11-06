@@ -1,0 +1,94 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-infrastructure-as-code-iac">What is Infrastructure as Code (IaC)?</h3>
+<p><strong>Infrastructure as Code (IaC)</strong> is the practice of managing and provisioning computing infrastructure through machine-readable definition files (e.g., code) rather than manual UI clicks or scripts. It treats infrastructure (servers, networks, databases) like application code: version-controlled, tested, reviewed, and deployed via CI/CD pipelines.</p>
+<p>In .NET ecosystems:</p>
+<ul>
+<li>Tools like Terraform, ARM templates (for Azure), or Pulumi automate spinning up resources for .NET apps (e.g., provisioning an AKS cluster for microservices).</li>
+<li>It's declarative (define desired state) or imperative (step-by-step commands), enabling reproducibility across envs.</li>
+</ul>
+<p>Think of it as Git for your cloud: Commit a change, and your infra updates safely—no more &quot;sudo&quot; roulette.</p>
+<h3 id="why-iac-quick-value-prop">Why IaC? (Quick Value Prop)</h3>
+<ul>
+<li><strong>Consistency</strong>: Eliminates &quot;works on my machine&quot; for infra—dev/staging/prod match exactly.</li>
+<li><strong>Speed &amp; Safety</strong>: Automate deploys with rollbacks; audit trails via Git.</li>
+<li><strong>Scalability</strong>: As a Tech Lead, it empowers self-service for teams, reducing bottlenecks.</li>
+<li>Ties to config mgmt (e.g., Ansible) by composing infra + app configs.</li>
+</ul>
+<h3 id="core-iac-concepts">Core IaC Concepts</h3>
+<p>Here's a breakdown of foundational concepts, with .NET-flavored examples:</p>
+<table>
+<thead>
+<tr>
+<th>Concept</th>
+<th>Description</th>
+<th>.NET Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Declarative vs. Imperative</strong></td>
+<td>Declarative: Specify end-state (tool figures &quot;how&quot;); Imperative: Script exact steps. Declarative is safer for drift detection.</td>
+<td>Declarative: Terraform HCL file for Azure SQL DB. Imperative: PowerShell script to create it.</td>
+</tr>
+<tr>
+<td><strong>Idempotency</strong></td>
+<td>Running the code multiple times yields the same result—no side effects.</td>
+<td>A Terraform apply on an existing .NET App Service won't recreate it; just verifies.</td>
+</tr>
+<tr>
+<td><strong>State Management</strong></td>
+<td>Tracks current infra state (e.g., in a file/backend) to compute changes.</td>
+<td>Terraform's <code>terraform.tfstate</code> file (store in Azure Blob for teams) diffs against your code.</td>
+</tr>
+<tr>
+<td><strong>Version Control</strong></td>
+<td>Infra code in Git; branches for envs, PRs for reviews.</td>
+<td>Branch <code>feature/new-api</code> adds a .NET Function App; merge triggers deploy.</td>
+</tr>
+<tr>
+<td><strong>Modularity &amp; Reusability</strong></td>
+<td>Break into modules/roles (e.g., reusable VPC or DB templates).</td>
+<td>Terraform modules for a shared .NET Redis cache across services.</td>
+</tr>
+<tr>
+<td><strong>Immutable Infrastructure</strong></td>
+<td>Treat resources as disposable—rebuild vs. mutate for reliability.</td>
+<td>Bake .NET app into Docker images; spin up new EC2 instances on deploy, terminate old.</td>
+</tr>
+<tr>
+<td><strong>Policy as Code</strong></td>
+<td>Embed compliance checks (e.g., no public S3 buckets) into pipelines.</td>
+<td>OPA (Open Policy Agent) gates a .NET pipeline if ARM template violates tagging rules.</td>
+</tr>
+<tr>
+<td><strong>Orchestration vs. Provisioning</strong></td>
+<td>Provisioning: Create resources (e.g., VMs). Orchestration: Coordinate (e.g., with Ansible post-provision).</td>
+<td>Pulumi provisions Azure resources, then Ansible configures IIS for .NET.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pro Tip for Your Interview</strong>: Emphasize integration—&quot;In a .NET pipeline, I'd use Azure Bicep (declarative ARM) for IaC, validated with Pester tests, to provision scalable App Services.&quot; Scenario: &quot;Migrating a monolith to IaC cut our infra drift incidents by 80%.&quot; Highlights leadership in DevOps maturity.</p>
+<p>Next—maybe Terraform vs. ARM, or a hands-on example? Fire away!</p>
+
+    </div>
+</body>
+</html>"

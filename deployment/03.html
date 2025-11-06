@@ -1,0 +1,83 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-bluegreen-or-redblack-deployment">What is Blue/Green (or Red/Black) Deployment?</h3>
+<p><strong>Blue/green deployment</strong> (also known as red/black) is a zero-downtime strategy for releasing new application versions. It uses two identical production environments: the &quot;blue&quot; environment runs the current live version, while the &quot;green&quot; (or &quot;red&quot;) environment is where you deploy and test the new version. Once validated, you switch all user traffic from blue to green in a single operation (e.g., via a router or load balancer). If issues occur, you instantly switch back—no rollbacks needed.</p>
+<p>The &quot;red/black&quot; term is a variant emphasizing the color swap (red for live, black for staging), but the mechanics are the same. It's all about parallelism: Prep in the shadows, flip the switch live.</p>
+<p>This shines in cloud-native setups, minimizing user impact compared to in-place updates.</p>
+<h4 id="how-it-works-high-level-steps">How It Works (High-Level Steps)</h4>
+<p>For a .NET app (e.g., ASP.NET Core API on Azure):</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Description</th>
+<th>.NET Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Prepare Blue</td>
+<td>Blue is live, serving traffic with stable version (e.g., v1.0).</td>
+<td>Azure App Service slot &quot;production&quot; running v1.0.</td>
+</tr>
+<tr>
+<td>2. Deploy to Green</td>
+<td>Build and deploy new version (v2.0) to the idle environment; run smoke tests.</td>
+<td>Use <code>dotnet publish</code> + Azure DevOps pipeline to deploy to &quot;staging&quot; slot; integrate unit/integration tests.</td>
+</tr>
+<tr>
+<td>3. Validate</td>
+<td>Run health checks, load tests, and canary traffic if hybrid.</td>
+<td>Query Application Insights for metrics; use Azure Load Testing for perf validation.</td>
+</tr>
+<tr>
+<td>4. Switch Traffic</td>
+<td>Redirect 100% traffic to green (atomic swap).</td>
+<td>Swap slots in Azure App Service or update Kubernetes Ingress rules.</td>
+</tr>
+<tr>
+<td>5. Monitor &amp; Cleanup</td>
+<td>Keep blue as hot standby; decommission after stability.</td>
+<td>Set up alerts in Azure Monitor; scale down blue post-switch.</td>
+</tr>
+</tbody>
+</table>
+<p>Automation via CI/CD (e.g., Azure Pipelines) makes this seamless—deployments can take minutes.</p>
+<h3 id="when-to-use-bluegreen-deployment">When to Use Blue/Green Deployment?</h3>
+<p>Opt for blue/green when downtime is unacceptable and rollbacks must be instant. It's perfect for:</p>
+<ul>
+<li><strong>High-Availability Systems</strong>: E-commerce or real-time .NET apps (e.g., SignalR chat) where even seconds of outage cost revenue.</li>
+<li><strong>Frequent Releases</strong>: Teams shipping daily/weekly—pair with feature flags for safer feature toggles in .NET (e.g., via Flurl or Polly).</li>
+<li><strong>Complex Apps</strong>: Microservices architectures on Kubernetes/AKS, where syncing DB schemas or external deps needs testing without risk.</li>
+<li><strong>Compliance-Driven Environments</strong>: Banking .NET backends requiring audit-proof, reversible changes.</li>
+</ul>
+<p><strong>Avoid It When</strong>:</p>
+<ul>
+<li>Budget constraints (doubles infra costs—e.g., two Azure clusters).</li>
+<li>Simple, low-traffic monoliths (overkill; use rolling updates).</li>
+<li>Resource-heavy apps (e.g., ML models) where duplicating state is tough.</li>
+</ul>
+<p><strong>Pro Tip for Your Interview</strong>: Stress cost trade-offs—&quot;In Azure, slots are free for basic tiers, but for prod scale, I'd use blue/green with traffic routing via API Management for granular control.&quot; Scenario: &quot;Deploying a .NET 8 upgrade to a high-traffic API; swap slots after A/B testing endpoints.&quot; Demonstrates ops maturity!</p>
+<p>Next up—maybe A/B testing or CI/CD pipelines? Your call!</p>
+
+    </div>
+</body>
+</html>"

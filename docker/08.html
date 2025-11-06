@@ -1,0 +1,100 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-docker-compose">What is Docker Compose?</h3>
+<p><strong>Docker Compose</strong> (now part of Docker CLI as <code>docker compose</code>) is a tool for defining and running multi-container Docker applications using a single YAML file (<code>docker-compose.yml</code>). It simplifies orchestrating complex setups by managing services, networks, volumes, and dependencies—allowing you to spin up entire stacks (e.g., app + DB + cache) with one command like <code>docker compose up</code>. It's declarative: Describe your desired state, and Compose handles the plumbing (e.g., creating networks, linking containers).</p>
+<ul>
+<li><p><strong>Core Components in YAML</strong>:</p>
+<ul>
+<li><strong>Services</strong>: Containers (e.g., your .NET API as a service).</li>
+<li><strong>Networks/Volumes</strong>: Shared resources (auto-created if not specified).</li>
+<li><strong>Depends_on</strong>: Startup order (e.g., wait for DB before API).</li>
+<li><strong>Envs/Ports</strong>: Config overrides.</li>
+</ul>
+</li>
+<li><p><strong>Basic Example</strong> for a .NET Stack:</p>
+<pre><code class="language-yaml">version: '3.8'
+services:
+  api:
+    image: mynetapp:1.0  # Or build: . for Dockerfile
+    ports:
+      - &quot;8080:80&quot;
+    environment:
+      - ConnectionStrings__Default=Server=db;Database=MyDB;
+    depends_on:
+      - db
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - SA_PASSWORD=YourStrong@Passw0rd
+    volumes:
+      - db-data:/var/opt/mssql
+volumes:
+  db-data:
+</code></pre>
+<p>Run: <code>docker compose up -d</code> (detached); down with <code>docker compose down -v</code> (removes volumes).</p>
+</li>
+</ul>
+<p>Compose is local/dev-focused; for prod, scale to Kubernetes/Swarm.</p>
+<h3 id="use-cases-for-docker-compose">Use Cases for Docker Compose</h3>
+<p>Compose excels at simplifying multi-service workflows, especially for development and testing .NET apps.</p>
+<table>
+<thead>
+<tr>
+<th>Use Case</th>
+<th>Description</th>
+<th>.NET Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Local Development Stacks</strong></td>
+<td>Quickly assemble full environments without manual <code>docker run</code> chains.</td>
+<td>Spin up a .NET Core API + Postgres + Redis for end-to-end testing—edit code, restart service with <code>up --build</code>.</td>
+</tr>
+<tr>
+<td><strong>Dependency Management</strong></td>
+<td>Automate startup sequences and networking (e.g., service discovery by name).</td>
+<td>Ensure EF Core migrations run after SQL Server starts; API queries <code>db:1433</code> internally.</td>
+</tr>
+<tr>
+<td><strong>CI/CD Testing</strong></td>
+<td>Reproducible test envs in pipelines (e.g., integration tests).</td>
+<td>GitHub Actions: <code>compose up</code> for load-testing a Blazor app against a mocked Azure Service Bus.</td>
+</tr>
+<tr>
+<td><strong>Microservices Prototyping</strong></td>
+<td>Mock entire ecosystems for rapid iteration.</td>
+<td>Prototype a .NET SignalR chat service + MongoDB + Nginx reverse proxy—all in one <code>up</code>.</td>
+</tr>
+<tr>
+<td><strong>Data Persistence &amp; Cleanup</strong></td>
+<td>Volume management for stateful services without data loss.</td>
+<td>Persist SQLite DB for a .NET console app; use <code>down --volumes</code> for fresh starts in dev cycles.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>When to Avoid</strong>: Large-scale prod (use Kubernetes); simple single-container apps (plain Docker suffices).</p>
+<p><strong>Pro Tip for Your Interview</strong>: &quot;In a .NET team, I'd use Compose for golden-path dev envs—e.g., API + Cosmos emulator—reducing 'it works on my machine' by 90%. For prod, migrate to Helm charts.&quot; Shows full lifecycle thinking.</p>
+<p>Next—maybe Kubernetes basics or Swarm?</p>
+
+    </div>
+</body>
+</html>"

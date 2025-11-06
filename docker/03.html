@@ -1,0 +1,99 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="how-to-build-a-docker-image">How to Build a Docker Image</h3>
+<p>Building a Docker image is the process of creating a portable, layered package from your Dockerfile (the blueprint) and source code. It's done using the <code>docker build</code> command, which executes instructions sequentially, caching layers for efficiency. This is crucial for .NET apps to ensure consistent deploys across dev, CI/CD, and prod.</p>
+<h4 id="prerequisites">Prerequisites</h4>
+<ul>
+<li>Docker installed (Desktop or Engine).</li>
+<li>A Dockerfile in your project root.</li>
+<li>Source code ready (e.g., .NET solution).</li>
+</ul>
+<h4 id="step-by-step-guide">Step-by-Step Guide</h4>
+<p>Here's how to build an image for a simple .NET ASP.NET Core API:</p>
+<ol>
+<li><p><strong>Prepare Your Dockerfile</strong>: As discussed earlier, use multi-stage builds to optimize (build stage for compile, runtime stage for deploy).</p>
+<ul>
+<li>Example (save as <code>Dockerfile</code>):
+<pre><code># Build stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY [&quot;MyApi.csproj&quot;, &quot;./&quot;]
+RUN dotnet restore &quot;MyApi.csproj&quot;
+COPY . .
+WORKDIR &quot;/src&quot;
+RUN dotnet build &quot;MyApi.csproj&quot; -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish &quot;MyApi.csproj&quot; -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT [&quot;dotnet&quot;, &quot;MyApi.dll&quot;]
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>Navigate to Project Directory</strong>: Open a terminal in your .NET project folder (where Dockerfile and .csproj live).</p>
+<pre><code>cd /path/to/MyApi
+</code></pre>
+</li>
+<li><p><strong>Build the Image</strong>:</p>
+<ul>
+<li>Basic command: <code>docker build -t myapp:1.0 .</code>
+<ul>
+<li><code>-t</code>: Tags the image (name:tag, e.g., <code>myapp:latest</code>).</li>
+<li><code>.</code>: Build context (current dir; includes files to copy).</li>
+</ul>
+</li>
+<li>For .NET: This restores NuGet, builds, publishes, and layers the runtime image (~150-300 MB final size).</li>
+<li>Output: Docker caches layers (e.g., &quot;Step 3/8 : RUN dotnet restore&quot; → reused if unchanged).</li>
+</ul>
+</li>
+<li><p><strong>Verify the Build</strong>:</p>
+<ul>
+<li>List images: <code>docker images</code> (look for <code>myapp</code>).</li>
+<li>Run a test container: <code>docker run -d -p 8080:80 --name test myapp:1.0</code> (access at <code>localhost:8080</code>).</li>
+<li>Inspect layers: <code>docker history myapp:1.0</code> (shows build steps).</li>
+</ul>
+</li>
+<li><p><strong>Advanced Options</strong>:
+| Flag | Purpose | Example |
+|------|---------|---------|
+| <code>--no-cache</code> | Force rebuild all layers (e.g., after NuGet updates). | <code>docker build --no-cache -t myapp:1.0 .</code> |
+| <code>--platform</code> | Cross-platform build (e.g., for ARM). | <code>docker build --platform linux/arm64 -t myapp:arm .</code> |
+| <code>-f</code> | Specify alternate Dockerfile. | <code>docker build -f Dockerfile.dev -t myapp:dev .</code> |
+| <code>--push</code> | Build + push to registry (e.g., ACR). | <code>docker build -t myregistry.azurecr.io/myapp:1.0 --push .</code> |</p>
+</li>
+</ol>
+<h4 id="common-pitfalls-tips">Common Pitfalls &amp; Tips</h4>
+<ul>
+<li><strong>Context Size</strong>: Exclude junk (e.g., <code>/bin</code>, <code>node_modules</code>) via <code>.dockerignore</code> file (like <code>.gitignore</code>).</li>
+<li><strong>Security</strong>: Scan post-build with <code>docker scout</code> or Trivy.</li>
+<li><strong>CI/CD Integration</strong>: In Azure DevOps/GitHub Actions, add a <code>docker build</code> step in your YAML pipeline—tag with commit SHA for traceability.</li>
+</ul>
+<p><strong>Pro Tip for Your Interview</strong>: &quot;For a .NET 8 microservice, I'd multi-stage build to slash image size by 70%, then push to ACR for Kubernetes pulls—ensuring zero-downtime deploys.&quot; Emphasizes optimization and ops savvy.</p>
+<p>Next—running containers or registries? What's up?</p>
+
+    </div>
+</body>
+</html>"

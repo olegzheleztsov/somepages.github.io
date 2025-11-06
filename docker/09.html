@@ -1,0 +1,75 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="pros-cons-of-docker-compose-in-production">Pros &amp; Cons of Docker Compose in Production</h3>
+<p>Docker Compose is excellent for local/dev workflows, but in production, it's often used in <strong>Swarm mode</strong> (its built-in orchestration) for basic multi-host setups. For .NET apps (e.g., API + DB stacks), it simplifies deploys but has limits at scale. Here's a balanced view:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Simplicity &amp; Setup</strong></td>
+<td>YAML-based declarative configs make it dead-simple to define/replicate stacks (e.g., <code>docker compose up</code> for a .NET API + SQL Server). Low learning curve for teams.</td>
+<td>Lacks advanced orchestration—manual intervention for failures; not as robust as Kubernetes for complex .NET microservices.</td>
+</tr>
+<tr>
+<td><strong>Portability &amp; Versioning</strong></td>
+<td>Git-friendly YAML files ensure consistent envs across CI/CD (e.g., Azure DevOps pipelines pushing .NET images to ACR).</td>
+<td>Single-file configs can become monolithic in large apps; harder to modularize than Helm/Kustomize.</td>
+</tr>
+<tr>
+<td><strong>Scaling &amp; Availability</strong></td>
+<td>Basic horizontal scaling (<code>deploy: replicas: 3</code>) and load balancing in Swarm mode—good for small .NET clusters (e.g., 5-10 nodes).</td>
+<td>No auto-scaling or self-healing; Swarm is deprecated-ish (post-2023); for high-availability .NET apps, migrate to AKS sooner.</td>
+</tr>
+<tr>
+<td><strong>Resource Management</strong></td>
+<td>Built-in networks/volumes for isolation/persistence (e.g., mounting EBS for .NET logs).</td>
+<td>Resource limits are basic; no fine-grained CPU/memory quotas or affinity rules—inefficient for bursty workloads.</td>
+</tr>
+<tr>
+<td><strong>Security &amp; Compliance</strong></td>
+<td>Easy to add secrets/env vars; integrates with external vaults (e.g., Azure Key Vault for .NET connection strings).</td>
+<td>Default root user in containers; Swarm's overlay network has encryption but weaker RBAC than K8s—risky for regulated .NET finance apps.</td>
+</tr>
+<tr>
+<td><strong>Monitoring &amp; Maintenance</strong></td>
+<td>Quick rollouts/updates; integrates with Prometheus for metrics on .NET services.</td>
+<td>Logging/monitoring is ad-hoc (needs ELK stack); no centralized dashboard—ops toil grows with fleet size.</td>
+</tr>
+<tr>
+<td><strong>Cost &amp; Overhead</strong></td>
+<td>Lightweight—no extra infra for small prod; free/open-source.</td>
+<td>At scale, underpowered; running Swarm clusters adds management overhead without K8s' ecosystem (e.g., operators for .NET EF migrations).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Overall Verdict</strong>: Great for <strong>small-to-medium prod</strong> (e.g., &lt;50 containers, single-team .NET apps) or as a Swarm bridge to Kubernetes. For enterprise, it's often a stepping stone—pros outweigh cons for simplicity, but cons bite on resilience.</p>
+<p><strong>Pro Tip for Your Interview</strong>: &quot;I'd use Compose in Swarm for a .NET monolith's prod lift-and-shift, but plan K8s migration for auto-scaling—kept our deploys 2x faster initially.&quot; Shows pragmatic scaling mindset.</p>
+<p>Next—Kubernetes vs. Swarm deep dive?</p>
+
+    </div>
+</body>
+</html>"

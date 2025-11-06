@@ -1,0 +1,171 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="reusing-the-same-docker-compose-file-across-environments">Reusing the Same Docker Compose File Across Environments</h3>
+<p>Reusing a single <code>docker-compose.yml</code> for different environments (dev, test, staging, prod) is a best practice for maintainability—it keeps core definitions centralized while allowing overrides for env-specific configs like ports, DB connections, or resource limits. Docker Compose supports this via <strong>environment variables</strong> (most flexible), <strong>multiple compose files</strong> (for structural overrides), and <strong>profiles</strong> (for conditional services). I'll break it down with .NET-focused examples (e.g., an ASP.NET Core API + SQL Server stack).</p>
+<h4 id="environment-variables-recommended-for-simple-overrides">1. <strong>Environment Variables (Recommended for Simple Overrides)</strong></h4>
+<p>Use env vars to parameterize values in your compose file. Docker Compose interpolates them with <code>${VAR_NAME}</code> syntax. Load vars from <code>.env</code> files or shell exports.</p>
+<ul>
+<li><p><strong>Step-by-Step</strong>:</p>
+<ol>
+<li>In <code>docker-compose.yml</code>, reference vars:
+<pre><code class="language-yaml">version: '3.8'
+services:
+  api:
+    image: mynetapp:1.0
+    ports:
+      - &quot;${API_PORT:-8080}:80&quot;  # Default to 8080 if unset
+    environment:
+      - ConnectionStrings__Default=Server=db;Database=${DB_NAME:-MyDB};User Id=sa;Password=${DB_PASSWORD}
+    depends_on:
+      - db
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - SA_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db-data:/var/opt/mssql
+volumes:
+  db-data:
+</code></pre>
+</li>
+<li>Create env-specific <code>.env</code> files:
+<ul>
+<li><code>.env.dev</code>: <code>API_PORT=8080\nDB_NAME=MyDevDB\nDB_PASSWORD=DevPass123</code></li>
+<li><code>.env.test</code>: <code>API_PORT=8081\nDB_NAME=MyTestDB\nDB_PASSWORD=TestPass456</code></li>
+<li><code>.env.prod</code>: <code>API_PORT=80\nDB_NAME=MyProdDB\nDB_PASSWORD=ProdSecurePass!</code></li>
+</ul>
+</li>
+<li>Run with overrides: <code>docker compose --env-file .env.dev up -d</code> (for dev); swap the file for other envs.</li>
+<li>In CI/CD (e.g., Azure DevOps): Set vars in pipeline vars or use <code>--env-file</code> in YAML steps.</li>
+</ol>
+</li>
+<li><p><strong>Pros</strong>: No extra files; git-ignore <code>.env.*</code> for secrets.</p>
+</li>
+<li><p><strong>Cons</strong>: Limited to value overrides—not service additions/removals.</p>
+</li>
+</ul>
+<h4 id="multiple-compose-files-for-structural-changes">2. <strong>Multiple Compose Files (For Structural Changes)</strong></h4>
+<p>Use a base <code>docker-compose.yml</code> + override files (e.g., <code>docker-compose.dev.yml</code>) to add/modify services, volumes, or networks per env. Compose merges them on run.</p>
+<ul>
+<li><p><strong>Step-by-Step</strong>:</p>
+<ol>
+<li>Base <code>docker-compose.yml</code> (core services, as above).</li>
+<li>Env-specific overrides:
+<ul>
+<li><code>docker-compose.dev.yml</code>:
+<pre><code class="language-yaml">version: '3.8'
+services:
+  api:
+    ports:
+      - &quot;8080:80&quot;  # Dev-specific port
+    volumes:
+      - .:/app  # Hot-reload for dev
+  db:
+    environment:
+      - SA_PASSWORD=DevPass123
+</code></pre>
+</li>
+<li><code>docker-compose.prod.yml</code>:
+<pre><code class="language-yaml">version: '3.8'
+services:
+  api:
+    ports:
+      - &quot;80:80&quot;
+    deploy:
+      replicas: 3  # Scale in prod
+  db:
+    environment:
+      - SA_PASSWORD=${DB_PASSWORD}  # From .env
+</code></pre>
+</li>
+</ul>
+</li>
+<li>Run: <code>docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d</code> (merges base + dev).</li>
+</ol>
+</li>
+<li><p><strong>Pros</strong>: Handles complex diffs (e.g., add monitoring service in prod).</p>
+</li>
+<li><p><strong>Cons</strong>: File proliferation; order matters (later files override earlier).</p>
+</li>
+</ul>
+<h4 id="profiles-for-conditional-services">3. <strong>Profiles (For Conditional Services)</strong></h4>
+<p>Docker Compose profiles (v2.10+) let you tag services and start only subsets (e.g., run dev without prod-only monitoring). Combine with env vars for full flexibility.</p>
+<ul>
+<li><p><strong>Step-by-Step</strong>:</p>
+<ol>
+<li>Add <code>profiles</code> to services in <code>docker-compose.yml</code>:
+<pre><code class="language-yaml">services:
+  api:
+    # ... as before
+    profiles: [&quot;dev&quot;, &quot;test&quot;, &quot;prod&quot;]  # Always include
+  monitoring:
+    image: prometheus/prometheus
+    profiles: [&quot;prod&quot;]  # Prod-only
+  db:
+    profiles: [&quot;dev&quot;, &quot;test&quot;]  # No DB in prod (use external)
+</code></pre>
+</li>
+<li>Run selectively: <code>docker compose --profile prod up -d</code> (starts api + monitoring).</li>
+<li>For dev: <code>docker compose --profile dev up -d</code> (api + db).</li>
+</ol>
+</li>
+<li><p><strong>Pros</strong>: Clean conditional logic; great for env-specific add-ons.</p>
+</li>
+<li><p><strong>Cons</strong>: Profiles don't override configs—pair with env vars or overrides.</p>
+</li>
+</ul>
+<h4 id="comparison-of-methods">Comparison of Methods</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Best For</th>
+<th>Complexity</th>
+<th>.NET Tie-In Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Env Vars</strong></td>
+<td>Config tweaks (ports, secrets)</td>
+<td>Low</td>
+<td>Swap EF Core connection strings without rebuilds.</td>
+</tr>
+<tr>
+<td><strong>Multiple Files</strong></td>
+<td>Service additions (e.g., extra volumes)</td>
+<td>Medium</td>
+<td>Add debug tools in dev; scale replicas in prod.</td>
+</tr>
+<tr>
+<td><strong>Profiles</strong></td>
+<td>Selective startup (e.g., optional services)</td>
+<td>Low</td>
+<td>Exclude heavy DB for API-only test runs.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pro Tip for Your Interview</strong>: &quot;For a .NET pipeline, I'd centralize in one compose file with .env overrides and GitHub secrets—enables 'docker compose up' parity across dev/test/prod, cutting env drift.&quot; Use <code>docker compose config</code> to validate merged files.</p>
+<p>Next—maybe secrets in Compose or migrating to Kubernetes?</p>
+
+    </div>
+</body>
+</html>"

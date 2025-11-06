@@ -1,0 +1,82 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-canary-deployment">What is Canary Deployment?</h3>
+<p><strong>Canary deployment</strong> is a deployment strategy that involves gradually rolling out a new version of your application to a small subset of users or servers (the &quot;canaries&quot;) before exposing it to the entire production environment. It's named after the historical practice of miners sending canaries into tunnels to detect toxic gases—if the birds survived, the air was safe.</p>
+<p>In essence, it acts as a controlled experiment: You deploy the new version alongside the stable one, routing a tiny percentage of traffic (e.g., 5-10%) to it. Metrics are monitored in real-time; if everything looks good, you incrementally increase exposure until full rollout. If issues arise (e.g., errors, performance degradation), you quickly rollback to the previous version.</p>
+<h4 id="how-it-works-high-level-steps">How It Works (High-Level Steps)</h4>
+<p>Here's a simplified flow for implementing canary in a .NET ecosystem (e.g., using Azure or Kubernetes):</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Description</th>
+<th>.NET Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Prepare</td>
+<td>Build and tag the new version (e.g., v2.0). Keep the old version (v1.0) running.</td>
+<td>Use <code>dotnet publish</code> to create artifacts; tag in Azure DevOps or GitHub Actions.</td>
+</tr>
+<tr>
+<td>2. Deploy Subset</td>
+<td>Route a small traffic slice to the new version.</td>
+<td>In Azure App Service: Use Traffic Manager or Deployment Slots with traffic splitting. In Kubernetes: Use Istio or Flagger for weighted routing to .NET pods.</td>
+</tr>
+<tr>
+<td>3. Monitor</td>
+<td>Track key metrics like error rates, latency, and user behavior.</td>
+<td>Integrate Application Insights for telemetry; set alerts for anomalies (e.g., &gt;2% error spike).</td>
+</tr>
+<tr>
+<td>4. Promote or Rollback</td>
+<td>If healthy, ramp up traffic (e.g., 20% → 50% → 100%). Else, shift traffic back.</td>
+<td>Automate with Azure Pipelines or ArgoCD; rollback via blue-green swap.</td>
+</tr>
+<tr>
+<td>5. Clean Up</td>
+<td>Decommission the old version once stable.</td>
+<td>Scale down old pods/services.</td>
+</tr>
+</tbody>
+</table>
+<p>This contrasts with big-bang deployments (all-at-once) by minimizing risk through isolation.</p>
+<h3 id="when-to-use-canary-deployment">When to Use Canary Deployment?</h3>
+<p>Use canary when the stakes are high and you want to catch issues early without disrupting everyone. It's ideal for:</p>
+<ul>
+<li><strong>High-Risk Changes</strong>: New features, database migrations, or third-party integrations in mission-critical apps (e.g., e-commerce .NET APIs handling payments).</li>
+<li><strong>Large-Scale User Bases</strong>: Services with millions of users, where even a 1% failure rate is catastrophic—test on a diverse &quot;canary&quot; group first.</li>
+<li><strong>Performance-Sensitive Apps</strong>: UI/UX heavy Blazor or ASP.NET Core apps where latency spikes could drive users away.</li>
+<li><strong>Regulatory/Compliance Needs</strong>: Finance or healthcare .NET systems requiring audit trails and low-downtime releases.</li>
+</ul>
+<p><strong>Avoid It When</strong>:</p>
+<ul>
+<li>Teams lack robust monitoring (e.g., no real-time dashboards).</li>
+<li>User base is too small (canary group might not be representative).</li>
+<li>Releases are infrequent/low-risk—opt for simpler strategies like rolling updates.</li>
+</ul>
+<p><strong>Pro Tip for Your Interview</strong>: Highlight automation—mention tools like LaunchDarkly for feature flags in .NET to toggle canaries dynamically. If asked for a scenario: &quot;In a .NET microservices setup on AKS, I'd use canary to deploy a buggy ML model endpoint, monitoring CPU via Prometheus before full rollout.&quot; Shows strategic thinking!</p>
+<p>Next question? Maybe rolling vs. blue-green?</p>
+
+    </div>
+</body>
+</html>"

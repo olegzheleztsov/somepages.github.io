@@ -1,0 +1,127 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="docker-fundamentals-dockerfile-image-and-container">Docker Fundamentals: Dockerfile, Image, and Container</h3>
+<p>Docker is a platform for containerization, enabling apps to run consistently across environments. Let's break down these core concepts step by step, with a focus on their roles in building and running .NET apps (e.g., containerizing an ASP.NET Core API).</p>
+<h4 id="what-is-a-dockerfile">1. What is a Dockerfile?</h4>
+<p>A <strong>Dockerfile</strong> is a simple, human-readable text file (no file extension) containing a series of instructions to automate the creation of a Docker image. It's like a recipe or build script that defines how to assemble your app's environment from scratch.</p>
+<ul>
+<li><p><strong>Key Elements</strong>:</p>
+<ul>
+<li><strong>Base Image</strong>: Starts with <code>FROM</code> (e.g., <code>FROM mcr.microsoft.com/dotnet/aspnet:8.0</code> for .NET).</li>
+<li><strong>Instructions</strong>: COPY (add files), RUN (execute commands like <code>dotnet restore</code>), ENV (set variables), EXPOSE (ports), CMD/ENTRYPOINT (startup command).</li>
+</ul>
+</li>
+<li><p><strong>Example for a .NET App</strong>:</p>
+<pre><code>FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /app
+COPY . ./
+RUN dotnet publish -c Release -o out
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app/out .
+ENTRYPOINT [&quot;dotnet&quot;, &quot;MyApi.dll&quot;]
+</code></pre>
+<p>Build it with <code>docker build -t myapp .</code> to create an image.</p>
+</li>
+<li><p><strong>Purpose</strong>: Ensures reproducibility—anyone can build the same image from the same Dockerfile.</p>
+</li>
+</ul>
+<h4 id="what-is-a-docker-image">2. What is a Docker Image?</h4>
+<p>A <strong>Docker image</strong> is a lightweight, standalone, executable package that includes your application code, runtime (e.g., .NET runtime), libraries, environment variables, and config files. It's created from a Dockerfile (via <code>docker build</code>) and stored in a registry like Docker Hub or Azure Container Registry.</p>
+<ul>
+<li><p><strong>Characteristics</strong>:</p>
+<ul>
+<li><strong>Layered &amp; Immutable</strong>: Built in read-only layers (each instruction adds a layer for caching/efficiency).</li>
+<li><strong>Portable</strong>: Shareable and runnable anywhere Docker is installed.</li>
+<li><strong>Size-Optimized</strong>: Often 100-500 MB for .NET apps.</li>
+</ul>
+</li>
+<li><p><strong>Analogy</strong>: An image is like a DVD snapshot of your app—static and ready to &quot;play.&quot;</p>
+</li>
+</ul>
+<h4 id="what-is-a-container">3. What is a Container?</h4>
+<p>A <strong>container</strong> is a live, isolated runtime instance of a Docker image. It's created when you run an image (e.g., <code>docker run myapp</code>), turning the static package into a dynamic, process-like entity that executes your app.</p>
+<ul>
+<li><p><strong>Characteristics</strong>:</p>
+<ul>
+<li><strong>Ephemeral</strong>: Starts/stops/deletes easily; shares the host kernel for low overhead.</li>
+<li><strong>Isolated</strong>: Has its own filesystem, network, and processes—but no full OS.</li>
+<li><strong>Scalable</strong>: Run multiple from one image (e.g., 10 containers for load balancing a .NET service).</li>
+</ul>
+</li>
+<li><p><strong>Analogy</strong>: A container is like playing the DVD—it's the running movie, with start/stop controls.</p>
+</li>
+</ul>
+<h4 id="difference-between-a-container-and-an-image">Difference Between a Container and an Image</h4>
+<p>Images and containers are tightly coupled but serve distinct roles: Images are blueprints; containers are executions. Here's a quick comparison:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Docker Image</th>
+<th>Container</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nature</strong></td>
+<td>Static, read-only template</td>
+<td>Dynamic, writable runtime instance</td>
+</tr>
+<tr>
+<td><strong>Creation</strong></td>
+<td>Built from Dockerfile (<code>docker build</code>)</td>
+<td>Run from image (<code>docker run</code>)</td>
+</tr>
+<tr>
+<td><strong>State</strong></td>
+<td>Immutable layers; no processes</td>
+<td>Mutable (e.g., logs, temp files); runs processes</td>
+</tr>
+<tr>
+<td><strong>Lifecycle</strong></td>
+<td>Persistent; stored in registries</td>
+<td>Ephemeral; starts, runs, stops, deletes</td>
+</tr>
+<tr>
+<td><strong>Use Case</strong></td>
+<td>Versioning/sharing (e.g., tag .NET app v1.0)</td>
+<td>Deployment/testing (e.g., run API on port 80)</td>
+</tr>
+<tr>
+<td><strong>Size/Overhead</strong></td>
+<td>Fixed (e.g., 200 MB)</td>
+<td>Minimal runtime add (e.g., +10 MB)</td>
+</tr>
+<tr>
+<td><strong>Multiple?</strong></td>
+<td>One image → many containers</td>
+<td>Many from one image (e.g., dev/prod variants)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pro Tip for Your Interview</strong>: In a .NET microservices setup, you'd use a Dockerfile to build a multi-stage image (optimize for prod size), push to ACR, then deploy containers via Kubernetes for orchestration. This ensures &quot;build once, run anywhere&quot; parity.</p>
+<p>Got a follow-up, like building a .NET Dockerfile hands-on?</p>
+
+    </div>
+</body>
+</html>"

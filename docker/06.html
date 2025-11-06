@@ -1,0 +1,122 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="persisting-data-in-docker-containers">Persisting Data in Docker Containers</h3>
+<p>By default, Docker containers are <strong>ephemeral</strong>: Any data written inside (e.g., to <code>/app/data</code>) is lost when the container stops, restarts, or is deleted. This is great for stateless apps but problematic for stateful ones like .NET apps with databases (e.g., SQLite files) or logs. To persist data, use <strong>volumes</strong> or <strong>bind mounts</strong>—external storage mechanisms that decouple data from the container lifecycle.</p>
+<h4 id="docker-volumes-recommended-for-production">1. <strong>Docker Volumes</strong> (Recommended for Production)</h4>
+<p>Volumes are Docker-managed directories stored on the host (e.g., <code>/var/lib/docker/volumes/</code>). They're abstracted, portable, and efficient for multi-container setups (e.g., via Docker Compose or Kubernetes).</p>
+<ul>
+<li><p><strong>How to Create and Use</strong>:</p>
+<ol>
+<li>Create a volume: <code>docker volume create myapp-data</code>.</li>
+<li>Run container with volume: <code>docker run -d -v myapp-data:/app/data --name myapp myapp:1.0</code>.
+<ul>
+<li><code>-v &lt;volume-name&gt;:&lt;container-path&gt;</code> mounts the volume inside the container.</li>
+</ul>
+</li>
+<li>Data written to <code>/app/data</code> (e.g., via .NET <code>File.WriteAllText</code>) persists even if the container is removed.</li>
+<li>Inspect: <code>docker volume inspect myapp-data</code>; remove with <code>docker volume rm myapp-data</code> (after stopping containers).</li>
+</ol>
+</li>
+<li><p><strong>.NET Example</strong>: For an ASP.NET Core app logging to files:</p>
+<pre><code>// In C#: System.IO.File.AppendAllText(&quot;/app/data/logs.txt&quot;, &quot;Log entry&quot;);
+</code></pre>
+<p>Mount as above—logs survive restarts.</p>
+</li>
+</ul>
+<h4 id="bind-mounts-great-for-development">2. <strong>Bind Mounts</strong> (Great for Development)</h4>
+<p>These map a host directory directly to the container's filesystem, syncing changes in real-time. Ideal for editing code/logs during dev.</p>
+<ul>
+<li><p><strong>How to Use</strong>:</p>
+<ol>
+<li>Run with bind: <code>docker run -d -v /host/path/to/data:/app/data --name myapp myapp:1.0</code>.
+<ul>
+<li><code>-v &lt;absolute-host-path&gt;:&lt;container-path&gt;</code>.</li>
+</ul>
+</li>
+<li>On Windows/Mac: Use <code>/c/Users/...</code> or relative paths carefully.</li>
+<li>Changes on host reflect instantly in container (and vice versa).</li>
+</ol>
+</li>
+<li><p><strong>.NET Example</strong>: Mount a host folder for config files:</p>
+<pre><code>docker run -d -v C:\dev\configs:/app/configs -p 8080:80 myapp:1.0
+</code></pre>
+<p>Edit <code>appsettings.json</code> on host; .NET picks it up on restart.</p>
+</li>
+</ul>
+<h4 id="comparison-volumes-vs.bind-mounts">Comparison: Volumes vs. Bind Mounts</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Volumes</th>
+<th>Bind Mounts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Management</strong></td>
+<td>Docker handles (named/anonymous)</td>
+<td>Manual host paths</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td>Optimized (direct I/O)</td>
+<td>Slight overhead (syncing)</td>
+</tr>
+<tr>
+<td><strong>Portability</strong></td>
+<td>High (easy to backup/share)</td>
+<td>Low (host-specific paths)</td>
+</tr>
+<tr>
+<td><strong>Use Case</strong></td>
+<td>Prod DBs (e.g., SQL Server in .NET)</td>
+<td>Dev debugging (e.g., live code edits)</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>Isolated; easier RBAC</td>
+<td>Exposes host dir (risky)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="advanced-tips">Advanced Tips</h4>
+<ul>
+<li><strong>Docker Compose</strong>: Define in <code>docker-compose.yml</code>:
+<pre><code>services:
+  myapp:
+    image: myapp:1.0
+    volumes:
+      - myapp-data:/app/data
+volumes:
+  myapp-data:
+</code></pre>
+Run with <code>docker-compose up</code>.</li>
+<li><strong>Named Volumes for DBs</strong>: For .NET with EF Core + SQLite: Mount to <code>/var/lib/sqlite</code>.</li>
+<li><strong>Cleanup</strong>: Use <code>--rm</code> for non-persistent runs; prune with <code>docker volume prune</code>.</li>
+<li><strong>Orchestration</strong>: In Kubernetes (for .NET on AKS), use PersistentVolumes (PV) backed by volumes.</li>
+</ul>
+<p><strong>Pro Tip for Your Interview</strong>: &quot;For a stateful .NET microservice with Cosmos DB backups, I'd use named volumes in Compose for dev/prod parity, with host bind mounts for hot-reloading configs—balancing persistence and agility.&quot;</p>
+<p>Next—maybe volumes in Kubernetes or data backups?</p>
+
+    </div>
+</body>
+</html>"

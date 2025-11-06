@@ -1,0 +1,83 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-rolling-shadow-deployment-strategy">What is Rolling (Shadow) Deployment Strategy?</h3>
+<p><strong>Rolling deployment</strong> (sometimes called incremental or phased) is a strategy where you gradually replace old instances of your application with new ones in the production environment, one at a time or in small batches, while the app continues serving live traffic. This minimizes disruption by ensuring there's always capacity to handle requests—old pods/instances handle most load until phased out.</p>
+<p>A <strong>shadow deployment</strong> (or dark/pilot deployment) is a close cousin: It deploys the new version alongside the old one but doesn't route real user traffic to it initially. Instead, it &quot;shadows&quot; copies of incoming requests to the new version for testing (e.g., logging responses without affecting users), allowing side-by-side comparison for performance or behavior diffs.</p>
+<p>Rolling is more about gradual replacement with live traffic; shadow focuses on passive observation. Often, shadow is used pre-rolling to validate safely.</p>
+<h4 id="how-it-works-high-level-steps">How It Works (High-Level Steps)</h4>
+<p>For a .NET app in a containerized setup (e.g., ASP.NET Core on Kubernetes/AKS):</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Description</th>
+<th>.NET Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Prepare</td>
+<td>Build the new version and update deployment config (e.g., replicas).</td>
+<td><code>dotnet publish</code> for container image; push to Azure Container Registry.</td>
+</tr>
+<tr>
+<td>2. Initiate Roll</td>
+<td>Start replacing instances incrementally (e.g., 10% at a time). For shadow: Duplicate traffic to new instances without response impact.</td>
+<td>In AKS: Use <code>kubectl rollout</code> with maxUnavailable=1; for shadow, tools like Linkerd proxy requests.</td>
+</tr>
+<tr>
+<td>3. Monitor</td>
+<td>Watch for issues across the fleet—health checks, metrics.</td>
+<td>Application Insights for distributed tracing; alert on latency jumps or error rates.</td>
+</tr>
+<tr>
+<td>4. Complete</td>
+<td>Fully phase out old version once new is stable. Rollback by reversing the rollout.</td>
+<td>Kubernetes handles auto-rollback on failure; shadow ends by merging validated changes.</td>
+</tr>
+<tr>
+<td>5. Post-Check</td>
+<td>Verify end-to-end after full rollout.</td>
+<td>Run chaos tests with Gremlin to simulate failures.</td>
+</tr>
+</tbody>
+</table>
+<p>Automation via Helm charts or Azure DevOps YAML pipelines keeps it hands-off.</p>
+<h3 id="when-to-use-rolling-or-shadow-deployment">When to Use Rolling (or Shadow) Deployment?</h3>
+<p>Choose rolling for balanced risk/speed; shadow for extra caution on untested changes. Ideal scenarios:</p>
+<ul>
+<li><strong>Stateless or Loosely Coupled Apps</strong>: .NET microservices where instances are identical and scalable (e.g., API gateways handling stateless HTTP).</li>
+<li><strong>Resource-Constrained Environments</strong>: Unlike blue/green, it doesn't double infra—great for cost-sensitive Azure setups.</li>
+<li><strong>Frequent, Low-Risk Updates</strong>: Bug fixes or minor features in Blazor apps; shadow shines for A/B perf testing new endpoints.</li>
+<li><strong>Hybrid Shadow Use</strong>: When validating ML integrations (e.g., shadow a new .NET ML.NET model on live data without risking predictions).</li>
+</ul>
+<p><strong>Avoid It When</strong>:</p>
+<ul>
+<li>Stateful apps (e.g., session-heavy) where mid-roll inconsistencies cause issues—use blue/green instead.</li>
+<li>Ultra-high availability needs (rolling can have brief degraded states during transitions).</li>
+<li>No strong health checks (risks propagating bad instances).</li>
+</ul>
+<p><strong>Pro Tip for Your Interview</strong>: Differentiate: &quot;Rolling for everyday deploys in AKS—set maxSurge=25% to control blast radius. I'd layer shadow for a risky refactor, using Polly for resilient shadowing in .NET.&quot; Scenario: &quot;Updating a .NET SignalR hub; roll out to 20% nodes, monitor WebSocket drops via Insights.&quot; Positions you as pragmatic!</p>
+<p>What's next—maybe CI/CD tools or disaster recovery?</p>
+
+    </div>
+</body>
+</html>"

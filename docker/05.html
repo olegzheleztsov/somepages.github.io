@@ -1,0 +1,91 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-a-multistage-build">What is a Multistage Build?</h3>
+<p>A <strong>multistage build</strong> in Docker is a technique that allows you to use multiple <code>FROM</code> statements in a single Dockerfile to define separate build stages. Each stage acts like an independent image: you can build, compile, or prepare artifacts in early stages (e.g., using heavy tools like compilers), then selectively copy only the necessary outputs (e.g., binaries) to a lean final stage for runtime. This results in smaller, more secure production images by discarding build-time dependencies.</p>
+<h4 id="how-it-works-quick-mechanics">How It Works (Quick Mechanics)</h4>
+<ul>
+<li><strong>Stages</strong>: Named (e.g., <code>AS build</code>, <code>AS test</code>) or unnamed.</li>
+<li><strong>Copy Between Stages</strong>: Use <code>COPY --from=&lt;stage&gt;</code> to transfer files (e.g., from a &quot;build&quot; stage to &quot;runtime&quot;).</li>
+<li><strong>Final Image</strong>: The last <code>FROM</code> defines the production image; previous stages are ephemeral (not included in the final output).</li>
+<li><strong>Build Command</strong>: <code>docker build</code> executes all stages sequentially, caching where possible.</li>
+</ul>
+<p><strong>Simple Example</strong> (Expanding on our .NET Dockerfile):</p>
+<pre><code># Stage 1: Build (heavy SDK for compile)
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY . .
+RUN dotnet publish -c Release -o /app/publish
+
+# Stage 2: Runtime (light ASP.NET base)
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .  # Only copy outputs
+ENTRYPOINT [&quot;dotnet&quot;, &quot;MyApi.dll&quot;]
+</code></pre>
+<ul>
+<li>Final image: ~100 MB (runtime only) vs. ~1 GB (full SDK).</li>
+</ul>
+<p>This optimizes by &quot;throwing away&quot; the SDK after copying artifacts.</p>
+<h3 id="use-cases-for-multistage-builds">Use Cases for Multistage Builds</h3>
+<p>Multistage builds shine in production pipelines, especially for compiled languages like .NET, Go, or Node.js. Here's a table of key scenarios:</p>
+<table>
+<thead>
+<tr>
+<th>Use Case</th>
+<th>Description</th>
+<th>.NET Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Image Size Optimization</strong></td>
+<td>Strip build tools/deps to create minimal runtime images, speeding deploys and reducing storage/transfer costs.</td>
+<td>Shrink a .NET Core API from 1.2 GB (with SDK) to 150 MB for Kubernetes—faster pulls in AKS.</td>
+</tr>
+<tr>
+<td><strong>Security Hardening</strong></td>
+<td>Exclude sensitive build-time tools (e.g., debuggers) from prod images, reducing attack surface.</td>
+<td>Build stage uses SDK with temp creds; runtime stage has only runtime + app, scanned via Trivy.</td>
+</tr>
+<tr>
+<td><strong>Environment Separation</strong></td>
+<td>Isolate dev/test/build from prod (e.g., different bases for OS/arch).</td>
+<td>Stage 1: Windows SDK for .NET Framework build; Stage 2: Linux runtime for cross-platform deploys.</td>
+</tr>
+<tr>
+<td><strong>CI/CD Efficiency</strong></td>
+<td>Parallelize stages in pipelines; cache heavy restores (e.g., NuGet) without bloating final artifacts.</td>
+<td>In Azure DevOps: Build stage caches <code>dotnet restore</code>; copy to runtime for tagging/pushing to ACR.</td>
+</tr>
+<tr>
+<td><strong>Multi-Arch Support</strong></td>
+<td>Build for multiple platforms (e.g., AMD64 + ARM) in stages, then merge.</td>
+<td>.NET Blazor app: Stage builds for arm64 (edge devices); final image supports both via manifest lists.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>When to Skip</strong>: Simple scripts or interpreted langs (e.g., Python) where single-stage suffices.</p>
+<p><strong>Pro Tip for Your Interview</strong>: &quot;In a .NET microservices setup, multistage cuts vuln exposure by 90% (fewer CVEs in runtime image)—I'd always validate with <code>docker sbom</code> post-build.&quot; Ties to secure, efficient DevOps.</p>
+<p>Next—maybe optimizing further or Kubernetes integration?</p>
+
+    </div>
+</body>
+</html>"
