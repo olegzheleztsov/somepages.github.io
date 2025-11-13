@@ -1,0 +1,123 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="kubernetes-replicaset-overview">Kubernetes ReplicaSet: Overview</h3>
+<p>In Kubernetes (K8s), a <strong>ReplicaSet</strong> (under <code>apps/v1</code> API) is a low-level controller that ensures a stable set of identical pods are running at any given time. It maintains the desired number of replicas by creating or deleting pods as needed, based on selectors. ReplicaSets are the &quot;workhorses&quot; behind higher-level abstractions like Deployments—rarely used directly in production but essential for understanding scaling and self-healing.</p>
+<p>ReplicaSets declare a pod template and use label selectors to match/manage existing pods. If a pod dies (e.g., node failure), it spins up a replacement. They're declarative: Define the desired state in YAML, and K8s reconciles it continuously.</p>
+<h4 id="key-features">Key Features</h4>
+<ul>
+<li><strong>Replicas Guarantee</strong>: <code>spec.replicas</code> sets the target count (e.g., 3 pods). Scales up/down automatically on changes.</li>
+<li><strong>Selectors</strong>: Uses <code>spec.selector</code> (equality/set-based, as we covered) to identify owned pods. Must match the template's labels, or creation fails.</li>
+<li><strong>Pod Template</strong>: <code>spec.template</code> defines the pod spec (containers, volumes, etc.)—new pods are clones of this.</li>
+<li><strong>Ownership</strong>: ReplicaSets &quot;own&quot; matching pods; deleting the RS cascades to pods (unless <code>orphan</code> flag).</li>
+<li><strong>No Built-in Updates</strong>: Unlike Deployments, it doesn't handle rolling updates—use for simple, static scaling.</li>
+</ul>
+<h4 id="comparison-replicaset-vs.deployment-vs.statefulset">Comparison: ReplicaSet vs. Deployment vs. StatefulSet</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>ReplicaSet</th>
+<th>Deployment</th>
+<th>StatefulSet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Level</strong></td>
+<td>Low-level; basic replica management</td>
+<td>High-level; ReplicaSet + updates</td>
+<td>High-level; ordered, stateful replicas</td>
+</tr>
+<tr>
+<td><strong>Scaling</strong></td>
+<td>Horizontal only; no strategy</td>
+<td>Horizontal + rolling updates</td>
+<td>Horizontal + stable identities</td>
+</tr>
+<tr>
+<td><strong>Use When</strong></td>
+<td>Simple, stateless replication</td>
+<td>Most apps (e.g., .NET APIs)</td>
+<td>Databases (e.g., .NET with SQL)</td>
+</tr>
+<tr>
+<td><strong>Updates</strong></td>
+<td>Full replacement (downtime)</td>
+<td>Rolling/Recreate (zero-downtime)</td>
+<td>Ordered rollout</td>
+</tr>
+<tr>
+<td><strong>Direct Use?</strong></td>
+<td>Rare; wrapped by Deployment</td>
+<td>Default for stateless apps</td>
+<td>For persistent, ordered apps</td>
+</tr>
+</tbody>
+</table>
+<p>ReplicaSets are to Deployments what threads are to processes—underlying but not standalone.</p>
+<h4 id="example-yaml">Example YAML</h4>
+<p>Here's a basic ReplicaSet for a .NET API (3 replicas):</p>
+<pre><code class="language-yaml">apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: dotnet-api-rs
+spec:
+  replicas: 3
+  selector:                  # Must match template labels
+    matchLabels:
+      app: dotnet-api
+  template:                  # Pod blueprint
+    metadata:
+      labels:
+        app: dotnet-api
+        version: v1
+    spec:
+      containers:
+      - name: api
+        image: mcr.microsoft.com/dotnet/aspnet:8.0
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: &quot;100m&quot;
+            memory: &quot;128Mi&quot;
+</code></pre>
+<p>Apply: <code>kubectl apply -f rs.yaml</code>. Check: <code>kubectl get rs dotnet-api-rs</code> (shows READY replicas). Scale: <code>kubectl scale rs dotnet-api-rs --replicas=5</code>.</p>
+<h4 id="use-cases">Use Cases</h4>
+<ul>
+<li><strong>Basic Scaling</strong>: Ensure exactly N instances of a stateless .NET Worker Service for background tasks.</li>
+<li><strong>Self-Healing</strong>: If a pod crashes (e.g., .NET exception loop), ReplicaSet replaces it without intervention.</li>
+<li><strong>Testing/Migration</strong>: Standalone for quick prototypes or during Deployment-to-StatefulSet transitions.</li>
+<li><strong>In .NET Contexts</strong>: Under a Deployment for API pods; use selectors to tie to Services for load-balanced access.</li>
+</ul>
+<h4 id="best-practices">Best Practices</h4>
+<ul>
+<li><strong>Avoid Direct Use</strong>: Prefer Deployments for updates—ReplicaSets alone cause downtime on image changes.</li>
+<li><strong>Label Consistency</strong>: Template labels must align with selector, or K8s rejects it (<code>kubectl describe rs</code> for errors).</li>
+<li><strong>Resource Limits</strong>: Always set requests/limits to prevent OOM evictions.</li>
+<li><strong>Pitfalls</strong>: Scaling too aggressively without HPA leads to resource contention; monitor with <code>kubectl get pods -l app=dotnet-api</code>.</li>
+<li><strong>Interview Tip</strong>: &quot;ReplicaSets ensure 'enough' pods; Deployments add 'how' to update them—key for zero-downtime .NET releases.&quot;</li>
+</ul>
+<p>ReplicaSets keep things running smoothly under the hood. Next: StatefulSets for stateful .NET apps, or HPA in more depth? What's your pick?</p>
+
+    </div>
+</body>
+</html>"

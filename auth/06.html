@@ -1,0 +1,130 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="how-digital-signatures-work">How Digital Signatures Work</h3>
+<p>A <strong>digital signature</strong> is a cryptographic mechanism that provides <strong>authenticity</strong> (proves the sender's identity), <strong>integrity</strong> (ensures the data hasn't been tampered with), and <strong>non-repudiation</strong> (the sender can't deny signing it). It uses <strong>asymmetric encryption</strong>: The signer uses their <strong>private key</strong> to create the signature, while anyone with the signer's <strong>public key</strong> can verify it. This is efficient because only the private key holder signs, but verification is public and fast.</p>
+<p>Digital signatures don't encrypt the data—they <em>sign</em> it, often on a hash of the data to handle large payloads. Common algorithms include RSA, ECDSA (Elliptic Curve Digital Signature Algorithm), and EdDSA.</p>
+<h4 id="step-by-step-how-digital-signatures-work">Step-by-Step: How Digital Signatures Work</h4>
+<ol>
+<li><p><strong>Hash the Message</strong>:</p>
+<ul>
+<li>Compute a fixed-size digest (hash) of the original data using a cryptographic hash function (e.g., SHA-256). This condenses the message into a short, unique fingerprint.</li>
+<li>Why? Signing the full message is inefficient; the hash captures any change (avalanche effect).</li>
+</ul>
+</li>
+<li><p><strong>Sign the Hash</strong>:</p>
+<ul>
+<li>The signer applies their private key to the hash using the algorithm (e.g., RSA-PSS padding).</li>
+<li>Output: A signature (a number or byte array, e.g., 256-512 bits).</li>
+</ul>
+</li>
+<li><p><strong>Attach and Transmit</strong>:</p>
+<ul>
+<li>Bundle the original data + signature (and optionally the public key or its ID).</li>
+<li>Send over an insecure channel.</li>
+</ul>
+</li>
+<li><p><strong>Verify the Signature</strong>:</p>
+<ul>
+<li>Recipient recomputes the hash of the received data.</li>
+<li>Use the signer's public key to &quot;decrypt&quot; (verify) the signature, extracting the embedded hash.</li>
+<li>If hashes match and the math checks out, it's valid. Mismatch? Tampered or wrong key.</li>
+</ul>
+</li>
+</ol>
+<p>If the signature fails, the message is rejected—preventing man-in-the-middle attacks.</p>
+<h4 id="example-digital-signatures-in-jwt-json-web-signature-jws">Example: Digital Signatures in JWT (JSON Web Signature - JWS)</h4>
+<p>JWTs often use digital signatures in their <strong>JWS</strong> format to secure tokens (e.g., for auth in APIs). A signed JWT looks like: <code>header.payload.signature</code> (base64-encoded parts separated by dots).</p>
+<ul>
+<li><strong>Header</strong>: JSON with algo (e.g., <code>{&quot;alg&quot;:&quot;RS256&quot;,&quot;typ&quot;:&quot;JWT&quot;}</code>) → Base64.</li>
+<li><strong>Payload</strong>: Claims (e.g., <code>{&quot;sub&quot;:&quot;user123&quot;,&quot;exp&quot;:1234567890}</code>) → Base64.</li>
+<li><strong>Signing Input</strong>: Base64(header) + &quot;.&quot; + Base64(payload).</li>
+<li><strong>Signature Creation</strong>:
+<ol>
+<li>Hash the signing input (SHA-256).</li>
+<li>Sign the hash with issuer's private key (RS256 = RSA + SHA-256).</li>
+<li>Base64-encode the signature.</li>
+</ol>
+</li>
+<li><strong>Verification</strong> (Offline-Capable):
+<ol>
+<li>Recompute hash of received header.payload.</li>
+<li>Use issuer's public key to verify the signature against the hash.</li>
+<li>Check claims (e.g., expiry) if valid.</li>
+</ol>
+</li>
+</ul>
+<p><strong>Example JWT (Simplified)</strong>:</p>
+<pre><code>Header: {&quot;alg&quot;: &quot;RS256&quot;}
+Payload: {&quot;sub&quot;: &quot;alice&quot;, &quot;iat&quot;: 1516239022}
+Signing Input: eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhbGljZSIsImlhdCI6MTUxNjIzOTAyMn0
+Signature: SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c  (signed hash)
+Full Token: eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhbGljZSIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+</code></pre>
+<p>In .NET: Use <code>System.IdentityModel.Tokens.Jwt</code> to sign/verify: <code>new JwtSecurityTokenHandler().WriteToken(token)</code> with RSA keys.</p>
+<h4 id="comparison-of-signature-algorithms-in-jwt">Comparison of Signature Algorithms in JWT</h4>
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>Key Type</th>
+<th>Strengths</th>
+<th>Use Cases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>HS256/HS384/HS512</strong></td>
+<td>Symmetric (shared secret)</td>
+<td>Fast; simple for internal systems.</td>
+<td>Stateless sessions in single-server apps.</td>
+</tr>
+<tr>
+<td><strong>RS256/RS384/RS512</strong></td>
+<td>Asymmetric (RSA public/private)</td>
+<td>Secure distribution; non-repudiation.</td>
+<td>API tokens (e.g., OAuth ID tokens).</td>
+</tr>
+<tr>
+<td><strong>ES256/ES384/ES512</strong></td>
+<td>Asymmetric (ECC)</td>
+<td>Smaller keys; mobile-efficient.</td>
+<td>IoT or high-volume signing.</td>
+</tr>
+<tr>
+<td><strong>PS256</strong></td>
+<td>Asymmetric (RSA-PSS)</td>
+<td>Probabilistic padding; quantum-resistant potential.</td>
+<td>High-security environments.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="use-cases">Use Cases</h4>
+<ul>
+<li><strong>Software Updates</strong>: Sign binaries (e.g., Microsoft signs .NET packages) to prevent malware.</li>
+<li><strong>Email Signing</strong>: PGP/S/MIME signs messages for trust.</li>
+<li><strong>Blockchain Transactions</strong>: ECDSA signs transfers (e.g., Bitcoin) for ownership proof.</li>
+<li><strong>JWT in Auth</strong>: Signed tokens for offline verification in distributed systems (e.g., microservices).</li>
+</ul>
+<p>Digital signatures are tamper-proof &quot;seals&quot;—essential for trust in digital comms. Always use secure keys and rotate them!</p>
+
+    </div>
+</body>
+</html>"

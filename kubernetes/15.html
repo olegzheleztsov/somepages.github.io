@@ -1,0 +1,144 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="kubernetes-pod-affinity-overview">Kubernetes Pod Affinity: Overview</h3>
+<p>In Kubernetes (K8s), <strong>Pod Affinity</strong> (and its counterpart, <strong>Pod Anti-Affinity</strong>) is a scheduling mechanism that allows you to constrain where pods are placed based on the labels of <em>existing pods</em> on nodes. Unlike Node Affinity (which targets node labels), Pod Affinity focuses on pod-to-pod relationships, enabling fine-grained control over pod placement for availability, performance, or resource efficiency. It's defined in the pod spec under <code>spec.affinity.podAffinity</code> or <code>podAntiAffinity</code>.</p>
+<p>Affinity rules use label selectors (equality/set-based, as we covered earlier) to match pods. There are two rule types:</p>
+<ul>
+<li><strong>RequiredDuringSchedulingIgnoredDuringExecution</strong>: Hard constraint—pod won't schedule if no suitable node exists (may leave pod pending).</li>
+<li><strong>PreferredDuringSchedulingIgnoredDuringExecution</strong>: Soft preference—pod schedules even if no match, but weights influence the decision (higher weight = stronger preference).</li>
+</ul>
+<p>These are evaluated at scheduling time (not runtime). As of Kubernetes v1.31 (November 2025), they integrate better with topology spreads for multi-zone clusters.</p>
+<h4 id="key-components">Key Components</h4>
+<ul>
+<li><strong>Pod Affinity</strong>: Attracts pods to nodes with matching labeled pods (e.g., co-locate related services).</li>
+<li><strong>Pod Anti-Affinity</strong>: Repels pods from nodes with certain labeled pods (e.g., spread replicas for HA).</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Rule Type</th>
+<th>Syntax Example (in YAML)</th>
+<th>Behavior</th>
+<th>Weight (for Preferred)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Required</strong></td>
+<td><code>requiredDuringSchedulingIgnoredDuringExecution: [{labelSelector: {matchExpressions: [{key: app, operator: In, values: [frontend]}]}}]</code></td>
+<td>Mandatory match; fails scheduling if unmet.</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td><strong>Preferred</strong></td>
+<td><code>preferredDuringSchedulingIgnoredDuringExecution: [{weight: 100, podAffinityTerm: {labelSelector: ...}}]</code></td>
+<td>Optional; score-based ranking (1-100).</td>
+<td>1-100 (higher = more preferred)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Topology Keys</strong>: Optional, to scope affinity within domains like <code>topology.kubernetes.io/zone</code> (e.g., spread across AZs).</li>
+</ul>
+<h4 id="example-yaml">Example YAML</h4>
+<p>For a .NET API Deployment with Pod Anti-Affinity to spread replicas (avoid single-node failure):</p>
+<pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dotnet-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dotnet-api
+  template:
+    metadata:
+      labels:
+        app: dotnet-api
+    spec:
+      affinity:
+        podAntiAffinity:          # Spread across nodes
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - dotnet-api
+            topologyKey: &quot;kubernetes.io/hostname&quot;  # One per node
+        # Optional: Pod Affinity for co-location
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 80
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  component: cache  # Prefer nodes with cache pods
+              topologyKey: &quot;kubernetes.io/hostname&quot;
+      containers:
+      - name: api
+        image: mcr.microsoft.com/dotnet/aspnet:8.0
+        ports:
+        - containerPort: 8080
+</code></pre>
+<p>Apply: <code>kubectl apply -f api-deployment.yaml</code>. The scheduler will prefer spreading the 3 replicas across different nodes.</p>
+<h4 id="use-cases">Use Cases</h4>
+<p>Pod Affinity is key for optimizing .NET microservices in multi-node clusters (e.g., AKS), balancing HA and performance.</p>
+<ul>
+<li><p><strong>High Availability (Anti-Affinity)</strong>:</p>
+<ul>
+<li><strong>Scenario</strong>: Spread replicas of a .NET API across nodes/AZs to survive failures. Use required anti-affinity on <code>app: dotnet-api</code> and <code>topologyKey: topology.kubernetes.io/zone</code>.</li>
+<li><strong>Benefit</strong>: Ensures no single point of failure; critical for production .NET apps handling user sessions.</li>
+</ul>
+</li>
+<li><p><strong>Performance Optimization (Affinity)</strong>:</p>
+<ul>
+<li><strong>Scenario</strong>: Co-locate a .NET frontend pod with its backend cache (e.g., Redis sidecar or separate pod labeled <code>component: cache</code>). Preferred affinity reduces latency for gRPC calls.</li>
+<li><strong>Benefit</strong>: Lowers network hops in data-intensive .NET workloads like real-time analytics.</li>
+</ul>
+</li>
+<li><p><strong>Resource Colocation/Isolation</strong>:</p>
+<ul>
+<li><strong>Scenario</strong>: Place CPU-intensive .NET ML inference pods near GPU-labeled nodes (via anti-affinity to avoid noisy neighbors). Or group related services in a namespace.</li>
+<li><strong>Benefit</strong>: Maximizes node utilization; prevents resource contention in shared clusters.</li>
+</ul>
+</li>
+<li><p><strong>Multi-Tenancy</strong>:</p>
+<ul>
+<li><strong>Scenario</strong>: Enforce anti-affinity between tenants' .NET apps (e.g., label <code>tenant: acme</code> vs. <code>beta</code>) to isolate noisy workloads.</li>
+<li><strong>Benefit</strong>: Enhances security and SLAs in shared K8s environments.</li>
+</ul>
+</li>
+</ul>
+<h4 id="best-practices">Best Practices</h4>
+<ul>
+<li><strong>Combine with Node Affinity</strong>: Use Pod Affinity for pod relations + Node Affinity for hardware (e.g., SSD nodes).</li>
+<li><strong>Topology Awareness</strong>: Always specify <code>topologyKey</code> (e.g., hostname for nodes, zone for AZs) to avoid over-constraining.</li>
+<li><strong>Start Soft</strong>: Use preferred rules initially to avoid pending pods; tune weights based on <code>kubectl describe pod</code> events.</li>
+<li><strong>Monitoring</strong>: Watch scheduling failures with <code>kubectl get events</code>; integrate with HPA for dynamic scaling.</li>
+<li><strong>Pitfalls</strong>: Overly strict required rules can starve scheduling—test in staging. Not retroactive (reschedule with <code>kubectl delete pod</code>).</li>
+<li><strong>Interview Tip</strong>: &quot;Affinity for 'friends' (co-locate), Anti for 'foes' (spread)—boosts .NET app resilience without custom schedulers.&quot;</li>
+</ul>
+<p>This refines pod placement for robust .NET deploys. Next: Topology Spread Constraints, or DaemonSets? What's your question?</p>
+
+    </div>
+</body>
+</html>"

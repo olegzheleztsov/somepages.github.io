@@ -1,0 +1,203 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="managing-configuration-and-secrets-in-kubernetes-configmaps-and-secrets">Managing Configuration and Secrets in Kubernetes: ConfigMaps and Secrets</h3>
+<p>In Kubernetes (K8s), <strong>ConfigMaps</strong> and <strong>Secrets</strong> are key resources for injecting non-sensitive (ConfigMaps) or sensitive (Secrets) data into pods without baking it into container images. This promotes the &quot;12-Factor App&quot; principles: externalize config for portability and security. ConfigMaps handle app settings like database URLs or feature flags, while Secrets manage credentials like API keys or certs. Both are namespaced, declarative (YAML/CLI), and can be mounted as volumes or environment variables in pods.</p>
+<p>They're created independently and referenced in Pod/Deployment specs. Changes to them can trigger pod restarts (via subPath or envFrom) for live updates. As of Kubernetes v1.31 (November 2025), they support advanced features like immutable modes for efficiency and integration with tools like External Secrets Operator for vault syncing.</p>
+<h4 id="configmaps">1. ConfigMaps</h4>
+<p>A <strong>ConfigMap</strong> stores non-confidential data in key-value pairs, often from files, env vars, or literals. It's ideal for decoupling config from code—e.g., switching .NET app settings between dev/prod without rebuilding images.</p>
+<ul>
+<li><p><strong>Creation Methods</strong>:</p>
+<ul>
+<li>CLI: <code>kubectl create configmap my-config --from-literal=key1=value1 --from-file=config.json</code>.</li>
+<li>YAML: Define <code>data</code> (strings) or <code>binaryData</code> (base64 for binaries).</li>
+</ul>
+</li>
+<li><p><strong>Consumption in Pods</strong>:</p>
+<ul>
+<li><strong>Environment Variables</strong>: <code>spec.env[].valueFrom.configMapKeyRef</code> to inject keys as env vars.</li>
+<li><strong>Volumes</strong>: Mount as files via <code>spec.volumes[].configMap.items</code> (e.g., read-only filesystem).</li>
+<li><strong>EnvFrom</strong>: Bulk-inject all keys as env vars.</li>
+</ul>
+</li>
+<li><p><strong>Example YAML</strong> (ConfigMap for .NET app settings):</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dotnet-app-config
+data:
+  DATABASE_URL: &quot;Server=postgres;Database=mydb;&quot;
+  LOG_LEVEL: &quot;Information&quot;
+  FEATURE_FLAG: &quot;true&quot;
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dotnet-api
+spec:
+  template:
+    spec:
+      containers:
+      - name: api
+        image: mcr.microsoft.com/dotnet/aspnet:8.0
+        envFrom:                # All keys as env vars
+        - configMapRef:
+            name: dotnet-app-config
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+      volumes:
+      - name: config-volume
+        configMap:
+          name: dotnet-app-config  # Mounts as files
+</code></pre>
+</li>
+</ul>
+<h4 id="secrets">2. Secrets</h4>
+<p>A <strong>Secret</strong> is similar to a ConfigMap but for sensitive data, stored as base64-encoded strings (not encrypted by default—use external tools like Vault for that). K8s restricts access via RBAC, and they're designed to avoid exposure in logs or etcd dumps. Use for passwords, tokens, or private keys.</p>
+<ul>
+<li><p><strong>Creation Methods</strong>:</p>
+<ul>
+<li>CLI: <code>kubectl create secret generic my-secret --from-literal=password=supersecret --from-file=ssh-key=~/.ssh/id_rsa</code>.</li>
+<li>YAML: <code>data</code> field requires base64 values (e.g., <code>echo -n 'value' | base64</code>).</li>
+</ul>
+</li>
+<li><p><strong>Consumption in Pods</strong>:</p>
+<ul>
+<li>Same as ConfigMaps: Env vars, volumes, or envFrom.</li>
+<li>Volumes mount as tmpfs (in-memory) for security, auto-deleting on pod termination.</li>
+<li>Opaque Secrets: Generic key-value; specialized types like <code>kubernetes.io/tls</code> for certs.</li>
+</ul>
+</li>
+<li><p><strong>Example YAML</strong> (Secret for .NET DB connection):</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: dotnet-db-secret
+type: Opaque
+data:
+  DB_PASSWORD: c3VwZXJzZWNyZXQ=  # base64 of &quot;supersecret&quot;
+  API_KEY: YXBpLWtleQ==         # base64 of &quot;api-key&quot;
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dotnet-api
+spec:
+  template:
+    spec:
+      containers:
+      - name: api
+        image: mcr.microsoft.com/dotnet/aspnet:8.0
+        env:
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:       # Specific key as env var
+              name: dotnet-db-secret
+              key: DB_PASSWORD
+        volumeMounts:
+        - name: secret-volume
+          mountPath: /app/secrets  # Mount as files
+          readOnly: true
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: dotnet-db-secret
+</code></pre>
+</li>
+</ul>
+<h4 id="key-differences-and-comparison">Key Differences and Comparison</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>ConfigMap</th>
+<th>Secret</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Non-sensitive config (e.g., URLs, flags)</td>
+<td>Sensitive data (e.g., keys, certs)</td>
+</tr>
+<tr>
+<td><strong>Encoding</strong></td>
+<td>Plain text in <code>data</code></td>
+<td>Base64 in <code>data</code> (not encryption)</td>
+</tr>
+<tr>
+<td><strong>Storage</strong></td>
+<td>Visible in etcd; no access controls</td>
+<td>RBAC-restricted; volume tmpfs</td>
+</tr>
+<tr>
+<td><strong>Size Limit</strong></td>
+<td>1MiB total</td>
+<td>1MiB total</td>
+</tr>
+<tr>
+<td><strong>Use in .NET</strong></td>
+<td>appsettings.json overrides via volumes</td>
+<td>EF Core connection strings via env</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>None inherent</td>
+<td>Avoids plain-text in manifests</td>
+</tr>
+<tr>
+<td><strong>Updates</strong></td>
+<td>Pod restart for env changes; hot-reload via volumes</td>
+<td>Same; use tools like Reloader for auto-restart</td>
+</tr>
+</tbody>
+</table>
+<h4 id="use-cases">Use Cases</h4>
+<p>These are staples for .NET deployments on AKS/EKS, enabling GitOps (store in repo as base64 for Secrets).</p>
+<ul>
+<li><p><strong>ConfigMap Use Cases</strong>:</p>
+<ul>
+<li><strong>Environment-Specific Settings</strong>: Different <code>LOG_LEVEL</code> for dev/prod .NET apps—apply via Helm values.</li>
+<li><strong>Feature Toggles</strong>: Inject flags to enable/disable .NET middleware without redeploys.</li>
+<li><strong>External Service Endpoints</strong>: URLs for Redis or RabbitMQ in a .NET Worker Service.</li>
+</ul>
+</li>
+<li><p><strong>Secret Use Cases</strong>:</p>
+<ul>
+<li><strong>Database Credentials</strong>: Secure .NET API's SQL Server password, fetched by Entity Framework.</li>
+<li><strong>API Tokens</strong>: OAuth/JWT secrets for .NET auth services (e.g., Azure AD integration).</li>
+<li><strong>TLS Certs</strong>: Mount private keys for custom HTTPS in ASP.NET Core.</li>
+</ul>
+</li>
+</ul>
+<h4 id="best-practices">Best Practices</h4>
+<ul>
+<li><strong>Security</strong>: Never commit Secrets to Git—use Sealed Secrets or External Secrets for encryption. Enable etcd encryption at rest.</li>
+<li><strong>Immutability</strong>: Set <code>immutable: true</code> for static configs to optimize watches.</li>
+<li><strong>Tools</strong>: Integrate with .NET's <code>IConfiguration</code> to load from env/volumes; use cert-manager for dynamic Secrets.</li>
+<li><strong>Pitfalls</strong>: Base64 isn't secure—pair with RBAC. For large files, use volumes over env vars.</li>
+<li><strong>Interview Tip</strong>: Emphasize 12-factor: &quot;ConfigMaps for portability, Secrets for zero-trust.&quot;</li>
+</ul>
+<p>This keeps your .NET K8s apps configurable and secure. Up next: Persistent Volumes for stateful storage, or RBAC for access control? What's your focus?</p>
+
+    </div>
+</body>
+</html>"

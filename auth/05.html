@@ -1,0 +1,115 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="jwt-json-web-token-overview-and-use-cases">JWT (JSON Web Token): Overview and Use Cases</h3>
+<p><strong>JSON Web Token (JWT)</strong> is a compact, self-contained standard (RFC 7519) for securely representing claims (e.g., user ID, roles, expiry) as a JSON object encoded in a URL-safe string. It's divided into three parts: <strong>Header</strong> (algorithm/metadata), <strong>Payload</strong> (claims), and <strong>Signature</strong> (for integrity, signed with a secret or public key). Example: <code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</code>.</p>
+<p>JWTs are stateless: The verifier (e.g., server) can validate them locally by checking the signature and claims (e.g., expiry via <code>exp</code> claim) without querying a database or external service. This enables <strong>offline authentication checks</strong>, where the client or a peer system verifies the token independently, making it ideal for distributed or disconnected environments.</p>
+<h4 id="general-use-cases">General Use Cases</h4>
+<p>JWTs excel in scenarios requiring secure, lightweight token transmission over HTTP. Here's a table of common use cases:</p>
+<table>
+<thead>
+<tr>
+<th>Use Case</th>
+<th>Description</th>
+<th>Why JWT?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Stateless Web Authentication</strong></td>
+<td>After login, server issues JWT; client includes it in <code>Authorization: Bearer &lt;token&gt;</code> headers for API calls. Server verifies signature/claims locally.</td>
+<td>No session storage needed; scales horizontally (e.g., in .NET Core with <code>AddJwtBearer</code>).</td>
+</tr>
+<tr>
+<td><strong>Single Sign-On (SSO)</strong></td>
+<td>User logs in once; JWT propagates across apps/domains (e.g., via OAuth/OIDC).</td>
+<td>Cross-origin sharing; includes identity claims for seamless auth.</td>
+</tr>
+<tr>
+<td><strong>API Authorization</strong></td>
+<td>Tokens carry scopes/roles (e.g., <code>role: admin</code>) for fine-grained access control in microservices.</td>
+<td>Claims enable RBAC/ABAC without DB hits; integrates with gateways like Kong.</td>
+</tr>
+<tr>
+<td><strong>Secure Data Exchange</strong></td>
+<td>Embed non-sensitive claims (e.g., user prefs) in tokens for machine-to-machine comms.</td>
+<td>Tamper-proof via signature; compact for headers/URLs.</td>
+</tr>
+<tr>
+<td><strong>Federated Identity</strong></td>
+<td>In OIDC, ID tokens (JWTs) prove user identity from providers like Google/Auth0.</td>
+<td>Standard for authz delegation; verifiable offline post-issuance.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="offline-authentication-check-specific-use-cases">Offline Authentication Check: Specific Use Cases</h4>
+<p>The &quot;offline auth check&quot; refers to JWT's ability to be validated without real-time server contact—crucial for latency-sensitive or disconnected apps. Verification involves:</p>
+<ul>
+<li><strong>Signature Check</strong>: Use the signing key (symmetric: shared secret; asymmetric: public key) to ensure no tampering.</li>
+<li><strong>Claims Validation</strong>: Inspect <code>iss</code> (issuer), <code>aud</code> (audience), <code>exp</code> (expiry), <code>nbf</code> (not before), and custom claims.</li>
+<li>No revocation lists needed (use short expiry or blocklists for revokes).</li>
+</ul>
+<p>This works because JWTs are <strong>self-validating</strong>—the payload is base64-encoded (readable but signed), so offline peers can trust it if the signature holds.</p>
+<table>
+<thead>
+<tr>
+<th>Offline Use Case</th>
+<th>Description</th>
+<th>Offline Validation Steps</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mobile/Edge Apps</strong></td>
+<td>In a mobile .NET MAUI app or IoT device, store JWT locally; validate on-device for cached API calls without network.</td>
+<td>Check expiry/signature against embedded public key; refresh if expired.</td>
+<td>Offline shopping cart in e-commerce app—user stays &quot;logged in&quot; for 24h.</td>
+</tr>
+<tr>
+<td><strong>Distributed Systems</strong></td>
+<td>Microservices in a cluster verify JWTs from upstream services offline, using a shared public key.</td>
+<td>Peer service loads token, verifies signature/audience; enforces claims for authz.</td>
+<td>Kubernetes sidecar proxies (e.g., Envoy) checking JWTs for inter-pod traffic.</td>
+</tr>
+<tr>
+<td><strong>Progressive Web Apps (PWAs)</strong></td>
+<td>Browser-based app uses JWT for offline mode; Service Worker validates for cached resources.</td>
+<td>JS library (e.g., <code>jsonwebtoken</code>) checks claims without server ping.</td>
+<td>Gmail-like PWA: Access emails offline if token valid.</td>
+</tr>
+<tr>
+<td><strong>Disaster Recovery/High-Latency</strong></td>
+<td>In remote sites (e.g., satellite links), validate long-lived JWTs locally during outages.</td>
+<td>Fallback to offline mode if issuer unreachable; use <code>jti</code> (token ID) for one-time checks.</td>
+<td>Military/field ops apps authenticating users without central server.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="pros-and-cons-for-offline-scenarios">Pros and Cons for Offline Scenarios</h4>
+<ul>
+<li><strong>Pros</strong>: Fast local verification (no round-trips); resilient to outages; reduces server load.</li>
+<li><strong>Cons</strong>: No built-in revocation (mitigate with short expiry ~15-60 mins or reference tokens); larger size than opaque tokens; signature key compromise risks all tokens.</li>
+</ul>
+<p>In practice, implement with libraries like <code>PyJWT</code> (Python), <code>jjwt</code> (Java), or <code>Microsoft.AspNetCore.Authentication.JwtBearer</code> (.NET). Always use HTTPS for transmission and HS256/RS256 for signing. For offline-heavy apps, combine with refresh tokens for seamless re-auth.</p>
+
+    </div>
+</body>
+</html>"

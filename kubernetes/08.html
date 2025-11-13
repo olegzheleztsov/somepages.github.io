@@ -1,0 +1,138 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="kubernetes-liveness-and-readiness-probes-overview">Kubernetes Liveness and Readiness Probes: Overview</h3>
+<p>In Kubernetes (K8s), <strong>Probes</strong> are diagnostic mechanisms that allow the Kubelet (node agent) to perform health checks on containers within pods. They integrate with the lifecycle of workloads, enabling self-healing and traffic management. The two primary probes are <strong>Liveness</strong> (detects if a container is alive and should continue running) and <strong>Readiness</strong> (detects if a container is ready to serve traffic). Both are optional but crucial for reliable .NET apps—e.g., ensuring an ASP.NET Core API restarts on deadlock or only routes traffic post-warmup.</p>
+<p>Probes are defined in pod specs under <code>spec.containers[].livenessProbe</code> or <code>readinessProbe</code>. They support three types: <strong>exec</strong> (run a command inside the container), <strong>httpGet</strong> (HTTP request to a path), or <strong>tcpSocket</strong> (TCP connection). Common configs include <code>initialDelaySeconds</code> (delay before first probe), <code>periodSeconds</code> (check interval, default 10s), <code>timeoutSeconds</code> (probe timeout, default 1s), <code>failureThreshold</code> (consecutive failures before action, default 3), and <code>successThreshold</code> (consecutive successes, default 1).</p>
+<p>If a probe fails, Liveness restarts the container (potentially the pod), while Readiness removes it from Service endpoints (no restart, just traffic isolation). Startup probes (a third type) can defer these during app init.</p>
+<h4 id="key-differences-and-comparison">Key Differences and Comparison</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Liveness Probe</th>
+<th>Readiness Probe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Checks if the app is running healthily; failure → container restart.</td>
+<td>Checks if the app is ready for traffic; failure → exclude from load balancing.</td>
+</tr>
+<tr>
+<td><strong>Impact on Pod</strong></td>
+<td>Restarts container (self-healing for hangs/crashes).</td>
+<td>No restart; pod stays alive but traffic is paused until ready.</td>
+</tr>
+<tr>
+<td><strong>Default Behavior</strong></td>
+<td>Runs after <code>initialDelaySeconds</code>; indefinite if succeeding.</td>
+<td>Similar, but must succeed for traffic routing.</td>
+</tr>
+<tr>
+<td><strong>Use in Services</strong></td>
+<td>Indirect (via pod health).</td>
+<td>Direct: Failing pods are evicted from endpoints.</td>
+</tr>
+<tr>
+<td><strong>.NET Example</strong></td>
+<td>Detect deadlock in long-running Worker Service; restart on failure.</td>
+<td>Ensure API is warmed (e.g., caches loaded) before accepting requests.</td>
+</tr>
+<tr>
+<td><strong>Risks</strong></td>
+<td>Too aggressive → restart loops (use <code>failureThreshold</code>).</td>
+<td>Too strict → uneven load (e.g., all pods &quot;not ready&quot; during deploy).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="liveness-probes">Liveness Probes</h4>
+<p>Liveness probes prevent &quot;zombie&quot; containers—apps that start but become unresponsive (e.g., infinite loops, memory leaks). K8s restarts the container if it fails, evicting the old one and creating a new (with potential downtime).</p>
+<ul>
+<li><strong>Configuration Example</strong> (YAML for .NET API):
+<pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dotnet-api
+spec:
+  template:
+    spec:
+      containers:
+      - name: api
+        image: mcr.microsoft.com/dotnet/aspnet:8.0
+        livenessProbe:
+          httpGet:                  # HTTP endpoint for health
+            path: /health/live      # .NET endpoint returning 200 OK
+            port: 8080
+          initialDelaySeconds: 30   # Wait 30s for startup
+          periodSeconds: 10         # Check every 10s
+          timeoutSeconds: 5         # Timeout after 5s
+          failureThreshold: 3       # Restart after 3 failures
+</code></pre>
+In .NET, implement via middleware: <code>app.MapGet(&quot;/health/live&quot;, () =&gt; &quot;OK&quot;);</code> or use libraries like AspNetCore.HealthChecks.</li>
+</ul>
+<h4 id="readiness-probes">Readiness Probes</h4>
+<p>Readiness probes ensure traffic only hits &quot;prepared&quot; pods, avoiding errors during init (e.g., DB connection pooling). Failing pods are temporarily removed from Services, allowing others to handle load.</p>
+<ul>
+<li><strong>Configuration Example</strong> (YAML, often same as Liveness but stricter):
+<pre><code class="language-yaml"># In the same Deployment spec as above
+readinessProbe:
+  httpGet:
+    path: /health/ready         # Different endpoint, e.g., checks DB connectivity
+    port: 8080
+  initialDelaySeconds: 10      # Shorter delay
+  periodSeconds: 5             # More frequent
+  failureThreshold: 3
+  successThreshold: 1          # Ready after 1 success
+</code></pre>
+In .NET, extend health checks: Query EF Core context in <code>/health/ready</code> to confirm DB readiness.</li>
+</ul>
+<h4 id="use-cases">Use Cases</h4>
+<p>Probes are vital for production resilience, especially in .NET microservices on AKS.</p>
+<ul>
+<li><p><strong>Liveness Probe Use Cases</strong>:</p>
+<ul>
+<li><strong>Deadlock Detection</strong>: A .NET background service (e.g., Hangfire jobs) hangs on a lock—probe fails, K8s restarts without manual intervention.</li>
+<li><strong>Memory Leaks</strong>: Long-running .NET console apps in Jobs; probe checks response time, restarting before OOM kills.</li>
+<li><strong>External Dependency Failures</strong>: If a .NET API's Redis connection drops, a custom exec probe (<code>dotnet --info</code>) triggers restart.</li>
+</ul>
+</li>
+<li><p><strong>Readiness Probe Use Cases</strong>:</p>
+<ul>
+<li><strong>Warmup Phases</strong>: During .NET app startup (e.g., compiling Razor views or seeding caches), probes fail until complete—prevents 5xx errors on first requests.</li>
+<li><strong>Rolling Updates</strong>: In Deployments, ensure new pods are traffic-ready before shifting load, minimizing downtime for .NET API updates.</li>
+<li><strong>Graceful Degradation</strong>: If a pod's external service (e.g., Azure Service Bus) is down, exclude it temporarily without restarting the whole app.</li>
+</ul>
+</li>
+</ul>
+<h4 id="best-practices">Best Practices</h4>
+<ul>
+<li><strong>Tailor to App</strong>: Use HTTP for web apps (.NET loves this); exec for non-HTTP (e.g., <code>ps aux | grep process</code>).</li>
+<li><strong>Avoid Probe Loops</strong>: Set <code>initialDelaySeconds</code> &gt; startup time; monitor with <code>kubectl describe pod</code> for events like &quot;Liveness probe failed.&quot;</li>
+<li><strong>Combine with Startup Probe</strong>: For slow .NET inits (e.g., EF migrations), add <code>startupProbe</code> to disable L/R during boot.</li>
+<li><strong>Security</strong>: HTTP probes can expose internals—use RBAC or internal paths.</li>
+<li><strong>Interview Tip</strong>: &quot;Liveness heals, Readiness gates—use both for zero-downtime .NET deploys.&quot;</li>
+</ul>
+<p>Probes make K8s &quot;smart&quot; about your apps. Next: Persistent Volumes for stateful .NET data, or RBAC? What's up?</p>
+
+    </div>
+</body>
+</html>"

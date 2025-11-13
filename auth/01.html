@@ -1,0 +1,79 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="difference-between-authentication-and-authorization">Difference Between Authentication and Authorization</h3>
+<p>In security and access control systems (e.g., in web apps, APIs, or cloud services), <strong>authentication</strong> and <strong>authorization</strong> are two distinct but complementary processes. Authentication focuses on <em>identity verification</em>, while authorization deals with <em>permission granting</em>. They often work together: Authenticate first, then authorize based on the verified identity.</p>
+<h4 id="key-differences">Key Differences</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Authentication</th>
+<th>Authorization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Definition</strong></td>
+<td>Verifies the identity of a user or system (e.g., &quot;Are you who you claim to be?&quot;).</td>
+<td>Determines what actions or resources the authenticated user can access (e.g., &quot;What are you allowed to do?&quot;).</td>
+</tr>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Prevents unauthorized access by confirming credentials.</td>
+<td>Enforces policies to control access to specific features, data, or operations.</td>
+</tr>
+<tr>
+<td><strong>When It Happens</strong></td>
+<td>Typically first, during login or session start.</td>
+<td>After authentication, ongoing for each request or action.</td>
+</tr>
+<tr>
+<td><strong>Examples</strong></td>
+<td>- Username/password login.<br>- Multi-factor authentication (MFA).<br>- JWT token validation.<br>- Biometrics (fingerprint).</td>
+<td>- Role-based access (e.g., admin can delete users, user can only view).<br>- OAuth scopes (e.g., read vs. write permissions).<br>- File system ACLs (e.g., read-only access).</td>
+</tr>
+<tr>
+<td><strong>Failure Outcome</strong></td>
+<td>Access denied; user is rejected (e.g., &quot;Invalid credentials&quot;).</td>
+<td>Access partially or fully restricted (e.g., &quot;You can view but not edit&quot;).</td>
+</tr>
+<tr>
+<td><strong>Mechanisms</strong></td>
+<td>Passwords, tokens, certificates, biometrics.</td>
+<td>RBAC (Role-Based), ABAC (Attribute-Based), ACLs, policies.</td>
+</tr>
+<tr>
+<td><strong>Analogy</strong></td>
+<td>Showing ID at a club entrance to prove you're over 21.</td>
+<td>Once inside, checking if your ticket allows VIP lounge access.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="how-they-interact">How They Interact</h4>
+<ul>
+<li>In a .NET web app (e.g., ASP.NET Core): Authentication might use Identity for login, generating a claims principal. Authorization then uses <code>[Authorize(Roles = &quot;Admin&quot;)]</code> attributes to gatekeep endpoints.</li>
+<li>Common Pitfall: Skipping authorization after authentication can lead to breaches (e.g., authenticated but over-privileged users).</li>
+</ul>
+<p>In summary, authentication answers <strong>&quot;Who are you?&quot;</strong>, while authorization answers <strong>&quot;What can you do?&quot;</strong>. Both are essential for robust security—implement them layered for defense-in-depth.</p>
+
+    </div>
+</body>
+</html>"

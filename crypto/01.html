@@ -1,0 +1,111 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-a-hash-function-in-cryptography">What is a Hash Function in Cryptography?</h3>
+<p>A <strong>cryptographic hash function</strong> is a mathematical algorithm that takes an arbitrary-length input (often called a &quot;message&quot; or &quot;data&quot;) and produces a fixed-length output, known as a <strong>hash value</strong>, <strong>hash digest</strong>, or simply <strong>hash</strong>. This output is typically a string of hexadecimal characters (e.g., SHA-256 produces 256 bits or 64 hex characters). The function is designed to be <strong>one-way</strong>: it's computationally easy to compute the hash from the input, but extremely difficult (or infeasible) to reverse-engineer the original input from the hash.</p>
+<p>In essence, it's like a digital fingerprint: unique to the input but irreversible. Common examples include SHA-256 (Secure Hash Algorithm 256-bit), MD5 (older, now insecure for crypto), and BLAKE3 (modern, fast alternative).</p>
+<h4 id="key-properties-of-cryptographic-hash-functions">Key Properties of Cryptographic Hash Functions</h4>
+<p>Cryptographic hashes must satisfy specific security properties to be reliable. These distinguish them from non-cryptographic hashes (e.g., simple checksums). Here's a summary:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+<th>Why It Matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Deterministic</strong></td>
+<td>The same input always produces the same output.</td>
+<td>Ensures consistency for verification.</td>
+</tr>
+<tr>
+<td><strong>Fixed Output Size</strong></td>
+<td>Regardless of input length, the hash is always the same size (e.g., 256 bits).</td>
+<td>Enables uniform storage and comparison.</td>
+</tr>
+<tr>
+<td><strong>Avalanche Effect</strong></td>
+<td>A tiny change in input (e.g., one bit) causes a drastic change in output (at least 50% bits differ).</td>
+<td>Makes patterns undetectable.</td>
+</tr>
+<tr>
+<td><strong>Preimage Resistance</strong></td>
+<td>Given a hash, it's hard to find any input that produces it.</td>
+<td>Prevents &quot;cracking&quot; to guess originals.</td>
+</tr>
+<tr>
+<td><strong>Second Preimage Resistance</strong></td>
+<td>Given an input and its hash, hard to find a different input with the same hash.</td>
+<td>Protects against targeted tampering.</td>
+</tr>
+<tr>
+<td><strong>Collision Resistance</strong></td>
+<td>Hard to find two different inputs with the same hash.</td>
+<td>Ensures uniqueness for security proofs.</td>
+</tr>
+</tbody>
+</table>
+<p>These properties make hashes tamper-evident: if data changes, the hash changes predictably.</p>
+<h4 id="typical-use-cases">Typical Use Cases</h4>
+<p>Cryptographic hash functions are foundational in security protocols, enabling integrity, authenticity, and non-repudiation without exposing sensitive data. Here are common applications:</p>
+<ol>
+<li><p><strong>Password Storage and Authentication</strong>:</p>
+<ul>
+<li>Hashes (often salted and iterated, e.g., via bcrypt or Argon2) store user passwords securely. During login, the input password is hashed and compared to the stored hash—never storing plaintext.</li>
+<li><strong>Why?</strong> Even if a database is breached, attackers can't easily reverse hashes to get passwords.</li>
+<li>Example: Web apps like those using ASP.NET Identity.</li>
+</ul>
+</li>
+<li><p><strong>Data Integrity Verification</strong>:</p>
+<ul>
+<li>Computes checksums for files, downloads, or messages to detect alterations (e.g., during software updates).</li>
+<li><strong>Why?</strong> A mismatch in hashes flags corruption or tampering.</li>
+<li>Example: Git uses SHA-1 (migrating to SHA-256) for commit integrity.</li>
+</ul>
+</li>
+<li><p><strong>Digital Signatures and Certificates</strong>:</p>
+<ul>
+<li>Hashes the message, then signs the hash with a private key (e.g., in RSA or ECDSA). Verifiers check the signature against the re-computed hash.</li>
+<li><strong>Why?</strong> Signing a fixed-size hash is faster and more efficient than signing the full message.</li>
+<li>Example: SSL/TLS certificates in HTTPS, where hashes ensure site authenticity.</li>
+</ul>
+</li>
+<li><p><strong>Blockchain and Cryptocurrencies</strong>:</p>
+<ul>
+<li>Generates transaction IDs, Merkle trees (for efficient block verification), and proof-of-work (e.g., mining in Bitcoin requires hashing nonces until a target is met).</li>
+<li><strong>Why?</strong> Collision resistance secures the ledger against double-spends.</li>
+<li>Example: Ethereum uses Keccak-256 for smart contract addresses.</li>
+</ul>
+</li>
+<li><p><strong>Message Authentication Codes (MACs) and HMAC</strong>:</p>
+<ul>
+<li>Combines hashing with a secret key (e.g., HMAC-SHA256) to verify both integrity and authenticity of messages.</li>
+<li><strong>Why?</strong> Prevents forgery; used in APIs and secure communications.</li>
+<li>Example: JWT tokens in .NET Core for API authentication.</li>
+</ul>
+</li>
+</ol>
+<p>In summary, hash functions are the &quot;glue&quot; of modern cryptography—ubiquitous yet invisible, powering everything from secure logins to decentralized finance. For implementation, always choose approved algorithms like those from NIST (e.g., SHA-3 family) and avoid deprecated ones like MD5 for new systems.</p>
+
+    </div>
+</body>
+</html>"

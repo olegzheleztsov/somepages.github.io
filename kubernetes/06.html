@@ -1,0 +1,120 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="kubernetes-ingress-overview">Kubernetes Ingress: Overview</h3>
+<p>In Kubernetes (K8s), an <strong>Ingress</strong> is a stable API object (under <code>networking.k8s.io/v1</code> since Kubernetes v1.19) that manages external access to Services, primarily for HTTP and HTTPS traffic. Unlike Services (which provide internal load balancing), Ingress acts as a smart &quot;traffic cop&quot; at the cluster edge, routing incoming requests based on rules like hostnames, paths, or headers. It enables features like load balancing, SSL/TLS termination, and name-based virtual hosting—all without exposing arbitrary ports. However, Ingress requires an <strong>Ingress Controller</strong> (a runtime component) to function; without one, it's just declarative config.</p>
+<p>Ingress is ideal for web-facing apps, reducing the need for multiple LoadBalancer Services (and their costs). It's limited to HTTP/HTTPS—use Services for TCP/UDP. As of Kubernetes v1.31 (and no major changes by November 2025), it emphasizes <code>IngressClass</code> for controller selection and stricter path validation.</p>
+<h4 id="key-components-and-features">Key Components and Features</h4>
+<ul>
+<li><strong>Ingress Resource</strong>: The YAML-defined object specifying routing rules (<code>spec.rules</code>), TLS configs (<code>spec.tls</code>), and backend Services. Uses annotations for controller-specific tweaks (e.g., rate limiting).</li>
+<li><strong>Ingress Controller</strong>: A pod-based implementation (e.g., NGINX or Traefik) that watches Ingress resources and programs the underlying infrastructure (like a cloud LB). Select via <code>spec.ingressClassName</code>.</li>
+<li><strong>Rules</strong>: Host/path matching with <code>pathType</code> (Prefix for <code>/api/*</code>, Exact for <code>/api/v1</code>, or ImplementationSpecific). Supports rewrites, wildcards (e.g., <code>*.example.com</code>), and multiple backends.</li>
+<li><strong>IngressClass</strong>: A cluster resource to parameterize controllers (e.g., for auth or metrics). Stable since v1.18; defaults can be set for auto-selection.</li>
+<li><strong>TLS</strong>: References Secrets for certs; supports SNI for multi-host setups.</li>
+</ul>
+<h4 id="types-of-ingress-controllers">Types of Ingress Controllers</h4>
+<p>Controllers vary by features and ecosystem fit. Here's a quick comparison:</p>
+<table>
+<thead>
+<tr>
+<th>Controller</th>
+<th>Description</th>
+<th>Strengths</th>
+<th>.NET Tie-In</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>NGINX</strong> (ingress-nginx)</td>
+<td>Popular reverse proxy; annotation-heavy.</td>
+<td>High performance, Lua scripting, extensive docs.</td>
+<td>Great for ASP.NET Core APIs—supports auth (OAuth/JWT) and path rewrites for .NET routing.</td>
+</tr>
+<tr>
+<td><strong>Traefik</strong></td>
+<td>Dynamic, auto-discovers services via labels.</td>
+<td>Built-in middleware (e.g., rate limiting), easy Helm install.</td>
+<td>Suits .NET microservices with gRPC; auto-TLS via Let's Encrypt.</td>
+</tr>
+<tr>
+<td><strong>HAProxy</strong></td>
+<td>Enterprise-focused, config-based.</td>
+<td>Advanced TCP/HTTP balancing, WAF integration.</td>
+<td>For high-traffic .NET apps needing sticky sessions.</td>
+</tr>
+<tr>
+<td><strong>Cloud-Specific</strong> (e.g., AWS ALB, Azure Application Gateway)</td>
+<td>Provider-managed.</td>
+<td>Seamless integration, no extra pods.</td>
+<td>Deploy .NET to AKS with Azure Gateway for auto-scaling.</td>
+</tr>
+</tbody>
+</table>
+<p>Choose based on your stack—NGINX is a safe default for most.</p>
+<h4 id="use-cases">Use Cases</h4>
+<p>Ingress excels in production web scenarios, especially for .NET apps where clean URLs and security matter. Common ones include:</p>
+<ul>
+<li><strong>Exposing Web Apps Externally</strong>: Route public traffic to a single .NET Service (e.g., Blazor frontend on port 80) via a shared domain, avoiding per-Service LoadBalancers.</li>
+<li><strong>Path-Based Fanout Routing</strong>: Direct <code>/api/users</code> to a .NET backend Service and <code>/admin</code> to another—perfect for API gateways in microservices architectures.</li>
+<li><strong>Name-Based Virtual Hosting</strong>: Host multiple .NET apps (e.g., <code>api.example.com</code> → User Service, <code>dashboard.example.com</code> → Admin Service) on one IP, consolidating costs.</li>
+<li><strong>TLS Termination and Security</strong>: Offload HTTPS decryption at the edge; integrate with cert managers for auto-renewal. Use for .NET apps with sensitive data (e.g., EF Core over HTTPS).</li>
+<li><strong>Advanced Routing</strong>: Header-based (e.g., A/B testing .NET versions) or canary releases—route 10% traffic to a new Deployment via weights (controller-dependent).</li>
+</ul>
+<p>In .NET Tech Lead interviews, highlight cost savings: One Ingress + LoadBalancer replaces many, ideal for scaling Azure-hosted .NET solutions.</p>
+<h4 id="example-yaml-for-a.net-api">Example YAML for a .NET API</h4>
+<p>Here's a basic Ingress for an ASP.NET Core API Service:</p>
+<pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dotnet-api-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2  # Rewrite for .NET paths
+spec:
+  ingressClassName: nginx  # References NGINX controller
+  rules:
+  - host: api.example.com
+    http:
+      paths:
+      - path: /app(/|$)(.*)  # Captures /app/users → /users
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: dotnet-api-svc
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - api.example.com
+    secretName: tls-secret  # K8s Secret with cert/key
+</code></pre>
+<p>Apply with <code>kubectl apply -f ingress.yaml</code>; the controller provisions routing.</p>
+<h4 id="best-practices">Best Practices</h4>
+<ul>
+<li>Always specify <code>pathType</code> to pass validation.</li>
+<li>Use IngressClass for multi-controller clusters.</li>
+<li>Secure with NetworkPolicies and cert managers (e.g., cert-manager for Let's Encrypt).</li>
+<li>Monitor via controller logs; test with <code>curl -H &quot;Host: api.example.com&quot; &lt;ingress-ip&gt;</code>.</li>
+<li>Pitfall: For non-HTTP, stick to Services—Ingress isn't a replacement.</li>
+</ul>
+<p>This wraps up external access—Ingress makes your .NET K8s deploys web-ready. Next: ConfigMaps/Secrets, or Persistent Volumes for stateful .NET apps? Your call!</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,157 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="how-asymmetric-encryption-works">How Asymmetric Encryption Works</h3>
+<p><strong>Asymmetric encryption</strong>, also known as public-key encryption, is a cryptographic method that uses a pair of mathematically linked keys: a <strong>public key</strong> (freely shareable for encryption) and a <strong>private key</strong> (kept secret for decryption). Unlike symmetric encryption, the keys are <em>different</em>—you can't encrypt with the private key or decrypt with the public one. This solves the key distribution problem: Anyone can encrypt a message using the recipient's public key, but only the recipient (with the private key) can decrypt it.</p>
+<p>It's based on &quot;trapdoor&quot; math problems that are easy in one direction but hard to reverse (e.g., multiplying large primes is easy; factoring the product is hard). Invented in 1976 by Diffie and Hellman, it's the backbone of secure internet protocols like HTTPS.</p>
+<h4 id="key-principles">Key Principles</h4>
+<ul>
+<li><strong>Key Pair Generation</strong>: Create a public-private pair where the public key derives from the private (but not vice versa).</li>
+<li><strong>One-Way Functions</strong>: Relies on problems like integer factorization (RSA) or discrete logarithms (DH/ECC).</li>
+<li><strong>Non-Repudiation Potential</strong>: Often paired with digital signatures (sign with private, verify with public) for proof of origin.</li>
+<li><strong>Not for Bulk Data</strong>: Slower than symmetric, so hybrid use is common (asymmetric for key exchange, symmetric for payload).</li>
+</ul>
+<h4 id="step-by-step-how-it-works">Step-by-Step: How It Works</h4>
+<ol>
+<li><p><strong>Key Generation</strong>:</p>
+<ul>
+<li>The recipient generates a key pair using an algorithm (e.g., RSA).</li>
+<li>Public key is shared openly (e.g., in a certificate).</li>
+<li>Private key is stored securely.</li>
+</ul>
+</li>
+<li><p><strong>Encryption</strong>:</p>
+<ul>
+<li>Sender gets the recipient's public key.</li>
+<li>Input: Plaintext message + public key.</li>
+<li>Algorithm applies modular exponentiation or curve math to scramble the data.</li>
+<li>Output: Ciphertext (unreadable without private key).</li>
+</ul>
+</li>
+<li><p><strong>Transmission</strong>:</p>
+<ul>
+<li>Send ciphertext over an insecure channel (e.g., email, web).</li>
+</ul>
+</li>
+<li><p><strong>Decryption</strong>:</p>
+<ul>
+<li>Recipient uses private key.</li>
+<li>Input: Ciphertext + private key.</li>
+<li>Algorithm reverses the math (e.g., via the trapdoor function).</li>
+<li>Output: Original plaintext.</li>
+</ul>
+</li>
+</ol>
+<p>If intercepted, the ciphertext is useless without the private key.</p>
+<h4 id="common-algorithms">Common Algorithms</h4>
+<p>Here's a comparison of popular asymmetric algorithms:</p>
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>Key Size (Recommended)</th>
+<th>Basis</th>
+<th>Strengths</th>
+<th>Weaknesses/Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RSA (Rivest-Shamir-Adleman)</strong></td>
+<td>2048-4096 bits</td>
+<td>Prime factorization</td>
+<td>Widely supported; good for signatures. Used in PGP, SSH.</td>
+<td>Slower for encryption; quantum-vulnerable (use post-quantum alternatives).</td>
+</tr>
+<tr>
+<td><strong>ECC (Elliptic Curve Cryptography)</strong></td>
+<td>256-521 bits</td>
+<td>Elliptic curve discrete logs</td>
+<td>Smaller keys, faster ops than RSA.</td>
+<td>Complex math; emerging standards.</td>
+</tr>
+<tr>
+<td><strong>Diffie-Hellman (DH)</strong></td>
+<td>2048+ bits</td>
+<td>Discrete logarithms</td>
+<td>Key exchange (not direct encryption).</td>
+<td>No built-in auth; vulnerable to MITM without signatures.</td>
+</tr>
+<tr>
+<td><strong>ECDH (Elliptic Curve DH)</strong></td>
+<td>256 bits</td>
+<td>ECC + DH</td>
+<td>Efficient key agreement for TLS.</td>
+<td>Requires hybrid for full encryption.</td>
+</tr>
+</tbody>
+</table>
+<p>RSA is a classic for direct encryption, while DH/ECDH shines in key exchange.</p>
+<h4 id="pros-and-cons">Pros and Cons</h4>
+<ul>
+<li><strong>Pros</strong>:
+<ul>
+<li>Secure key distribution—no need to share secrets in advance.</li>
+<li>Enables digital signatures for authenticity.</li>
+<li>Scalable for many recipients (each gets their own public key).</li>
+</ul>
+</li>
+<li><strong>Cons</strong>:
+<ul>
+<li>Computationally intensive (slow for large data; use padding like OAEP).</li>
+<li>Larger keys/filesizes.</li>
+<li>Key management: Revocation, certification (e.g., via CAs).</li>
+</ul>
+</li>
+</ul>
+<h4 id="use-cases">Use Cases</h4>
+<ul>
+<li><strong>Secure Key Exchange</strong>: TLS handshakes (public key encrypts a symmetric session key).</li>
+<li><strong>Digital Signatures</strong>: Signing software updates or emails (private key signs hash; public verifies).</li>
+<li><strong>Secure Email/PGP</strong>: Encrypt messages to public keys; sign for trust.</li>
+<li><strong>Blockchain Wallets</strong>: ECC for signing transactions (e.g., Bitcoin uses secp256k1).</li>
+<li><strong>VPN/SSH</strong>: Authenticate and encrypt connections.</li>
+</ul>
+<h4 id="simple-text-example">Simple Text Example</h4>
+<p>Plaintext: &quot;HELLO&quot;.</p>
+<ul>
+<li>Recipient's Public Key: Derived from primes p=61, q=53 → modulus n=3233 (simplified RSA).</li>
+<li>Encryption (sender): Raise message (as number) to exponent e=17 mod n → Ciphertext: 2790.</li>
+<li>Transmission: Send 2790.</li>
+<li>Decryption (recipient): Raise to private exponent d=2753 mod n → 72 (ASCII for &quot;H&quot;), repeat for each letter.</li>
+</ul>
+<p>In code (Python pseudocode with <code>cryptography</code>):</p>
+<pre><code class="language-python">from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes
+
+private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+public_key = private_key.public_key()
+
+# Encrypt
+ciphertext = public_key.encrypt(b&quot;HELLO&quot;, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
+
+# Decrypt
+plaintext = private_key.decrypt(ciphertext, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
+</code></pre>
+<p>Asymmetric encryption's power is in its asymmetry—public openness with private secrecy. It's often hybridized with symmetric for real-world efficiency!</p>
+
+    </div>
+</body>
+</html>"

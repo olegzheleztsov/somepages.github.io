@@ -1,0 +1,158 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="kubernetes-statefulset-overview">Kubernetes StatefulSet: Overview</h3>
+<p>In Kubernetes (K8s), a <strong>StatefulSet</strong> (under <code>apps/v1</code> API) is a workload controller designed for stateful applications that require stable, ordered, and unique pod identities, persistent storage, and sequential scaling. Unlike Deployments (for stateless apps), StatefulSets ensure each pod has a predictable name (e.g., <code>web-0</code>, <code>web-1</code>), stable network endpoints via DNS, and dedicated storage that survives restarts. This makes them ideal for distributed systems where order matters, such as databases or message queues integrated with .NET apps.</p>
+<p>StatefulSets use a pod template like Deployments but add <code>volumeClaimTemplates</code> for per-pod PersistentVolumeClaims (PVCs) and tie into a headless Service for discovery. They're declarative: Define replicas and specs, and K8s handles ordered creation, scaling, and deletion. As of Kubernetes v1.31 (November 2025), they support advanced features like <code>podManagementPolicy: Parallel</code> for faster scaling and better integration with CSI drivers for storage.</p>
+<h4 id="key-features">Key Features</h4>
+<ul>
+<li><strong>Stable Pod Identities</strong>: Pods are named <code>{statefulset-name}-{ordinal}</code> (e.g., <code>mysql-0</code>). Ordinals start at 0 and are unique.</li>
+<li><strong>Ordered Operations</strong>: Scaling/rolling updates happen sequentially (e.g., create <code>web-0</code> before <code>web-1</code>; delete in reverse).</li>
+<li><strong>Persistent Storage</strong>: Automatic PVC creation per pod via templates—data persists across restarts.</li>
+<li><strong>Stable Networking</strong>: Paired with a headless Service (<code>clusterIP: None</code>) for DNS like <code>{pod-name}.{service-name}.{ns}.svc.cluster.local</code>.</li>
+<li><strong>Update Strategies</strong>: <code>RollingUpdate</code> (default, ordered) or <code>OnDelete</code> (manual control).</li>
+<li><strong>Scaling</strong>: <code>spec.replicas</code> for desired count; supports HPA on custom metrics.</li>
+</ul>
+<h4 id="comparison-statefulset-vs.deployment-vs.replicaset">Comparison: StatefulSet vs. Deployment vs. ReplicaSet</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>StatefulSet</th>
+<th>Deployment</th>
+<th>ReplicaSet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pod Naming</strong></td>
+<td>Ordered, stable (e.g., <code>app-0</code>)</td>
+<td>Random, ephemeral</td>
+<td>Random, ephemeral</td>
+</tr>
+<tr>
+<td><strong>Scaling Order</strong></td>
+<td>Sequential (create/delete in order)</td>
+<td>Parallel (any order)</td>
+<td>Parallel (any order)</td>
+</tr>
+<tr>
+<td><strong>Storage</strong></td>
+<td>Auto-PVC per pod</td>
+<td>Manual PVC attachment</td>
+<td>No built-in persistence</td>
+</tr>
+<tr>
+<td><strong>Networking</strong></td>
+<td>Headless Service for DNS</td>
+<td>Standard Service for load balancing</td>
+<td>Relies on Deployment</td>
+</tr>
+<tr>
+<td><strong>Use When</strong></td>
+<td>Stateful apps (DBs, queues)</td>
+<td>Stateless apps (APIs)</td>
+<td>Basic replication (rarely direct)</td>
+</tr>
+<tr>
+<td><strong>Updates</strong></td>
+<td>Ordered rolling or on-delete</td>
+<td>Rolling with history/rollbacks</td>
+<td>Full replacement (downtime)</td>
+</tr>
+</tbody>
+</table>
+<p>StatefulSets are for &quot;who&quot; (identity) and &quot;where&quot; (storage); Deployments are for &quot;how many&quot; (replicas).</p>
+<h4 id="example-yaml">Example YAML</h4>
+<p>Deploy a 3-replica MySQL StatefulSet (adaptable for .NET with EF Core):</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-svc
+spec:
+  clusterIP: None  # Headless
+  ports:
+  - port: 3306
+  selector:
+    app: mysql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  serviceName: mysql-svc  # Ties to headless Service
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:  # Per-pod PVC
+  - metadata:
+      name: mysql-storage
+    spec:
+      accessModes: [&quot;ReadWriteOnce&quot;]
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: standard
+</code></pre>
+<p>Apply: <code>kubectl apply -f mysql-statefulset.yaml</code>. Pods: <code>mysql-0</code>, <code>mysql-1</code>, <code>mysql-2</code> (created in order).</p>
+<h4 id="use-cases">Use Cases</h4>
+<p>StatefulSets are essential for apps with identity or data persistence, especially in .NET ecosystems.</p>
+<ul>
+<li><strong>Databases</strong>: Run clustered MySQL/PostgreSQL/SQL Server for .NET apps. Each pod gets a stable PVC for data durability; DNS allows EF Core to connect to <code>mysql-0.mysql-svc</code> as the leader.</li>
+<li><strong>Distributed Caches/Queues</strong>: Deploy Redis or RabbitMQ clusters. Ordered scaling ensures master-slave promotion without data loss; .NET StackExchange.Redis uses stable hostnames for connection pooling.</li>
+<li><strong>Monitoring Systems</strong>: Elasticsearch or Prometheus setups where pod order matters for shard allocation. Scale .NET-integrated logging (e.g., Serilog to ES) without reconfiguration.</li>
+<li><strong>Pet Applications</strong>: Legacy stateful .NET services (e.g., a custom queue processor) needing sticky sessions or per-instance storage during migrations to K8s.</li>
+</ul>
+<h4 id="best-practices">Best Practices</h4>
+<ul>
+<li><strong>Pair with Headless Services</strong>: Always for peer discovery—avoids IP changes.</li>
+<li><strong>Probes and Selectors</strong>: Add liveness/readiness probes (e.g., DB connectivity check); use labels for HPA.</li>
+<li><strong>Storage Choices</strong>: Use RWX for shared access if needed; dynamic classes for cloud (e.g., Azure Disk for .NET in AKS).</li>
+<li><strong>Scaling Caution</strong>: Sequential ops slow large clusters—use Parallel policy for non-dependent apps.</li>
+<li><strong>Security</strong>: Secrets for creds; NetworkPolicies to restrict inter-pod traffic.</li>
+<li><strong>Pitfalls</strong>: Don't use for stateless apps (overkill); test deletions to ensure PVC retention.</li>
+<li><strong>Interview Tip</strong>: &quot;StatefulSets for apps that 'remember'—stable names/storage prevent chaos in .NET DB clusters.&quot;</li>
+</ul>
+<p>This builds resilient stateful workloads. Next: DaemonSets, or RBAC? Let me know!</p>
+
+    </div>
+</body>
+</html>"

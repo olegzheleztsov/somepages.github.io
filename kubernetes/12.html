@@ -1,0 +1,190 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="deploying-a-stateful-application-in-kubernetes">Deploying a Stateful Application in Kubernetes</h3>
+<p>Stateful applications (e.g., databases like PostgreSQL or SQL Server used with .NET Entity Framework) require stable identities, persistent storage, and ordered operations—unlike stateless ones handled by Deployments. Kubernetes uses <strong>StatefulSets</strong> for this, providing uniquely named Pods (e.g., <code>db-0</code>, <code>db-1</code>), stable network IDs via headless Services, and per-Pod Persistent Volume Claims (PVCs). This ensures data survives restarts and scaling maintains order.</p>
+<p>StatefulSets differ from Deployments in key ways:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>StatefulSet</th>
+<th>Deployment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pod Identity</strong></td>
+<td>Unique, ordinal names (e.g., <code>app-0</code>)</td>
+<td>Random, interchangeable names</td>
+</tr>
+<tr>
+<td><strong>Scaling</strong></td>
+<td>Ordered (sequential creation/termination)</td>
+<td>Parallel (any order)</td>
+</tr>
+<tr>
+<td><strong>Storage</strong></td>
+<td>Automatic PVCs per Pod via templates</td>
+<td>Manual PVC attachment</td>
+</tr>
+<tr>
+<td><strong>Networking</strong></td>
+<td>Headless Service for stable DNS</td>
+<td>Standard Service for load balancing</td>
+</tr>
+<tr>
+<td><strong>Use Case</strong></td>
+<td>Databases, queues (e.g., .NET with SQL)</td>
+<td>Web APIs, stateless services</td>
+</tr>
+</tbody>
+</table>
+<h4 id="prerequisites">Prerequisites</h4>
+<ul>
+<li>A running Kubernetes cluster (e.g., Minikube for local, AKS for .NET cloud).</li>
+<li><code>kubectl</code> configured and access to a namespace (e.g., <code>default</code>).</li>
+<li>Storage class provisioner (e.g., <code>standard</code> in GKE/AKS for dynamic PVs).</li>
+<li>For .NET: A Docker image of your stateful app (e.g., <code>mcr.microsoft.com/mssql/server</code> for SQL Server).</li>
+</ul>
+<h4 id="step-by-step-deployment">Step-by-Step Deployment</h4>
+<p>We'll deploy a simple PostgreSQL instance (common for .NET apps via Npgsql/EF Core) as a StatefulSet with 2 replicas. Adapt for SQL Server by swapping the image and env vars.</p>
+<ol>
+<li><p><strong>Create Persistent Storage (PVC Template)</strong>:
+StatefulSets use <code>volumeClaimTemplates</code> to auto-provision PVCs per Pod. Define storage requests.</p>
+</li>
+<li><p><strong>Create a Headless Service</strong>:
+Enables stable DNS discovery (e.g., <code>postgres-0.postgres-svc</code> resolves to Pod IP).</p>
+</li>
+<li><p><strong>Define and Apply the StatefulSet</strong>:
+YAML combines Service and StatefulSet.</p>
+<p><strong>Example YAML</strong> (<code>postgres-statefulset.yaml</code>):</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-svc
+  labels:
+    app: postgres
+spec:
+  ports:
+  - port: 5432
+    name: postgres
+  clusterIP: None  # Headless for stable DNS
+  selector:
+    app: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: &quot;postgres-svc&quot;  # Links to headless Service
+  replicas: 2                  # Initial scale
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine  # Or mcr.microsoft.com/mssql/server for SQL
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret  # Use Secret for sensitive data
+              key: password
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: [&quot;ReadWriteOnce&quot;]
+      resources:
+        requests:
+          storage: 5Gi  # Per-Pod storage
+      storageClassName: standard  # Your cluster's class
+</code></pre>
+<ul>
+<li>Create a Secret first: <code>kubectl create secret generic postgres-secret --from-literal=password=supersecret</code>.</li>
+<li>Apply: <code>kubectl apply -f postgres-statefulset.yaml</code>.</li>
+</ul>
+</li>
+<li><p><strong>Monitor Creation</strong>:</p>
+<ul>
+<li>Watch Pods: <code>kubectl get pods --watch -l app=postgres</code> (creates <code>postgres-0</code> first, then <code>postgres-1</code> once ready).</li>
+<li>Check StatefulSet: <code>kubectl get sts postgres</code> (shows <code>READY 2/2</code>).</li>
+</ul>
+</li>
+<li><p><strong>Verify Deployment</strong>:</p>
+<ul>
+<li>DNS: Exec into a temp Pod (<code>kubectl run tmp --image=busybox --rm -it -- sh</code>) and run <code>nslookup postgres-0.postgres-svc</code> (resolves to stable IP).</li>
+<li>Storage: <code>kubectl get pvc -l app=postgres</code> (shows bound PVCs like <code>postgres-storage-postgres-0</code>).</li>
+<li>Access: Port-forward: <code>kubectl port-forward pod/postgres-0 5432:5432</code>. Connect from .NET app: <code>Server=localhost;Port=5432;Database=postgres;Password=supersecret</code>.</li>
+<li>Test persistence: Insert data via psql, delete Pod (<code>kubectl delete pod postgres-0</code>), watch recreation—data survives via remounted PVC.</li>
+</ul>
+</li>
+</ol>
+<h4 id="scaling">Scaling</h4>
+<ul>
+<li><strong>Scale Up</strong>: <code>kubectl scale sts postgres --replicas=3</code> (adds <code>postgres-2</code> after <code>postgres-1</code> is ready; new PVC auto-created).</li>
+<li><strong>Scale Down</strong>: <code>kubectl patch sts postgres -p '{&quot;spec&quot;:{&quot;replicas&quot;:1}}'</code> (terminates <code>postgres-1</code> first; PVCs persist).</li>
+<li>Use HPA for auto-scaling on custom metrics (e.g., connection count), but sparingly for stateful apps due to ordering.</li>
+</ul>
+<h4 id="updating-the-application">Updating the Application</h4>
+<ul>
+<li><strong>Rolling Update</strong> (default): Edit YAML (e.g., image to <code>postgres:16</code>), apply. Updates in reverse order (<code>postgres-1</code> first, then <code>postgres-0</code>); waits for readiness.</li>
+<li><strong>Partitioned Rollout</strong>: For canary, set <code>spec.updateStrategy.rollingUpdate.partition: 1</code>—updates only Pods &gt;=1 on delete. Decrement to 0 for full rollout.</li>
+<li>For .NET: Update image tag for a custom SQL container; use <code>OnDelete</code> strategy if manual control needed.</li>
+</ul>
+<h4 id="deletion-and-cleanup">Deletion and Cleanup</h4>
+<ul>
+<li>Delete StatefulSet: <code>kubectl delete sts postgres</code> (Pods terminate in reverse order; PVCs remain—delete manually: <code>kubectl delete pvc -l app=postgres</code>).</li>
+<li>Orphan Pods if needed: <code>--cascade=orphan</code> flag.</li>
+</ul>
+<h4 id="use-cases">Use Cases</h4>
+<ul>
+<li><strong>Databases</strong>: Deploy PostgreSQL/SQL Server for .NET apps needing persistent data (e.g., EF Core migrations).</li>
+<li><strong>Distributed Systems</strong>: Kafka or etcd clusters where Pod order matters for leader election.</li>
+<li><strong>.NET Hybrid</strong>: A stateful .NET Worker with Redis—use StatefulSet for Redis, Deployment for the Worker.</li>
+</ul>
+<h4 id="best-practices">Best Practices</h4>
+<ul>
+<li><strong>Storage</strong>: Use dynamic provisioning (StorageClasses); size PVCs based on app needs. For .NET, mount configs via ConfigMaps.</li>
+<li><strong>Networking</strong>: Always use headless Services + DNS for peer discovery—avoid IP hardcoding.</li>
+<li><strong>Ordering</strong>: Set <code>podManagementPolicy: OrderedReady</code> (default) for dependencies; <code>Parallel</code> for speed.</li>
+<li><strong>Security</strong>: Secrets for creds; RBAC for access; NetworkPolicies to isolate.</li>
+<li><strong>Monitoring</strong>: Probes for liveness/readiness (e.g., check DB connectivity); Prometheus for PVC metrics.</li>
+<li><strong>Pitfalls</strong>: Don't scale too fast—ordering prevents races but slows. Test persistence with chaos tools.</li>
+<li><strong>Interview Tip</strong>: &quot;StatefulSets for 'who' (identity) and 'what' (storage); Deployments for 'how many' (replicas).&quot;</li>
+</ul>
+<p>This gets your stateful .NET app running reliably. For a full .NET + SQL example, or Helm charts, ask!</p>
+
+    </div>
+</body>
+</html>"

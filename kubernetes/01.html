@@ -1,0 +1,100 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="high-level-architecture-of-a-kubernetes-cluster">High-Level Architecture of a Kubernetes Cluster</h3>
+<p>Kubernetes (K8s) is an open-source container orchestration platform designed to automate the deployment, scaling, and management of containerized applications. At a high level, a Kubernetes cluster is divided into two main parts: the <strong>Control Plane</strong> (also called the Master Node) and one or more <strong>Worker Nodes</strong>. These components work together to manage the lifecycle of applications across a distributed environment. Below, I'll break it down step by step, including key components and their interactions.</p>
+<h4 id="control-plane-master-node">1. <strong>Control Plane (Master Node)</strong></h4>
+<p>The Control Plane is the &quot;brain&quot; of the cluster, responsible for maintaining the desired state of the cluster, making global decisions, and detecting/responding to failures. It's typically highly available (HA) with multiple replicas for production setups. Key components include:</p>
+<ul>
+<li><p><strong>API Server (kube-apiserver)</strong>: The front-end for the Kubernetes control plane. It exposes the Kubernetes API, which serves as the hub for all communication. Users, admins, and other components interact with the cluster via this server (e.g., using <code>kubectl</code>).</p>
+</li>
+<li><p><strong>etcd</strong>: A distributed key-value store that acts as the cluster's database. It persistently stores all cluster data, including configuration, state, and metadata about objects like pods, services, and deployments. It's the single source of truth.</p>
+</li>
+<li><p><strong>Scheduler (kube-scheduler)</strong>: Watches for newly created pods (via the API Server) and assigns them to suitable nodes based on resource requirements, affinities, taints/tolerations, and other constraints. It doesn't start pods—it just decides <em>where</em> they go.</p>
+</li>
+<li><p><strong>Controller Manager (kube-controller-manager)</strong>: Runs controller processes that handle routine tasks to ensure the cluster's actual state matches the desired state. Examples include:</p>
+<ul>
+<li>Node Controller: Monitors node health.</li>
+<li>Replication Controller: Ensures the correct number of pod replicas.</li>
+<li>Endpoints Controller: Populates service endpoints.</li>
+</ul>
+</li>
+</ul>
+<p>The Control Plane components communicate internally (e.g., Scheduler and Controllers watch the API Server for changes) and are often deployed on dedicated, robust machines for reliability.</p>
+<h4 id="worker-nodes">2. <strong>Worker Nodes</strong></h4>
+<p>Worker Nodes are the &quot;muscle&quot; of the cluster, where actual application workloads run. Each node runs containerized apps in isolated units called <strong>Pods</strong> (the smallest deployable unit in Kubernetes, often containing one or more containers). Key components on each Worker Node:</p>
+<ul>
+<li><p><strong>Kubelet</strong>: The primary &quot;node agent&quot; that ensures containers in pods are running and healthy. It communicates with the API Server to receive pod specs and reports node status. It also manages the container lifecycle (start/stop) via the container runtime.</p>
+</li>
+<li><p><strong>Kube Proxy (kube-proxy)</strong>: Runs on each node to handle network proxying. It maintains network rules on nodes to enable communication to pods (e.g., via Services) and load-balances traffic. It supports modes like iptables or IPVS for efficiency.</p>
+</li>
+<li><p><strong>Container Runtime</strong>: The software responsible for pulling container images, unpacking them, and running containers (e.g., containerd, CRI-O, or Docker). It interfaces with Kubelet via the Container Runtime Interface (CRI).</p>
+</li>
+</ul>
+<p>Worker Nodes can be physical machines, VMs, or cloud instances. Pods on these nodes are scheduled by the Control Plane and can scale horizontally across multiple nodes.</p>
+<h4 id="networking-and-storage">3. <strong>Networking and Storage</strong></h4>
+<ul>
+<li><p><strong>Cluster Networking</strong>: Kubernetes assumes a flat network where every pod can communicate with every other pod (across nodes) using IP addresses. This is enabled by Container Network Interface (CNI) plugins like Calico, Flannel, or Cilium, which handle pod-to-pod routing, overlays, and service discovery.</p>
+</li>
+<li><p><strong>Storage</strong>: Persistent data is managed via Persistent Volumes (PVs) and Persistent Volume Claims (PVCs). Storage classes integrate with external providers (e.g., AWS EBS, GCP Persistent Disk) to dynamically provision storage for stateful apps.</p>
+</li>
+</ul>
+<h4 id="add-ons-and-extensions">4. <strong>Add-ons and Extensions</strong></h4>
+<p>These are optional but common components for enhanced functionality:</p>
+<ul>
+<li><strong>CoreDNS</strong>: Provides cluster-internal DNS resolution for services and pods.</li>
+<li><strong>Metrics Server</strong>: Collects resource usage data for Horizontal Pod Autoscaling (HPA).</li>
+<li><strong>Ingress Controller</strong>: Manages external access to services (e.g., NGINX Ingress).</li>
+<li><strong>Dashboard</strong>: A web-based UI for cluster management.</li>
+</ul>
+<h4 id="key-interactions-and-data-flow">Key Interactions and Data Flow</h4>
+<ol>
+<li>A user submits a deployment YAML via <code>kubectl</code> to the API Server.</li>
+<li>The API Server validates and stores it in etcd.</li>
+<li>The Controller Manager creates the desired replicas.</li>
+<li>The Scheduler assigns pods to nodes.</li>
+<li>Kubelets on those nodes pull images and start pods.</li>
+<li>Kube Proxy enables service discovery and load balancing.</li>
+<li>Ongoing: Controllers and Scheduler monitor/reconcile state via API Server watches.</li>
+</ol>
+<h4 id="visual-overview">Visual Overview</h4>
+<p>Imagine a diagram like this (text-based representation):</p>
+<pre><code>[Control Plane]
+  ├── API Server ←── Users/Tools (kubectl)
+  ├── etcd (Data Store)
+  ├── Scheduler
+  └── Controller Manager
+
+↓ (Schedules Pods)
+
+[Worker Node 1]          [Worker Node N]
+  ├── Kubelet             ├── Kubelet
+  ├── Kube Proxy          ├── Kube Proxy
+  ├── Container Runtime   ├── Container Runtime
+  └── Pods (Containers)   └── Pods (Containers)
+
+↔ [Cluster Network] (CNI) ↔
+↔ [Storage (PVs)] ↔
+</code></pre>
+<p>This architecture ensures scalability (add nodes as needed), fault tolerance (self-healing), and declarative management (define what you want, Kubernetes makes it happen). For deeper dives, check the official Kubernetes docs at kubernetes.io. If you have questions on specific components or setups (e.g., multi-cluster), let me know!</p>
+
+    </div>
+</body>
+</html>"

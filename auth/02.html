@@ -1,0 +1,95 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="authenticating-users-in-rest-apis">Authenticating Users in REST APIs</h3>
+<p>In REST APIs, <strong>authentication</strong> verifies a user's or client's identity before granting access to protected resources. It's typically stateless (no server-side sessions) to support scalability. The most common approach is <strong>token-based authentication</strong>, where a client sends credentials to an auth endpoint, receives a token, and includes it in subsequent requests. Below, I'll outline the typical flow and popular methods.</p>
+<h4 id="typical-flow-using-jwt-as-an-example">Typical Flow (Using JWT as an Example)</h4>
+<ol>
+<li><strong>Client Request</strong>: User provides credentials (e.g., username/password) via a POST to <code>/login</code> or <code>/auth/token</code>.</li>
+<li><strong>Server Validation</strong>: API verifies credentials against a database or identity provider (e.g., hashing passwords with bcrypt).</li>
+<li><strong>Token Issuance</strong>: If valid, server generates a signed token (e.g., JWT) with claims (user ID, roles, expiry) and returns it.</li>
+<li><strong>Subsequent Requests</strong>: Client includes the token in headers (e.g., <code>Authorization: Bearer &lt;token&gt;</code>) for protected endpoints.</li>
+<li><strong>Server Verification</strong>: API validates the token (signature, expiry) without database lookups for efficiency.</li>
+<li><strong>Logout/Expiry</strong>: Token expires or is revoked; client re-authenticates.</li>
+</ol>
+<p>This is stateless, secure, and scalable—ideal for microservices.</p>
+<h4 id="common-authentication-methods">Common Authentication Methods</h4>
+<p>Here's a comparison of typical methods, with JWT being the most prevalent for modern REST APIs (e.g., in ASP.NET Core):</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+<th>Pros</th>
+<th>Cons</th>
+<th>Use Cases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>JWT (JSON Web Tokens)</strong></td>
+<td>Self-contained, signed token with encoded claims (header.payload.signature). Use libraries like <code>System.IdentityModel.Tokens.Jwt</code> in .NET.</td>
+<td>Stateless; includes user info; easy to scale.</td>
+<td>Token size can be large; revocation requires blacklisting.</td>
+<td>Single-page apps (SPAs), mobile APIs (e.g., .NET Web API).</td>
+</tr>
+<tr>
+<td><strong>OAuth 2.0 / OpenID Connect</strong></td>
+<td>Authorization framework for delegated access; often with JWT tokens. Flows like Authorization Code for web, Client Credentials for services.</td>
+<td>Secure delegation; supports scopes/roles; integrates with Azure AD/Google.</td>
+<td>Complex setup; multiple flows.</td>
+<td>Third-party integrations (e.g., login with Google in a .NET app).</td>
+</tr>
+<tr>
+<td><strong>API Keys</strong></td>
+<td>Simple static key in headers (e.g., <code>X-API-Key: abc123</code>).</td>
+<td>Easy to implement; rate-limit friendly.</td>
+<td>No user context; must rotate often; exposed if leaked.</td>
+<td>Public APIs, server-to-server (e.g., Stripe integrations).</td>
+</tr>
+<tr>
+<td><strong>Basic Auth</strong></td>
+<td>Base64-encoded username:password in <code>Authorization: Basic &lt;encoded&gt;</code>.</td>
+<td>Simple; no tokens needed.</td>
+<td>Insecure over HTTP; sends creds every request.</td>
+<td>Internal tools; always over HTTPS.</td>
+</tr>
+<tr>
+<td><strong>Session Cookies</strong></td>
+<td>Server issues a session ID cookie after login; API checks server-side store.</td>
+<td>Familiar for web; CSRF protection.</td>
+<td>Stateful (needs sessions); not ideal for APIs.</td>
+<td>Traditional web apps, not pure REST.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="best-practices">Best Practices</h4>
+<ul>
+<li><strong>Always Use HTTPS</strong>: Prevents token interception.</li>
+<li><strong>Token Expiry &amp; Refresh</strong>: Short-lived access tokens (15-60 mins) with refresh tokens.</li>
+<li><strong>Secure Storage</strong>: Store tokens in HttpOnly cookies (web) or secure storage (mobile).</li>
+<li><strong>.NET Implementation Tip</strong>: Use ASP.NET Core's <code>[Authorize]</code> attribute with JWT Bearer middleware for quick setup.</li>
+<li><strong>Edge Cases</strong>: Handle token validation failures with 401 Unauthorized; use scopes for fine-grained access.</li>
+</ul>
+<p>JWT via OAuth is the &quot;typical&quot; choice for user auth in REST APIs today—flexible and widely adopted. For custom needs, layer with authorization (e.g., roles via claims).</p>
+
+    </div>
+</body>
+</html>"

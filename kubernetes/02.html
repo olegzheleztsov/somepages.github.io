@@ -1,0 +1,115 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="what-is-kubectl">What is kubectl?</h3>
+<p><strong>kubectl</strong> (pronounced &quot;koo-bek-tul&quot; or &quot;kay-bull-set-ul&quot;) is the official command-line interface (CLI) tool for interacting with Kubernetes clusters. It serves as the primary way for users, developers, and administrators to communicate with the Kubernetes API server, allowing you to deploy, inspect, debug, and manage Kubernetes resources like pods, services, deployments, and more. Essentially, it's the &quot;Swiss Army knife&quot; for Kubernetes operations, enabling declarative or imperative workflows directly from your terminal.</p>
+<p>Developed and maintained by the Kubernetes project, kubectl translates human-readable commands into API calls that the cluster's control plane processes. It's lightweight, extensible (via plugins), and available for major OS platforms (Linux, macOS, Windows). As of Kubernetes v1.30+ (current as of November 2025), it continues to evolve with features like improved output formatting and integration with tools like Stern for multi-pod logging.</p>
+<h4 id="key-purposes-and-features">Key Purposes and Features</h4>
+<ul>
+<li><strong>Cluster Management</strong>: Create, update, delete, and scale resources.</li>
+<li><strong>Inspection and Debugging</strong>: View logs, describe objects, exec into containers.</li>
+<li><strong>Configuration</strong>: Apply YAML/JSON manifests declaratively.</li>
+<li><strong>Portability</strong>: Works with any Kubernetes-compatible cluster (e.g., Minikube for local dev, EKS/GKE/AKS for cloud).</li>
+<li><strong>Authentication</strong>: Handles kubeconfig files for context switching between clusters.</li>
+</ul>
+<h4 id="common-kubectl-commands">Common kubectl Commands</h4>
+<p>Here's a quick reference table of essential commands, grouped by category. These are the ones you'd likely demo in an interview:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Command Example</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Basic Operations</strong></td>
+<td><code>kubectl get pods</code></td>
+<td>List pods in the current namespace. Add <code>-n &lt;namespace&gt;</code> for specifics.</td>
+</tr>
+<tr>
+<td></td>
+<td><code>kubectl apply -f deployment.yaml</code></td>
+<td>Apply a configuration file to create/update resources.</td>
+</tr>
+<tr>
+<td></td>
+<td><code>kubectl delete pod mypod</code></td>
+<td>Delete a specific resource.</td>
+</tr>
+<tr>
+<td><strong>Inspection</strong></td>
+<td><code>kubectl describe deployment myapp</code></td>
+<td>Show detailed info about a deployment (events, status).</td>
+</tr>
+<tr>
+<td></td>
+<td><code>kubectl logs mypod</code></td>
+<td>Fetch logs from a pod's container. Use <code>-f</code> to follow in real-time.</td>
+</tr>
+<tr>
+<td></td>
+<td><code>kubectl exec -it mypod -- /bin/sh</code></td>
+<td>Exec into a running pod's shell for debugging.</td>
+</tr>
+<tr>
+<td><strong>Scaling &amp; Updates</strong></td>
+<td><code>kubectl scale deployment myapp --replicas=3</code></td>
+<td>Scale a deployment to 3 replicas.</td>
+</tr>
+<tr>
+<td></td>
+<td><code>kubectl rollout status deployment/myapp</code></td>
+<td>Check the status of a rolling update.</td>
+</tr>
+<tr>
+<td><strong>Cluster Info</strong></td>
+<td><code>kubectl cluster-info</code></td>
+<td>Display endpoint info for the master and services.</td>
+</tr>
+<tr>
+<td></td>
+<td><code>kubectl get nodes</code></td>
+<td>List all nodes in the cluster with status.</td>
+</tr>
+<tr>
+<td><strong>Advanced</strong></td>
+<td><code>kubectl port-forward svc/mysvc 8080:80</code></td>
+<td>Forward local port 8080 to service port 80.</td>
+</tr>
+<tr>
+<td></td>
+<td><code>kubectl plugin list</code></td>
+<td>List installed plugins (e.g., for Helm or Krew).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="installation-and-setup-tips">Installation and Setup Tips</h4>
+<ul>
+<li><strong>Install</strong>: Download from the official Kubernetes release page or use package managers like <code>choco</code> (Windows), <code>brew</code> (macOS), or <code>apt</code> (Linux).</li>
+<li><strong>Kubeconfig</strong>: Run <code>kubectl config view</code> to manage cluster contexts. Set default with <code>kubectl config use-context my-context</code>.</li>
+<li><strong>Best Practices</strong>: Use <code>--dry-run=client</code> to validate YAML without applying; alias common commands (e.g., <code>alias k=kubectl</code>) for speed; integrate with IDEs like VS Code via extensions.</li>
+</ul>
+<p>In a .NET Tech Lead interview, you might be asked to explain how kubectl fits into a CI/CD pipeline (e.g., using it in Azure DevOps to deploy .NET apps to AKS) or troubleshoot a failing pod. If you want examples of kubectl in action with .NET/Kubernetes scenarios, or deeper dives into commands/flags, just ask!</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,204 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="kubernetes-persistent-volumes-pv-and-persistent-volume-claims-pvc-overview">Kubernetes Persistent Volumes (PV) and Persistent Volume Claims (PVC): Overview</h3>
+<p>In Kubernetes (K8s), <strong>PersistentVolumes (PVs)</strong> and <strong>PersistentVolumeClaims (PVCs)</strong> provide a way to abstract and manage persistent storage for stateful applications, decoupling storage provisioning from pod lifecycles. This is crucial for .NET apps needing durable data (e.g., databases like SQL Server via Entity Framework or file uploads in ASP.NET Core). PVs represent actual storage resources (e.g., AWS EBS volumes), while PVCs are user requests to consume them. They follow a &quot;storage-as-a-service&quot; model: Admins create PVs, users claim them via PVCs, and pods mount the bound PVC.</p>
+<p>Both are APIs under <code>core/v1</code>, but PVs are cluster-scoped (visible everywhere), while PVCs are namespaced (isolated per namespace). Dynamic provisioning (via StorageClasses) automates PV creation when a PVC matches no existing one.</p>
+<h4 id="persistentvolume-pv">1. PersistentVolume (PV)</h4>
+<p>A <strong>PV</strong> is a cluster-wide declaration of a piece of storage, provisioned by an admin or dynamically by the cluster. It describes the storage's capacity, access modes, and reclaim policy, acting like a &quot;storage slot&quot; available for binding.</p>
+<ul>
+<li><p><strong>Key Specs</strong>:</p>
+<ul>
+<li><strong>Capacity</strong>: <code>spec.capacity.storage: 10Gi</code> (size in bytes, e.g., Gi, Ti).</li>
+<li><strong>Access Modes</strong>:
+<ul>
+<li><code>ReadWriteOnce (RWO)</code>: Mountable by one node (common for databases).</li>
+<li><code>ReadOnlyMany (ROX)</code>: Readable by many nodes.</li>
+<li><code>ReadWriteMany (RWX)</code>: Writable by many nodes (e.g., NFS for shared .NET file storage).</li>
+</ul>
+</li>
+<li><strong>Reclaim Policy</strong>: <code>Retain</code> (keep data post-PVC delete), <code>Delete</code> (auto-delete PV), or <code>Recycle</code> (scrub and reuse).</li>
+<li><strong>StorageClassName</strong>: References a class for dynamic provisioning (e.g., <code>fast-ssd</code> for high-IOPS .NET apps).</li>
+<li><strong>Status</strong>: Available, Bound (to a PVC), Released (post-unbind), Failed.</li>
+</ul>
+</li>
+<li><p><strong>Provisioning</strong>:</p>
+<ul>
+<li><strong>Static</strong>: Admin creates PV YAML and applies (e.g., for on-prem NFS).</li>
+<li><strong>Dynamic</strong>: PVC triggers PV creation via a provisioner (e.g., CSI driver for Azure Disk).</li>
+</ul>
+</li>
+</ul>
+<p>PVs exist independently of pods—think of them as pre-allocated disks waiting for claims.</p>
+<h4 id="persistentvolumeclaim-pvc">2. PersistentVolumeClaim (PVC)</h4>
+<p>A <strong>PVC</strong> is a namespaced request for storage by a user or application. It specifies needs (size, access mode) and binds to a compatible PV, providing an abstraction for pods to consume storage without knowing the underlying details.</p>
+<ul>
+<li><p><strong>Key Specs</strong>:</p>
+<ul>
+<li><strong>Requests</strong>: <code>spec.resources.requests.storage: 5Gi</code> (minimum size).</li>
+<li><strong>Access Modes</strong>: Matches PV (e.g., RWO).</li>
+<li><strong>StorageClassName</strong>: Optional; selects a class for dynamic binding.</li>
+<li><strong>Status</strong>: Pending (searching), Bound (to PV), Lost (PV failed).</li>
+</ul>
+</li>
+<li><p><strong>Lifecycle</strong>:</p>
+<ol>
+<li>User creates PVC.</li>
+<li>K8s finds/makes a matching PV and binds them.</li>
+<li>Pod references PVC in <code>spec.volumes[].persistentVolumeClaim.claimName</code>.</li>
+<li>On delete, PV status becomes Released (data retained if policy allows).</li>
+</ol>
+</li>
+</ul>
+<p>PVCs make storage portable—e.g., a .NET Deployment can request &quot;5Gi RWO&quot; without specifying &quot;use EBS.&quot;</p>
+<h4 id="key-differences">Key Differences</h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>PersistentVolume (PV)</th>
+<th>PersistentVolumeClaim (PVC)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Scope</strong></td>
+<td>Cluster-wide (global resource).</td>
+<td>Namespaced (isolated per namespace).</td>
+</tr>
+<tr>
+<td><strong>Role</strong></td>
+<td>Supply side: Represents actual storage.</td>
+<td>Demand side: User's request for storage.</td>
+</tr>
+<tr>
+<td><strong>Creation</strong></td>
+<td>By admin (static) or system (dynamic).</td>
+<td>By user/app (via YAML or controller).</td>
+</tr>
+<tr>
+<td><strong>Binding</strong></td>
+<td>Becomes &quot;Bound&quot; when claimed.</td>
+<td>Binds to a PV; pods mount the PVC.</td>
+</tr>
+<tr>
+<td><strong>Deletion Impact</strong></td>
+<td>Reclaim policy dictates (e.g., retain data).</td>
+<td>Unbinds PV; data safe if retained.</td>
+</tr>
+<tr>
+<td><strong>Direct Pod Use?</strong></td>
+<td>No—pods can't mount PVs directly.</td>
+<td>Yes—mounted as volumes in pod specs.</td>
+</tr>
+<tr>
+<td><strong>.NET Analogy</strong></td>
+<td>A provisioned Azure Disk.</td>
+<td>A VM's attachment request to that disk.</td>
+</tr>
+</tbody>
+</table>
+<p>In short: PVs are the &quot;what&quot; (storage assets), PVCs are the &quot;how&quot; (claims to use them). One PV can satisfy one PVC (exclusive binding).</p>
+<h4 id="use-cases">Use Cases</h4>
+<ul>
+<li><p><strong>PV Use Cases</strong>:</p>
+<ul>
+<li><strong>Admin Provisioning</strong>: Pre-create PVs for legacy storage (e.g., on-prem SAN for .NET file shares).</li>
+<li><strong>Dynamic for Cloud</strong>: StorageClass auto-creates PVs for ephemeral .NET test DBs.</li>
+</ul>
+</li>
+<li><p><strong>PVC Use Cases</strong>:</p>
+<ul>
+<li><strong>Stateful Apps</strong>: StatefulSet templates create PVCs per Pod (e.g., one PVC per SQL Server replica in a .NET cluster).</li>
+<li><strong>Stateless with Persistence</strong>: Deployment for a .NET API with shared RWX PVC for logs/uploads.</li>
+<li><strong>Multi-Tenancy</strong>: Namespace-scoped PVCs with quotas for isolated .NET team storage.</li>
+</ul>
+</li>
+</ul>
+<h4 id="example-yaml">Example YAML</h4>
+<p><strong>PV</strong> (static, for NFS):</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    path: /exports
+    server: nfs-server.example.com
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+</code></pre>
+<p><strong>PVC</strong> (claims it):</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: manual
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dotnet-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dotnet
+  template:
+    metadata:
+      labels:
+        app: dotnet
+    spec:
+      containers:
+      - name: app
+        image: mcr.microsoft.com/dotnet/aspnet:8.0
+        volumeMounts:
+        - mountPath: /app/data
+          name: storage
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: nfs-pvc  # Binds to PV
+</code></pre>
+<p>Apply: <code>kubectl apply -f pv.yaml -f pvc-deployment.yaml</code>. Check: <code>kubectl get pv,pvc</code>.</p>
+<h4 id="best-practices">Best Practices</h4>
+<ul>
+<li><strong>Dynamic Over Static</strong>: Use StorageClasses for auto-provisioning—reduces admin toil.</li>
+<li><strong>Access Modes</strong>: Match app needs (RWO for single-writer .NET DBs; RWX for shared caches).</li>
+<li><strong>Snapshots/Backups</strong>: Integrate CSI drivers for volume snapshots (e.g., Azure Disk for .NET data protection).</li>
+<li><strong>Quotas</strong>: Apply ResourceQuotas on PVC storage to prevent overuse.</li>
+<li><strong>Pitfalls</strong>: Oversizing requests wastes resources; ensure reclaim=Retain for prod data.</li>
+<li><strong>Interview Tip</strong>: &quot;PVs provision storage; PVCs consume it—decouples ops from devs, like IaC for disks.&quot;</li>
+</ul>
+<p>This ensures your .NET apps have reliable storage. Next: RBAC, or Helm for packaging? Let me know!</p>
+
+    </div>
+</body>
+</html>"

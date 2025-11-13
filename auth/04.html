@@ -1,0 +1,94 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <h3 id="access-control-models-overview-and-differences">Access Control Models: Overview and Differences</h3>
+<p>Access control models define how permissions are granted to users, systems, or processes to access resources. They balance security, flexibility, and manageability. Below, I'll list four common models—<strong>RBAC (Role-Based Access Control)</strong>, <strong>ABAC (Attribute-Based Access Control)</strong>, <strong>ACL (Access Control Lists)</strong>, and <strong>ReBAC (Relationship-Based Access Control)</strong>—with brief descriptions. Then, a comparison table highlights their key differences.</p>
+<h4 id="rbac-role-based-access-control">1. <strong>RBAC (Role-Based Access Control)</strong></h4>
+<ul>
+<li><strong>Description</strong>: Permissions are assigned to <em>roles</em> (e.g., &quot;Admin&quot;, &quot;User&quot;), and users are assigned to roles. Access is granted based on the user's role. It's hierarchical (roles can inherit from others) and widely used in enterprise systems.</li>
+<li><strong>Example</strong>: A &quot;Manager&quot; role allows viewing reports; users in that role inherit the permission.</li>
+</ul>
+<h4 id="abac-attribute-based-access-control">2. <strong>ABAC (Attribute-Based Access Control)</strong></h4>
+<ul>
+<li><strong>Description</strong>: Decisions use <em>attributes</em> (e.g., user location, time, resource sensitivity) evaluated against policies. A policy engine (e.g., XACML) dynamically computes access.</li>
+<li><strong>Example</strong>: Allow access if user.department = &quot;HR&quot; AND time &gt; 9 AM AND resource.sensitivity = &quot;low&quot;.</li>
+</ul>
+<h4 id="acl-access-control-lists">3. <strong>ACL (Access Control Lists)</strong></h4>
+<ul>
+<li><strong>Description</strong>: Resources have explicit lists of users/groups and their permissions (e.g., read/write). It's resource-centric and simple for small-scale setups.</li>
+<li><strong>Example</strong>: A file's ACL lists &quot;user1: read, write&quot; and &quot;group2: read-only&quot;.</li>
+</ul>
+<h4 id="rebac-relationship-based-access-control">4. <strong>ReBAC (Relationship-Based Access Control)</strong></h4>
+<ul>
+<li><strong>Description</strong>: Access is based on <em>relationships</em> between entities (e.g., user owns resource, or user is a follower of owner). Popular in graph-based systems like Google's Zanzibar.</li>
+<li><strong>Example</strong>: Allow &quot;editor&quot; access if user is &quot;member_of&quot; the same &quot;team&quot; as the document owner.</li>
+</ul>
+<h4 id="key-differences">Key Differences</h4>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Granularity</th>
+<th>Flexibility</th>
+<th>Complexity</th>
+<th>Best For</th>
+<th>Drawbacks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RBAC</strong></td>
+<td>Role-level (coarse)</td>
+<td>Medium (static roles)</td>
+<td>Low (easy to audit)</td>
+<td>Enterprises with stable hierarchies (e.g., HR systems)</td>
+<td>Rigid; doesn't handle dynamic contexts well</td>
+</tr>
+<tr>
+<td><strong>ABAC</strong></td>
+<td>Attribute-level (fine)</td>
+<td>High (dynamic policies)</td>
+<td>High (policy engine needed)</td>
+<td>Complex, context-aware apps (e.g., cloud IAM)</td>
+<td>Performance overhead; hard to debug policies</td>
+</tr>
+<tr>
+<td><strong>ACL</strong></td>
+<td>User/resource-level (fine)</td>
+<td>Low (explicit lists)</td>
+<td>Low (simple lists)</td>
+<td>Small-scale filesystems or apps (e.g., local servers)</td>
+<td>Scalability issues; hard to manage at scale</td>
+</tr>
+<tr>
+<td><strong>ReBAC</strong></td>
+<td>Relationship-level (fine)</td>
+<td>High (graph-based)</td>
+<td>Medium-High (needs graph DB)</td>
+<td>Social/collaborative systems (e.g., Google Drive sharing)</td>
+<td>Requires modeling relationships; query complexity</td>
+</tr>
+</tbody>
+</table>
+<p>These models can be combined (e.g., RBAC + ABAC for hybrid control). Choose based on your system's scale, dynamics, and compliance needs—RBAC for simplicity, ABAC for nuance. If implementing in .NET, libraries like IdentityServer or Auth0 support these.</p>
+
+    </div>
+</body>
+</html>"
