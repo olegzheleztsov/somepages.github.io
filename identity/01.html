@@ -1,0 +1,131 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>Great question! This is a very common interview topic for .NET (especially ASP.NET Core) Tech Lead or Senior/Architect roles when discussing authentication and authorization.</p>
+<h3 id="identity-who-you-are">1. Identity (Who you are)</h3>
+<p>In .NET (ASP.NET Core), an <strong>Identity</strong> represents an authenticated user. It answers the question: &quot;Who is making this request?&quot;</p>
+<ul>
+<li>Technically: It's an object that implements <code>System.Security.Claims.ClaimsIdentity</code></li>
+<li>Most commonly: It's the <code>ClaimsIdentity</code> attached to the <code>ClaimsPrincipal</code> (which is stored in <code>HttpContext.User</code>)</li>
+<li>Contains a collection of <strong>Claims</strong> (e.g., Name, Email, Role, UserId, etc.)</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-csharp">var claims = new List&lt;Claim&gt;
+{
+    new Claim(ClaimTypes.Name, &quot;john.doe&quot;),
+    new Claim(ClaimTypes.Email, &quot;john@example.com&quot;),
+    new Claim(ClaimTypes.Role, &quot;Admin&quot;),
+    new Claim(&quot;EmployeeId&quot;, &quot;12345&quot;)
+};
+
+var identity = new ClaimsIdentity(claims, &quot;Bearer&quot;); // or &quot;Cookies&quot;, etc.
+var principal = new ClaimsPrincipal(identity);
+
+HttpContext.User = principal; // Now the user is authenticated
+</code></pre>
+<p>You check identity in code like:</p>
+<pre><code class="language-csharp">if (User.Identity.IsAuthenticated)
+{
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var roles = User.Claims.Where(c =&gt; c.Type == ClaimTypes.Role);
+}
+</code></pre>
+<h3 id="secret-proof-that-you-are-who-you-say-you-are">2. Secret (Proof that you are who you say you are)</h3>
+<p>A <strong>Secret</strong> is something that proves the identity — typically used during authentication, not stored on the user.</p>
+<p>Common types of secrets in .NET world:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Example</th>
+<th>Where stored / used</th>
+<th>Lifetime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Password</td>
+<td>User-entered password</td>
+<td>Hashed in DB (never plain text)</td>
+<td>Long-term</td>
+</tr>
+<tr>
+<td>API Key</td>
+<td>x-api-key header</td>
+<td>Server-side only</td>
+<td>Long-term</td>
+</tr>
+<tr>
+<td>Client Secret</td>
+<td>OAuth2 client_secret</td>
+<td>In app settings (backend only)</td>
+<td>Long-term</td>
+</tr>
+<tr>
+<td>JWT Signing Key</td>
+<td>HS256 symmetric key or RS256 private key</td>
+<td>appsettings.json or Azure Key Vault</td>
+<td>Rotated regularly</td>
+</tr>
+<tr>
+<td>Refresh Token</td>
+<td>Long-lived token to get new access token</td>
+<td>HttpOnly cookie or secure storage</td>
+<td>Days/weeks</td>
+</tr>
+<tr>
+<td>One-time code</td>
+<td>Magic link, 2FA code</td>
+<td>Transient (Redis, in-memory)</td>
+<td>Minutes</td>
+</tr>
+</tbody>
+</table>
+<p>Important: Secrets must <strong>never</strong> be included in the identity/claims that go to the client (especially in JWTs).</p>
+<h3 id="key-principle-very-important-for-tech-lead-interviews">Key Principle (Very important for Tech Lead interviews):</h3>
+<blockquote>
+<p><strong>Identity = Public/Safe data about the user (can be sent to client)</strong><br />
+<strong>Secret = Confidential data used to prove identity (must stay server-side or highly protected)</strong></p>
+</blockquote>
+<p>Bad practice (interview red flag):</p>
+<pre><code class="language-json">// Putting secret in JWT claims → NEVER DO THIS!
+{
+  &quot;sub&quot;: &quot;123&quot;,
+  &quot;role&quot;: &quot;Admin&quot;,
+  &quot;api_secret&quot;: &quot;super-secret-key&quot;   // Exposed to client!
+}
+</code></pre>
+<p>Good practice:</p>
+<ul>
+<li>Store secrets in <code>IConfiguration</code>, Azure Key Vault, AWS Secrets Manager, etc.</li>
+<li>Use short-lived JWTs (access tokens) + refresh tokens</li>
+<li>Rotate secrets regularly</li>
+<li>Use certificate-based signing (RS256/ECDSA) instead of symmetric keys in production</li>
+</ul>
+<h3 id="quick-interview-answers-you-can-use">Quick Interview Answers You Can Use:</h3>
+<p>Q: &quot;What is the difference between identity and secret?&quot;
+A: &quot;Identity is the set of claims that describe who the authenticated user is — it's safe to send to the client. A secret is the confidential material (like password, client secret, or signing key) used to prove or establish that identity — it must never leave the trusted environment.&quot;</p>
+<p>Q: &quot;Where should you store secrets in a .NET application?&quot;
+A: &quot;Never in source code. Use User Secrets (dev), Azure Key Vault / AWS Secrets Manager / Hashicorp Vault (prod), environment variables, or Azure App Configuration. For JWT signing in production, prefer asymmetric keys (RS256) with private key in Key Vault.&quot;</p>
+<p>Ready for the next question? Fire away! 🚀</p>
+
+    </div>
+</body>
+</html>"

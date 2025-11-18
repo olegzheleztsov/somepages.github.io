@@ -1,0 +1,193 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>Here’s the complete, production-ready way to set up a <strong>custom domain</strong> (e.g., <code>www.contoso.com</code> or <code>api.contoso.com</code>) for your .NET application hosted on Azure, using <strong>Azure DNS</strong> as your authoritative DNS provider (the cleanest and most common setup in 2025).</p>
+<h3 id="goal">Goal</h3>
+<p>Your users type → <code>www.contoso.com</code><br />
+Azure automatically routes it to your → Azure App Service / Front Door / Application Gateway / etc.</p>
+<h3 id="two-main-scenarios">Two Main Scenarios</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Where your domain is registered</th>
+<th>DNS hosted at</th>
+<th>Recommended &amp; simplest method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>Anywhere (GoDaddy, Namecheap, etc.)</td>
+<td><strong>Azure DNS</strong></td>
+<td>Delegate the domain to Azure DNS → add records</td>
+</tr>
+<tr>
+<td>B</td>
+<td>Anywhere</td>
+<td>Still GoDaddy / Cloudflare / etc.</td>
+<td>Just add CNAME / ALIAS record pointing to Azure (no delegation)</td>
+</tr>
+</tbody>
+</table>
+<p>Most enterprises and modern setups use <strong>Scenario A</strong> (Azure DNS as authoritative). Below is the full step-by-step for both.</p>
+<h3 id="scenario-a-full-azure-dns-recommended-for-full-control">Scenario A: Full Azure DNS (Recommended for full control)</h3>
+<h4 id="step-1-create-an-azure-dns-zone-if-not-exists">Step 1 – Create an Azure DNS Zone (if not exists)</h4>
+<pre><code class="language-bash">az network dns zone create -g MyResourceGroup -n contoso.com
+</code></pre>
+<p>This creates a hosted zone for <code>contoso.com</code>.</p>
+<h4 id="step-2-delegate-the-domain-from-your-registrar-to-azure-dns">Step 2 – Delegate the domain from your registrar to Azure DNS</h4>
+<p>Go to your registrar (GoDaddy, Namecheap, etc.) and replace their NS records with Azure’s 4 name servers (you get them from the portal or CLI):</p>
+<p>Portal → DNS Zone → you’ll see:</p>
+<pre><code>ns1-07.azure-dns.com
+ns2-07.azure-dns.net
+ns3-07.azure-dns.org
+ns4-07.azure-dns.info
+</code></pre>
+<p>Propagation: 1–48 hours.</p>
+<h4 id="step-3-add-the-correct-dns-records-depending-on-your-azure-service">Step 3 – Add the correct DNS records depending on your Azure service</h4>
+<table>
+<thead>
+<tr>
+<th>Your Azure Service</th>
+<th>Record Type</th>
+<th>Host / Name</th>
+<th>Value (points to)</th>
+<th>TTL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Azure App Service (most common)</td>
+<td>CNAME</td>
+<td>www</td>
+<td>yourapp.azurewebsites.net</td>
+<td>1h</td>
+</tr>
+<tr>
+<td></td>
+<td>TXT</td>
+<td>asuid.www</td>
+<td><verification-code-from-portal></td>
+<td>1h</td>
+</tr>
+<tr>
+<td></td>
+<td>A</td>
+<td>@ (apex/root)</td>
+<td>One of the 4 App Service outbound IPs <strong>OR</strong> better: use Azure Front Door / Traffic Manager</td>
+<td></td>
+</tr>
+<tr>
+<td>Azure Front Door / CDN</td>
+<td>CNAME</td>
+<td>www</td>
+<td>yourfd.azurefd.net</td>
+<td>1h</td>
+</tr>
+<tr>
+<td></td>
+<td>A</td>
+<td>@</td>
+<td>Front Door gives you a static anycast IP</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>Application Gateway</td>
+<td>A or CNAME</td>
+<td>www or @</td>
+<td>Public IP of the gateway (A) or *.azurefd.net</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>Azure Static Web Apps</td>
+<td>CNAME</td>
+<td>www</td>
+<td><your-static-web-app>.azurestaticapps.net</td>
+<td>1h</td>
+</tr>
+</tbody>
+</table>
+<h4 id="step-4-add-verify-custom-domain-in-the-azure-service-app-service-example">Step 4 – Add &amp; Verify Custom Domain in the Azure Service (App Service example)</h4>
+<p>Portal way (most common):</p>
+<ol>
+<li>Go to your App Service → Custom domains blade</li>
+<li>Click “+ Add custom domain”</li>
+<li>Type <code>www.contoso.com</code></li>
+<li>Azure will ask you to prove ownership:
+<ul>
+<li>For <strong>CNAME</strong> method: it tells you to add a TXT record <code>asuid.www</code> → value (: random string</li>
+<li>For <strong>A record</strong> apex: add TXT <code>contoso.com</code> with the code</li>
+</ul>
+</li>
+<li>Add that TXT record in your Azure DNS zone</li>
+<li>Click “Validate” → Azure checks it automatically</li>
+<li>Once validated → “Add”</li>
+</ol>
+<p>Done! SSL is automatic with Azure-managed cert (or upload your own).</p>
+<p>CLI example (App Service):</p>
+<pre><code class="language-bash">az webapp config hostname add \
+  --resource-group MyRG \
+  --webapp-name myapp \
+  --hostname www.contoso.com
+</code></pre>
+<h3 id="scenario-b-dns-still-at-godaddy-cloudflare-quick-dirty">Scenario B: DNS still at GoDaddy / Cloudflare (quick &amp; dirty)</h3>
+<p>You don’t delegate — just add these records at your current DNS provider:</p>
+<table>
+<thead>
+<tr>
+<th>Record Type</th>
+<th>Name/Host</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CNAME</td>
+<td>www</td>
+<td>myapp.azurewebsites.net</td>
+</tr>
+<tr>
+<td>TXT</td>
+<td>asuid.www</td>
+<td><verification code from Azure portal></td>
+</tr>
+<tr>
+<td>(Optional) CNAME or ALIAS/ANAME</td>
+<td>@ (apex)</td>
+<td>myapp.azurewebsites.net  (only if provider supports ALIAS/ANAME for apex)</td>
+</tr>
+</tbody>
+</table>
+<p>If your provider does <strong>not</strong> support ALIAS for apex domains → you cannot point root domain (<code>contoso.com</code>) directly to App Service. Solution: use Azure Front Door or Cloudflare Workers in front.</p>
+<h3 id="bonus-automatic-free-ssl-2025-best-practice">Bonus: Automatic Free SSL (2025 best practice)</h3>
+<p>Just toggle on:
+App Service → Custom domains → “Add binding” → TLS/SSL type: <strong>SNI SSL</strong> → Certificate: <strong>App Service Managed Certificate (Free)</strong></p>
+<p>Azure provisions a *.contoso.com wildcard or individual cert automatically (renewed forever).</p>
+<h3 id="tech-lead-summary-you-can-say-in-the-interview">Tech Lead Summary You Can Say in the Interview</h3>
+<blockquote>
+<p>“For production .NET apps I always delegate the domain to Azure DNS — full control, one place for all records, and works perfectly with Front Door and managed certificates. Then I add a CNAME + asuid TXT for subdomains, validate in the portal, and turn on the free managed cert. Takes 10 minutes once NS delegation propagates.”</p>
+</blockquote>
+<p>You’re now ready to explain this end-to-end like a pro.</p>
+<p>Next question? 🚀</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,204 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>Here's the exact answer a strong .NET/Azure Tech Lead gives when asked <strong>“How do you provide view or edit access to Azure components?”</strong> in 2025.</p>
+<h3 id="the-correct-modern-way-azure-role-based-access-control-rbac">The Correct &amp; Modern Way: Azure Role-Based Access Control (RBAC)</h3>
+<p>Azure uses <strong>Azure RBAC</strong> (Role-Based Access Control) – not old classic admins or AAD groups alone.</p>
+<p>You assign <strong>roles</strong> to users/groups/service principals at a specific <strong>scope</strong> (subscription, resource group, or individual resource).</p>
+<h3 id="most-common-built-in-roles-you-will-actually-use">Most Common Built-in Roles You Will Actually Use</h3>
+<table>
+<thead>
+<tr>
+<th>Role Name</th>
+<th>Permissions Summary</th>
+<th>Typical Person</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Owner</strong> – Avoid in prod</td>
+<td>Full access to everything + manage access</td>
+<td>Almost nobody</td>
+</tr>
+<tr>
+<td><strong>Contributor</strong></td>
+<td>Full access to resources but CANNOT manage access</td>
+<td>Developers, DevOps, senior engineers</td>
+</tr>
+<tr>
+<td><strong>Reader</strong></td>
+<td>View everything, no changes</td>
+<td>Auditors, support team, juniors, managers</td>
+</tr>
+<tr>
+<td><strong>User Access Administrator</strong></td>
+<td>Only manage access (assign roles) – no resource changes</td>
+<td>Security team</td>
+</tr>
+<tr>
+<td>Specific roles (best practice)</td>
+<td>Examples below</td>
+<td></td>
+</tr>
+<tr>
+<td>Virtual Machine Contributor</td>
+<td>Manage VMs only</td>
+<td>VM admins</td>
+</tr>
+<tr>
+<td>Web App Contributor</td>
+<td>Manage App Services / Functions</td>
+<td>App teams</td>
+</tr>
+<tr>
+<td>SQL DB Contributor</td>
+<td>Manage Azure SQL databases</td>
+<td>DBA team</td>
+</tr>
+<tr>
+<td>Key Vault Administrator</td>
+<td>Full Key Vault access</td>
+<td>Security / secrets team</td>
+</tr>
+<tr>
+<td>Key Vault Secrets User</td>
+<td>Read secrets only (perfect for apps)</td>
+<td>Applications (via Managed Identity)</td>
+</tr>
+<tr>
+<td>Storage Blob Data Reader/Contributor</td>
+<td>Blob-level access (not just storage account)</td>
+<td>Apps needing blob storage</td>
+</tr>
+<tr>
+<td>Log Analytics Reader/Contributor</td>
+<td>Application Insights / Log Analytics</td>
+<td>Monitoring team</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scopes-where-you-assign-the-role-critical">Scopes – Where You Assign the Role (Critical!)</h3>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>What It Covers</th>
+<th>Best Practice Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Subscription</strong></td>
+<td>Everything in the subscription</td>
+<td>Give Reader to auditors, Contributor to platform team</td>
+</tr>
+<tr>
+<td><strong>Resource Group</strong></td>
+<td>All resources in one RG (e.g., MyApp-Prod-RG)</td>
+<td>Most common – one RG per app/environment</td>
+</tr>
+<tr>
+<td><strong>Individual Resource</strong></td>
+<td>Only one resource (e.g., one Key Vault)</td>
+<td>When you need granular access (e.g., one team owns one Key Vault)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="step-by-step-how-to-grant-access-you-will-be-asked-this">Step-by-Step: How to Grant Access (You Will Be Asked This!)</h3>
+<p>In Azure Portal:</p>
+<ol>
+<li>Go to the scope (Subscription / Resource Group / specific resource)</li>
+<li>Access control (IAM) blade → “+ Add” → “Add role assignment”</li>
+<li>Select Role (e.g., Contributor)</li>
+<li>Assign access to: User, group, or service principal</li>
+<li>Select the member (person or AAD group)</li>
+<li>Review + assign</li>
+</ol>
+<p>Via Azure CLI (what Tech Leads actually use):</p>
+<pre><code class="language-bash"># Give Contributor at resource group level
+az role assignment create \
+  --assignee john.doe@contoso.com \
+  --role &quot;Contributor&quot; \
+  --resource-group MyApp-Prod-RG
+
+# Reader access to entire subscription
+az role assignment create \
+  --assignee auditors@contoso.com \
+  --role &quot;Reader&quot; \
+  --scope /subscriptions/00000000-0000-0000-0000-000000000000
+
+# Key Vault secrets read for an app (via Managed Identity)
+az role assignment create \
+  --assignee /subscriptions/.../resourceGroups/MyApp-RG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/myapp-identity \
+  --role &quot;Key Vault Secrets User&quot; \
+  --scope /subscriptions/.../resourceGroups/Secrets-RG/providers/Microsoft.KeyVault/vaults/prod-kv
+</code></pre>
+<h3 id="golden-rules-every-tech-lead-enforces">Golden Rules Every Tech Lead Enforces</h3>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Never use Owner in production</td>
+<td>Violates least privilege</td>
+</tr>
+<tr>
+<td>Never assign at subscription if RG is enough</td>
+<td>Prevents accidental cross-app changes</td>
+</tr>
+<tr>
+<td>Use Azure AD groups, not individual users</td>
+<td>Easy off-boarding</td>
+</tr>
+<tr>
+<td>Prefer built-in roles (don’t create custom unless absolutely needed)</td>
+<td>Easier auditing</td>
+</tr>
+<tr>
+<td>For applications → use Managed Identity + RBAC (no secrets!)</td>
+<td>Zero secrets in code</td>
+</tr>
+<tr>
+<td>Review access quarterly (Azure has “Access reviews” in PIM)</td>
+<td>Compliance</td>
+</tr>
+</tbody>
+</table>
+<h3 id="bonus-azure-pim-privileged-identity-management-shows-seniority">Bonus: Azure PIM (Privileged Identity Management) – Shows Seniority</h3>
+<p>For sensitive roles (Owner, Contributor on prod):</p>
+<ul>
+<li>Make users <strong>eligible</strong> instead of permanent</li>
+<li>They request access → approve → time-bound (e.g., 4 hours)</li>
+<li>Automatic de-provision + audit log</li>
+</ul>
+<h3 id="one-liner-you-can-say-in-the-interview">One-Liner You Can Say in the Interview</h3>
+<blockquote>
+<p>“We never use Owner or classic co-admin. Everything is least-privilege Azure RBAC at resource-group level using AAD groups. Developers get Contributor on their app’s RG, apps get Managed Identity with Key Vault Secrets User or Storage Blob Data Contributor – zero secrets, full audit, and automatic cleanup when someone leaves.”</p>
+</blockquote>
+<p>You’re now ready to sound like the person they want to hire as Tech Lead.</p>
+<p>Next question? 🚀</p>
+
+    </div>
+</body>
+</html>"

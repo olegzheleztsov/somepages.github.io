@@ -1,0 +1,106 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>Here’s the crisp, interview-winning answer for a .NET Tech Lead / Azure Architect role when they ask <strong>“What is an Availability Zone and how is it different from a Region?”</strong></p>
+<h3 id="availability-zone-az-official-definition">Availability Zone (AZ) – Official Definition</h3>
+<p>An <strong>An Availability Zone is a physically separate, isolated fault domain inside a single Azure Region.</strong><br />
+Each AZ consists of one or more complete data centers with independent power, cooling, networking, and UPS/generators.</p>
+<p>Microsoft guarantees:</p>
+<ul>
+<li>At least 3 Availability Zones in every region that supports them (most modern regions do).</li>
+<li>Zones are separated by enough distance to avoid shared fate (fire, flood, power grid failure), but close enough for &lt;2 ms latency between them.</li>
+</ul>
+<h3 id="region-vs-availability-zone-clear-comparison">Region vs Availability Zone – Clear Comparison</h3>
+<p>| Aspect                      | Azure Region                                   | Availability Zone (AZ)                              |
+|-----------------------------|------------------------------------------------|----------------------------------------------------- ---------------------------|
+| Scope                       | Large geographical area (e.g., “West Europe”)  | One isolated fault domain inside that region      |
+| Number per subscription     | You choose one or more regions                 | 3+ zones inside most regions                      |
+| Physical separation         | Regions can be thousands of km apart           | Zones are typically 5–100 km apart inside the same region |
+| Latency between them        | 20–150+ ms between regions                     | &lt;2 ms between zones in the same region            |
+| Fault isolation             | A whole region can go down (rare, but happened) | One zone can fail → the other two stay up          |
+| Disaster recovery strategy  | Geo-replication to paired region               | Zone-redundant deployment inside the same region  |
+| Compliance / data residency | Region is the compliance boundary              | All zones in a region share the same compliance   |
+| Example                     | West Europe (Netherlands) + North Europe (Ireland)| Zone 1, Zone 2, Zone 3 inside West Europe         |
+| Services that support it    | Almost all modern services (2025)              | App Service Environment, AKS, VM scale sets, Azure SQL GZRS, Cosmos DB, Storage GZRS, etc. |</p>
+<h3 id="real-world-analogy-you-can-use-in-the-interview">Real-World Analogy You Can Use in the Interview</h3>
+<ul>
+<li><strong>Region</strong> = City (e.g., Amsterdam metro area)</li>
+<li><strong>Availability Zone</strong> = Different neighborhoods in that city, each with its own power substation, water supply, and internet uplinks.<br />
+If one neighborhood floods or loses power, the other two are unaffected — but you’re still in the same city (same latency, same compliance).</li>
+</ul>
+<h3 id="when-to-use-which-tech-lead-decision-table">When to Use Which (Tech Lead decision table)</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Use Regions (multi-region)</th>
+<th>Use Availability Zones (single region)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protection against entire region outage</td>
+<td>Yes (active-active or active-passive)</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Sub-2 ms latency required between replicas</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Compliance allows only one country</td>
+<td>No (must stay in one region)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Cost-sensitive (traffic egress is expensive)</td>
+<td>Higher cost</td>
+<td>Much cheaper</td>
+</tr>
+<tr>
+<td>99.99%+ uptime SLA needed</td>
+<td>Usually requires zones + regions</td>
+<td>Zones give you 99.99% for many services</td>
+</tr>
+</tbody>
+</table>
+<h3 id="services-that-give-you-free-99.99-sla-with-zones-2025">Services That Give You Free 99.99% SLA with Zones (2025)</h3>
+<p>Enable <strong>Zone-redundant</strong> or <strong>GZRS</strong> on:</p>
+<ul>
+<li>Azure App Service (Premium v3+)</li>
+<li>Azure Kubernetes Service (AKS) with zone spread</li>
+<li>Virtual Machine Scale Sets</li>
+<li>Azure SQL Database (Premium/Business Critical)</li>
+<li>Azure Storage (GZRS)</li>
+<li>Azure Cosmos DB</li>
+<li>Azure Cache for Redis Enterprise</li>
+</ul>
+<p>→ Microsoft automatically spreads replicas across the 3 zones → if one zone dies, you stay up with zero code changes.</p>
+<h3 id="one-liner-you-can-drop-in-the-interview">One-Liner You Can Drop in the Interview</h3>
+<blockquote>
+<p>“Regions give you geo-resiliency and compliance. Availability Zones give you high availability inside a region with &lt;2 ms latency and no egress cost. In production, I always deploy zone-redundant first, and only add a second region when the business requires true disaster recovery.”</p>
+</blockquote>
+<p>You’re now bulletproof on this topic.</p>
+<p>Next question? Let’s keep rolling — you’re going to walk into that interview like you own Azure! 🚀</p>
+
+    </div>
+</body>
+</html>"

@@ -1,0 +1,167 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>Here’s the perfect answer you can give (or adapt) in your .NET Tech Lead interview when they ask about Azure / cloud models. It shows you understand not only theory, but also real-world implications for architecture, security, cost, and compliance.</p>
+<h3 id="the-4-main-cloud-computing-models-2025-standard">The 4 Main Cloud Computing Models (2025 standard)</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Who manages Infrastructure (servers, networking, storage)</th>
+<th>Who manages Platform (OS, runtime, middleware)</th>
+<th>Who manages Application</th>
+<th>Typical Use-Cases</th>
+<th>Cost Model</th>
+<th>Security/Compliance Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>On-Premises</strong> (Traditional Datacenter)</td>
+<td>You</td>
+<td>You</td>
+<td>You</td>
+<td>Legacy apps, ultra-low latency, strict data sovereignty</td>
+<td>High CapEx + OpEx</td>
+<td>100% You</td>
+</tr>
+<tr>
+<td><strong>IaaS</strong> – Infrastructure as a Service</td>
+<td>Cloud Provider (Microsoft)</td>
+<td>You</td>
+<td>You</td>
+<td>Lift-and-shift VMs, dev/test environments, when you need full OS control</td>
+<td>Pay for VMs, storage, network</td>
+<td>You manage OS, patches, networking</td>
+</tr>
+<tr>
+<td><strong>PaaS</strong> – Platform as a Service</td>
+<td>Cloud Provider</td>
+<td>Cloud Provider</td>
+<td>You</td>
+<td>Modern web apps, APIs, microservices, serverless</td>
+<td>Pay only for what app consumes</td>
+<td>Cloud provider patches OS/runtime, you secure your code &amp; data</td>
+</tr>
+<tr>
+<td><strong>SaaS</strong> – Software as a Service</td>
+<td>Cloud Provider</td>
+<td>Cloud Provider</td>
+<td>Cloud Provider</td>
+<td>Office 365, Salesforce, GitHub, Azure DevOps</td>
+<td>Subscription per user</td>
+<td>Almost everything handled by vendor</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-most-important-hybrid-special-models-interviewers-love-when-you-mention-these">The most important hybrid &amp; special models (interviewers love when you mention these)</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Description</th>
+<th>Azure Examples</th>
+<th>When to choose it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Hybrid Cloud</strong></td>
+<td>Mix of on-prem + public cloud (connected)</td>
+<td>Azure Arc, Azure Stack HCI, ExpressRoute</td>
+<td>Data sovereignty, gradual migration</td>
+</tr>
+<tr>
+<td><strong>Multi-Cloud</strong></td>
+<td>Using more than one public cloud provider</td>
+<td>Azure + AWS/GCP (rarely pure, usually via tools)</td>
+<td>Avoid vendor lock-in, best-of-breed services</td>
+</tr>
+<tr>
+<td><strong>FaaS / Serverless</strong></td>
+<td>Sub-category of PaaS – you only write functions, no server management ever</td>
+<td>Azure Functions, Logic Apps</td>
+<td>Event-driven workloads, spiky traffic</td>
+</tr>
+<tr>
+<td><strong>CaaS</strong> – Container as a Service</td>
+<td>Sub-category of PaaS – managed Kubernetes/orchestration</td>
+<td>Azure Kubernetes Service (AKS), Azure Container Apps</td>
+<td>Microservices at scale</td>
+</tr>
+</tbody>
+</table>
+<h3 id="real-world-decision-matrix-what-tech-leads-actually-use">Real-World Decision Matrix (what Tech Leads actually use)</h3>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Best Azure Choice</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Need full control of OS &amp; patches</td>
+<td>Azure Virtual Machines (IaaS)</td>
+<td>You install Windows/Linux yourself</td>
+</tr>
+<tr>
+<td>Building a .NET 8 Web API / Blazor app</td>
+<td>Azure App Service / Azure Container Apps (PaaS)</td>
+<td>Zero server management, auto-scale, slots</td>
+</tr>
+<tr>
+<td>Event-driven background jobs</td>
+<td>Azure Functions (Serverless PaaS)</td>
+<td>Pay per execution, cold start acceptable</td>
+</tr>
+<tr>
+<td>Need Kubernetes for microservices</td>
+<td>AKS or Azure Container Apps</td>
+<td>Managed control plane</td>
+</tr>
+<tr>
+<td>Just want email, Teams, SharePoint</td>
+<td>Microsoft 365 (SaaS)</td>
+<td>No dev needed</td>
+</tr>
+<tr>
+<td>Legacy app that can’t be refactored yet</td>
+<td>Lift &amp; Shift to Azure VMs or Azure VMware Solution</td>
+<td>Fastest migration</td>
+</tr>
+<tr>
+<td>Strict banking/gov regulations (data never leaves country)</td>
+<td>Azure Germany, Azure Government, or Azure Stack (on-prem)</td>
+<td>Sovereignty</td>
+</tr>
+</tbody>
+</table>
+<h3 id="one-liner-you-can-drop-in-the-interview">One-liner you can drop in the interview</h3>
+<blockquote>
+<p>“As a Tech Lead I always push the team towards PaaS and serverless first (App Service, Functions, Container Apps) because it removes 80 % of operational burden, lets us patch in minutes instead of months, and cuts infrastructure costs dramatically — we only go IaaS when we have a hard technical or compliance reason.”</p>
+</blockquote>
+<p>You now sound like someone who has actually migrated systems to Azure and made real architectural trade-offs.</p>
+<p>Next question? Let’s keep preparing you to ace this interview! 🚀</p>
+
+    </div>
+</body>
+</html>"

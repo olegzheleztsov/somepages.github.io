@@ -1,0 +1,132 @@
+"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="markdown-body">
+        <p>Here’s the perfect Tech-Lead answer for “Which service can be used for content delivery optimization in Azure?” (and yes, the expected answer is <strong>Azure CDN</strong>, but in 2025 we rarely use the “classic” Azure CDN anymore — we use the modern, much better options).</p>
+<h3 id="the-correct-current-2025-answer-azure-front-door-or-azure-cdn-from-microsoft-verizon-akamai">The Correct &amp; Current (2025) Answer: Azure Front Door (or Azure CDN from Microsoft / Verizon / Akamai)</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Type</th>
+<th>When We Actually Use It in Production (2025 reality)</th>
+<th>Key Advantages</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Azure Front Door</strong> (Standard + Premium)</td>
+<td>Global anycast routing + WAF + CDN + private link</td>
+<td><strong>This is the default choice now for 95 % of new projects</strong></td>
+<td>• Single anycast VIP (one global IP/endpoint)<br>• Built-in WAF, bot protection, private link<br>• Faster than old CDN (anycast vs PoP routing)<br>• Free TLS certs, custom domains unlimited<br>• Caches at 180+ edge locations<br>• Rules engine, traffic acceleration</td>
+</tr>
+<tr>
+<td><strong>Azure CDN Standard from Microsoft</strong></td>
+<td>Classic CDN (integrated with Azure storage, media services)</td>
+<td>Only when you need ultra-simple static blob caching</td>
+<td>Cheapest, integrated with Storage static websites</td>
+</tr>
+<tr>
+<td><strong>Azure CDN Standard/Premium from Akamai</strong></td>
+<td>Classic CDN</td>
+<td>Legacy apps or when you specifically need Akamai PoPs</td>
+<td>Bigger network in some regions</td>
+</tr>
+<tr>
+<td><strong>Azure CDN Standard/Premium from Verizon</strong></td>
+<td>Classic CDN (now called Edgio)</td>
+<td>Being phased out / rarely chosen new</td>
+<td>Was good in the past</td>
+</tr>
+<tr>
+<td><strong>Azure Front Door + Azure CDN integrated</strong></td>
+<td>You can actually attach Azure CDN endpoints as origins in Front Door</td>
+<td>Advanced hybrid setups</td>
+<td>Combine both for maximum control</td>
+</tr>
+</tbody>
+</table>
+<h3 id="real-world-decision-matrix-what-i-tell-my-teams">Real-World Decision Matrix (what I tell my teams)</h3>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Recommended Service</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Global static content (images, JS, CSS, videos) + low latency</td>
+<td><strong>Azure Front Door Standard</strong> (free tier is enough) or <strong>Premium</strong> if you need WAF</td>
+</tr>
+<tr>
+<td>You need WAF, bot protection, private backends (App Service Private Endpoint, AKS private)</td>
+<td><strong>Azure Front Door Premium</strong> (mandatory)</td>
+</tr>
+<tr>
+<td>Just caching blobs from Storage Account</td>
+<td>Azure CDN Standard from Microsoft</td>
+</tr>
+<tr>
+<td>Streaming large video files</td>
+<td>Azure CDN + Azure Media Services</td>
+</tr>
+<tr>
+<td>You already have Akamai/Cloudflare on-prem and want hybrid</td>
+<td>Keep existing or migrate to Front Door</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-it-works-in-practice-example-architecture">How It Works in Practice (example architecture)</h3>
+<pre><code>Internet (users worldwide)
+       ↓
+One global endpoint: cdn.contoso.com  →  Azure Front Door (anycast IP)
+       ↓
+Caching layer (180+ edge PoPs worldwide)
+       ↓ (cache miss)
+Origin:
+├─ Azure App Service / Static Web App
+├─ Azure Blob Storage (static website enabled)
+└─ AKS cluster via Private Link (only with Front Door Premium)
+</code></pre>
+<h3 id="quick-setup-what-youll-actually-do">Quick Setup (what you’ll actually do)</h3>
+<pre><code class="language-bash"># Create Front Door Standard (free tier is awesome)
+az afd profile create --profile-name myFD --resource-group MyRG --sku Standard_AzureFrontDoor
+
+# Add custom domain + free managed cert
+az afd custom-domain create ... cdn.contoso.com
+
+# Add origin (e.g., your App Service)
+az afd origin-group create ...
+az afd origin create --origin-host-header myapp.azurewebsites.net ...
+
+# Add route
+az afd route create --forwarding-protocol HttpsOnly --caching Enabled ...
+</code></pre>
+<p>Result: Images/CSS/JS cached globally, TLS termination at edge, &lt;50 ms first-byte worldwide.</p>
+<h3 id="one-liner-you-can-say-in-the-interview">One-Liner You Can Say in the Interview</h3>
+<blockquote>
+<p>“In 2025 we almost never use the old ‘Azure CDN’ profiles anymore. For content delivery optimization and global performance we use <strong>Azure Front Door Standard/Premium</strong> — it’s faster (anycast), cheaper, has built-in WAF, private link support, and Microsoft themselves recommend it over classic CDN for new workloads. We only fall back to Azure CDN from Microsoft when we just need simple blob caching.”</p>
+</blockquote>
+<p>You now sound like someone who actually deploys modern Azure architectures instead of reading 2018 docs.</p>
+<p>Next question? 🚀</p>
+
+    </div>
+</body>
+</html>"
